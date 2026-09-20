@@ -1,57 +1,60 @@
 #!/usr/bin/env bash
 # =============================================================================
-# MAYA Front Desk — Phase 1 & 2: GCP Project + Cloud SQL Provisioning
+# MAYA Front Desk — Steps 1–3: Project, APIs, Cloud SQL, Database & User
 # Run from: GCP Cloud Shell
-# Owner: Anurag (DevOps)
+# Owner: DevOps team
 # =============================================================================
 set -euo pipefail
 
-# ── Variables ─────────────────────────────────────────────────────────────────
 PROJECT_ID="maya-frontdesk"
 REGION="asia-south1"
-INSTANCE_NAME="maya-frontdesk-dev"
+INSTANCE="maya-frontdesk-dev"
 DB_NAME="maya_frontdesk"
+DB_USER="maya_app"
 
-echo "=================================================="
-echo " MAYA Front Desk — Cloud SQL Provisioning"
-echo " Project : $PROJECT_ID"
-echo " Region  : $REGION"
-echo " Instance: $INSTANCE_NAME"
-echo "=================================================="
-
-# ── Phase 1: Project & APIs ───────────────────────────────────────────────────
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║  MAYA Front Desk — Cloud SQL Provisioning            ║"
+echo "║  Project  : $PROJECT_ID"
+echo "║  Region   : $REGION (Mumbai)"
+echo "║  Instance : $INSTANCE"
+echo "╚══════════════════════════════════════════════════════╝"
 echo ""
-echo ">>> [1/6] Creating GCP Project..."
-gcloud projects create "$PROJECT_ID" --name="MAYA Front Desk" 2>/dev/null || \
-  echo "  Project already exists — skipping creation."
 
-echo ">>> Setting active project..."
+# ════════════════════════════════════════════════════════
+# STEP 1 — GCP Project & APIs
+# ════════════════════════════════════════════════════════
+echo ">>> [STEP 1] Creating GCP project & enabling APIs..."
+
+gcloud projects create "$PROJECT_ID" --name="MAYA Front Desk" 2>/dev/null && \
+  echo "    Project created" || echo "    Project already exists — skipping"
+
 gcloud config set project "$PROJECT_ID"
 
 echo ""
-echo ">>> [2/6] Enabling required APIs..."
-echo "  (This may take 1–2 minutes)"
+echo "    Link billing before enabling APIs."
+echo "    Run: gcloud billing accounts list"
+echo "    Then: gcloud billing projects link $PROJECT_ID --billing-account=ACCOUNT_ID"
+echo ""
+echo "    Press ENTER once billing is linked..."
+read -r
+
 gcloud services enable \
   sqladmin.googleapis.com \
-  compute.googleapis.com \
   secretmanager.googleapis.com \
   run.googleapis.com \
-  cloudbuild.googleapis.com \
   artifactregistry.googleapis.com \
   iam.googleapis.com
-echo "  ✅ APIs enabled"
+echo "    ✅ APIs enabled"
 
-# ── Phase 2: Cloud SQL Instance ───────────────────────────────────────────────
+# ════════════════════════════════════════════════════════
+# STEP 2 — Cloud SQL Instance
+# ════════════════════════════════════════════════════════
 echo ""
-echo ">>> [3/6] Creating Cloud SQL instance: $INSTANCE_NAME"
-echo "  Region  : $REGION (Mumbai)"
-echo "  Version : PostgreSQL 15"
-echo "  Tier    : db-g1-small (1.7 GB RAM)"
-echo "  Storage : 10 GB SSD, auto-increase"
-echo "  IP      : No public IP (Auth Proxy only)"
-echo "  Backup  : Daily at 02:00 IST, 7-day retention + PITR"
-echo "  (This takes 5–8 minutes ☕)"
-gcloud sql instances create "$INSTANCE_NAME" \
+echo ">>> [STEP 2] Creating Cloud SQL instance (this takes 5–8 min ☕)..."
+echo "    PostgreSQL 15 · db-g1-small · SSD 10 GB · No public IP"
+echo "    Backup: daily 02:00 IST · 7-day retention · PITR enabled"
+
+gcloud sql instances create "$INSTANCE" \
   --database-version=POSTGRES_15 \
   --tier=db-g1-small \
   --region="$REGION" \
@@ -67,19 +70,41 @@ gcloud sql instances create "$INSTANCE_NAME" \
   --deletion-protection \
   --project="$PROJECT_ID"
 
-echo "  ✅ Cloud SQL instance created"
+echo "    ✅ Cloud SQL instance ready"
 
-# ── Fetch and display connection name ─────────────────────────────────────────
+# ════════════════════════════════════════════════════════
+# STEP 3 — Database, Users, Passwords
+# ════════════════════════════════════════════════════════
 echo ""
-echo ">>> [4/6] Fetching connection details..."
-CONNECTION_NAME=$(gcloud sql instances describe "$INSTANCE_NAME" \
-  --format="value(connectionName)" --project="$PROJECT_ID")
+echo ">>> [STEP 3] Generating passwords..."
+DB_PASSWORD=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9!@#%^&*' | head -c 24)
+ROOT_PASSWORD=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 24)
 
 echo ""
-echo "=================================================="
-echo "  Cloud SQL Connection Details"
-echo "  Connection Name : $CONNECTION_NAME"
-echo "  Database        : $DB_NAME"
-echo "=================================================="
+echo "  ╔════════════════════════════════════════════════╗"
+echo "  ║  SAVE THESE NOW — stored in Secret Manager next ║"
+echo "  ║  maya_app password : $DB_PASSWORD"
+echo "  ║  postgres password : $ROOT_PASSWORD"
+echo "  ╚════════════════════════════════════════════════╝"
 echo ""
-echo "NEXT STEP: Run setup_db.sh to create the database, user, and enable pgvector."
+echo "  Press ENTER to continue..."
+read -r
+
+# Set postgres superuser password
+gcloud sql users set-password postgres \
+  --instance="$INSTANCE" --password="$ROOT_PASSWORD" --project="$PROJECT_ID"
+
+# Create database
+gcloud sql databases create "$DB_NAME" \
+  --instance="$INSTANCE" --charset=UTF8 --collation=en_US.UTF8 --project="$PROJECT_ID"
+
+# Create application user (not postgres superuser)
+gcloud sql users create "$DB_USER" \
+  --instance="$INSTANCE" --password="$DB_PASSWORD" --project="$PROJECT_ID"
+
+echo "    ✅ Database '$DB_NAME' created"
+echo "    ✅ User '$DB_USER' created (non-superuser)"
+echo ""
+echo ">>> NEXT: Run setup_db.sh to enable pgvector and configure grants"
+echo "    DB_PASSWORD=$DB_PASSWORD"
+echo "    ROOT_PASSWORD=$ROOT_PASSWORD"

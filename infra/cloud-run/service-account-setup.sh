@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# MAYA Front Desk — Phase 5: Cloud Run IAM Service Account Setup
-# Run from: GCP Cloud Shell AFTER store_secrets.sh completes
-# Owner: Anurag (DevOps)
+# MAYA Front Desk — Step 6 & 7: Cloud Run IAM + Developer Access
+# Run from: GCP Cloud Shell
+# Owner: DevOps team
 # =============================================================================
 set -euo pipefail
 
@@ -10,58 +10,68 @@ PROJECT_ID="maya-frontdesk"
 SA_NAME="maya-cloudrun-sa"
 SA_EMAIL="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 
-echo "=================================================="
-echo " MAYA Front Desk — Cloud Run Service Account"
-echo " SA: $SA_EMAIL"
-echo "=================================================="
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║  MAYA Front Desk — IAM Setup                         ║"
+echo "╚══════════════════════════════════════════════════════╝"
 
-# ── Create service account ────────────────────────────────────────────────────
+# ════════════════════════════════════════════════════════
+# STEP 6 — Cloud Run Service Account
+# ════════════════════════════════════════════════════════
 echo ""
-echo ">>> [1/4] Creating service account..."
+echo ">>> [STEP 6] Creating Cloud Run service account..."
+
 gcloud iam service-accounts create "$SA_NAME" \
   --display-name="MAYA Front Desk — Cloud Run SA" \
   --project="$PROJECT_ID" 2>/dev/null || \
-  echo "  Service account already exists — skipping."
-echo "  ✅ Service account: $SA_EMAIL"
+  echo "    Service account already exists — skipping"
 
-# ── Grant Cloud SQL Client role ───────────────────────────────────────────────
-echo ""
-echo ">>> [2/4] Granting Cloud SQL Client role (enables Auth Proxy)..."
+# Cloud SQL access (Auth Proxy / Unix socket)
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:$SA_EMAIL" \
-  --role="roles/cloudsql.client" \
-  --condition=None
-echo "  ✅ roles/cloudsql.client granted"
+  --role="roles/cloudsql.client" --condition=None
 
-# ── Grant Secret Manager Accessor ────────────────────────────────────────────
-echo ""
-echo ">>> [3/4] Granting Secret Manager Accessor (for DB password at runtime)..."
+# Secret Manager access (Cloud Run reads maya-database-url → DATABASE_URL)
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:$SA_EMAIL" \
-  --role="roles/secretmanager.secretAccessor" \
-  --condition=None
-echo "  ✅ roles/secretmanager.secretAccessor granted"
+  --role="roles/secretmanager.secretAccessor" --condition=None
 
-# ── Grant Artifact Registry Reader (pull container images) ───────────────────
-echo ""
-echo ">>> [4/4] Granting Artifact Registry Reader (pull container images)..."
+# Artifact Registry access (pull container images)
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:$SA_EMAIL" \
-  --role="roles/artifactregistry.reader" \
-  --condition=None
-echo "  ✅ roles/artifactregistry.reader granted"
+  --role="roles/artifactregistry.reader" --condition=None
 
-# ── Summary ───────────────────────────────────────────────────────────────────
+echo "    ✅ Cloud Run SA configured: $SA_EMAIL"
+echo "       roles/cloudsql.client           (Auth Proxy)"
+echo "       roles/secretmanager.secretAccessor (read DATABASE_URL)"
+echo "       roles/artifactregistry.reader   (pull images)"
+
+# ════════════════════════════════════════════════════════
+# STEP 7 — Grant Developer Access for Migrations
+# ════════════════════════════════════════════════════════
 echo ""
-echo "=================================================="
-echo "  ✅ Cloud Run Service Account Configured"
+echo ">>> [STEP 7] Grant developer Cloud SQL access for Alembic migrations..."
 echo ""
-echo "  SA Email    : $SA_EMAIL"
-echo "  Roles granted:"
-echo "    - roles/cloudsql.client           (Auth Proxy access)"
-echo "    - roles/secretmanager.secretAccessor (read DB password)"
-echo "    - roles/artifactregistry.reader   (pull container images)"
+echo "Enter the backend developer's Google account email (for migration access):"
+read -rp "Email: " DEV_EMAIL
+
+if [ -n "$DEV_EMAIL" ]; then
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="user:$DEV_EMAIL" \
+    --role="roles/cloudsql.client" --condition=None
+
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="user:$DEV_EMAIL" \
+    --role="roles/secretmanager.secretAccessor" --condition=None
+
+  echo "    ✅ $DEV_EMAIL can now:"
+  echo "       - Connect to Cloud SQL via Auth Proxy"
+  echo "       - Read secrets from Secret Manager"
+  echo "       - Run: bash infra/cloud-sql/run_migrations.sh"
+fi
+
 echo ""
-echo "  Next: Run cloud-sql/verify_connection.sh"
-echo "  Then: Share connection_info.env.template with Siddharth"
-echo "=================================================="
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║  ✅ IAM setup complete                               ║"
+echo "║  NEXT: Run cloud-sql/verify_connection.sh            ║"
+echo "║  THEN: Share run_migrations.sh                       ║"
+echo "╚══════════════════════════════════════════════════════╝"

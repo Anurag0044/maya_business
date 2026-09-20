@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# MAYA Front Desk — Alembic Migration Guide (for Siddharth / backend team)
+# MAYA Front Desk — Alembic Migration Guide (for / backend team)
 # Run from: GCP Cloud Shell
-# NOTE: Anurag shares this file with Siddharth. Siddharth runs it from
+# NOTE:  shares this file . runs it from
 #       Cloud Shell after cloning the backend repo.
 # =============================================================================
 set -euo pipefail
@@ -20,12 +20,12 @@ echo ""
 echo "PREREQUISITES:"
 echo "  1. You are in GCP Cloud Shell (authenticated as your Google account)"
 echo "  2. Your account has been granted roles/cloudsql.client on the project"
-echo "     (Anurag must do this once — see note below)"
+echo "     (DevOps team does this once — see note below)"
 echo "  3. The backend repo is cloned into ~/maya-frontdesk/backend"
 echo ""
 
-# ── Grant Siddharth access (Anurag runs this ONCE) ───────────────────────────
-echo "# ── ONE-TIME SETUP (Anurag runs this for Siddharth) ─────────────────"
+# ── Grant  ───────────────────────────
+echo "# ── ONE-TIME SETUP (DevOps team grants this for the backend developer) ─────────────────"
 echo "# Replace SIDDHARTH_EMAIL with his Google account:"
 echo "#   gcloud projects add-iam-policy-binding maya-frontdesk \\"
 echo "#     --member='user:siddharth@example.com' \\"

@@ -1,102 +1,65 @@
 #!/usr/bin/env bash
 # =============================================================================
-# MAYA Front Desk — Phase 3: Database, User & pgvector Setup
-# Run from: GCP Cloud Shell AFTER provision.sh completes
-# Owner: Anurag (DevOps)
+# MAYA Front Desk — Step 4: pgvector + Grants (interactive psql via Auth Proxy)
+# Run from: GCP Cloud Shell immediately after provision.sh
+# Owner: DevOps team
+#
+# Why pre-enable pgvector here (as postgres):
+#   The Alembic migration 0001_initial_schema.py runs:
+#     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
+#   For this to work, pgvector must already be available.
+#   Pre-enabling as postgres means maya_app never needs SUPERUSER.
+#   When Alembic runs, the extension already exists — it silently no-ops.
 # =============================================================================
 set -euo pipefail
 
 PROJECT_ID="maya-frontdesk"
-INSTANCE_NAME="maya-frontdesk-dev"
+INSTANCE="maya-frontdesk-dev"
 DB_NAME="maya_frontdesk"
-DB_USER="maya_app"
 
-echo "=================================================="
-echo " MAYA Front Desk — Database Setup"
-echo " Instance: $INSTANCE_NAME"
-echo " Database: $DB_NAME"
-echo " App User: $DB_USER"
-echo "=================================================="
-
-# ── Generate passwords ────────────────────────────────────────────────────────
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║  MAYA Front Desk — pgvector + DB Grants Setup        ║"
+echo "╚══════════════════════════════════════════════════════╝"
 echo ""
-echo ">>> [1/5] Generating secure passwords..."
-DB_PASSWORD=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9!@#%^&*' | head -c 24)
-ROOT_PASSWORD=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 24)
-
-echo "  DB_PASSWORD  (maya_app user): $DB_PASSWORD"
-echo "  ROOT_PASSWORD (postgres):     $ROOT_PASSWORD"
+echo "This opens a psql session via Cloud SQL Auth Proxy."
+echo "Copy and paste the SQL block shown below into the psql prompt."
 echo ""
-echo "  ⚠️  COPY BOTH PASSWORDS NOW — they will be stored in Secret Manager next."
-echo "  Press ENTER when ready to continue..."
-read -r
-
-# ── Set postgres root password ─────────────────────────────────────────────────
-echo ">>> [2/5] Setting postgres superuser password..."
-gcloud sql users set-password postgres \
-  --instance="$INSTANCE_NAME" \
-  --password="$ROOT_PASSWORD" \
-  --project="$PROJECT_ID"
-echo "  ✅ postgres password set"
-
-# ── Create application database ────────────────────────────────────────────────
-echo ""
-echo ">>> [3/5] Creating database '$DB_NAME'..."
-gcloud sql databases create "$DB_NAME" \
-  --instance="$INSTANCE_NAME" \
-  --charset=UTF8 \
-  --collation=en_US.UTF8 \
-  --project="$PROJECT_ID"
-echo "  ✅ Database created"
-
-# ── Create application user ────────────────────────────────────────────────────
-echo ""
-echo ">>> [4/5] Creating application user '$DB_USER'..."
-gcloud sql users create "$DB_USER" \
-  --instance="$INSTANCE_NAME" \
-  --password="$DB_PASSWORD" \
-  --project="$PROJECT_ID"
-echo "  ✅ User created"
-
-# ── Open psql to enable pgvector & set grants ──────────────────────────────────
-echo ""
-echo ">>> [5/5] Opening psql to enable pgvector and configure grants..."
-echo "  You will be prompted for the postgres password: $ROOT_PASSWORD"
-echo ""
-echo "  Run these SQL commands inside psql:"
-echo "  ─────────────────────────────────────────────────────────"
+echo "────────────────── SQL TO RUN IN PSQL ──────────────────"
 cat << 'SQL'
-  -- Enable pgvector (required for knowledge_chunks.embedding)
-  CREATE EXTENSION IF NOT EXISTS vector;
+-- 1. Enable pgvector (so maya_app never needs SUPERUSER)
+--    Alembic migration will find this already installed and no-op.
+CREATE EXTENSION IF NOT EXISTS vector;
+SELECT extname, extversion FROM pg_extension WHERE extname = 'vector';
 
-  -- Verify
-  SELECT extname, extversion FROM pg_extension WHERE extname = 'vector';
+-- 2. Grant database access to the application user
+GRANT ALL PRIVILEGES ON DATABASE maya_frontdesk TO maya_app;
 
-  -- Grant all privileges to the application user
-  GRANT ALL PRIVILEGES ON DATABASE maya_frontdesk TO maya_app;
-  GRANT ALL ON SCHEMA public TO maya_app;
-  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO maya_app;
-  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO maya_app;
+-- 3. Grant schema-level access (required for Alembic CREATE TABLE)
+GRANT ALL ON SCHEMA public TO maya_app;
 
-  -- Confirm user
-  \du maya_app
+-- 4. Grant on all future tables/sequences (so Alembic-created objects are accessible)
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO maya_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO maya_app;
 
-  -- Exit
-  \q
+-- 5. Confirm
+\du maya_app
+
+-- 6. Exit
+\q
 SQL
-echo "  ─────────────────────────────────────────────────────────"
+echo "────────────────────────────────────────────────────────"
 echo ""
-echo "  Press ENTER to open the psql connection..."
+echo "You will be prompted for the postgres password (from provision.sh output)."
+echo "Press ENTER to open psql..."
 read -r
 
-gcloud sql connect "$INSTANCE_NAME" \
+gcloud sql connect "$INSTANCE" \
   --user=postgres \
   --database="$DB_NAME" \
   --project="$PROJECT_ID"
 
 echo ""
-echo "=================================================="
-echo "  ✅ Database setup complete!"
-echo "  Next: Run secrets/store_secrets.sh"
-echo "  DB_PASSWORD to store: $DB_PASSWORD"
-echo "=================================================="
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║  ✅ pgvector enabled, grants configured              ║"
+echo "║  NEXT: Run secrets/store_secrets.sh                  ║"
+echo "╚══════════════════════════════════════════════════════╝"

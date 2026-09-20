@@ -1,47 +1,46 @@
 #!/usr/bin/env bash
 # =============================================================================
 # MAYA Front Desk — Cloud Run Deployment
-# Run from: GCP Cloud Shell (after container image is pushed to Artifact Registry)
-# Owner: Anurag (DevOps)
+# Run from: GCP Cloud Shell (after container image is in Artifact Registry)
+# Owner: DevOps team
+#
+# How DATABASE_URL reaches the app:
+#   --set-secrets "DATABASE_URL=maya-database-url:latest"
+#   Cloud Run injects the secret as an env var.
+#   config.py reads it: settings.database_url → asyncpg socket URL.
+#   session.py creates the engine with this URL.
 # =============================================================================
 set -euo pipefail
 
 PROJECT_ID="maya-frontdesk"
 REGION="asia-south1"
-SERVICE_NAME="maya-frontdesk-api"
-SA_EMAIL="maya-cloudrun-sa@maya-frontdesk.iam.gserviceaccount.com"
+SERVICE="maya-frontdesk-api"
+SA="maya-cloudrun-sa@maya-frontdesk.iam.gserviceaccount.com"
 AR_REPO="maya-repo"
 IMAGE_NAME="backend"
-IMAGE_TAG="${1:-latest}"  # pass a tag as arg, defaults to 'latest'
+IMAGE_TAG="${1:-latest}"
 
-# Construct the full image path
-IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/$AR_REPO/$IMAGE_NAME:$IMAGE_TAG"
+CONNECTION_NAME="maya-frontdesk:asia-south1:maya-frontdesk-dev"
+IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
 
-# Fetch connection name
-CONNECTION_NAME=$(gcloud secrets versions access latest \
-  --secret=maya-db-connection-name \
-  --project="$PROJECT_ID")
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║  MAYA Front Desk — Cloud Run Deploy                  ║"
+echo "║  Service  : $SERVICE"
+echo "║  Image    : $IMAGE"
+echo "║  SQL Conn : $CONNECTION_NAME"
+echo "╚══════════════════════════════════════════════════════╝"
+echo ""
 
-echo "=================================================="
-echo " MAYA Front Desk — Cloud Run Deployment"
-echo " Service   : $SERVICE_NAME"
-echo " Image     : $IMAGE"
-echo " Region    : $REGION"
-echo " SQL Conn  : $CONNECTION_NAME"
-echo "=================================================="
-
-gcloud run deploy "$SERVICE_NAME" \
+gcloud run deploy "$SERVICE" \
   --image="$IMAGE" \
   --region="$REGION" \
   --platform=managed \
-  --service-account="$SA_EMAIL" \
+  --service-account="$SA" \
   --add-cloudsql-instances="$CONNECTION_NAME" \
-  --set-secrets="DATABASE_PASSWORD=maya-db-password:latest" \
-  --set-env-vars="DATABASE_HOST=/cloudsql/$CONNECTION_NAME" \
-  --set-env-vars="DATABASE_NAME=maya_frontdesk" \
-  --set-env-vars="DATABASE_USER=maya_app" \
-  --set-env-vars="DATABASE_PORT=5432" \
+  --set-secrets="DATABASE_URL=maya-database-url:latest" \
   --set-env-vars="ENVIRONMENT=production" \
+  --set-env-vars="DEBUG=false" \
+  --set-env-vars="TIMEZONE=Asia/Kolkata" \
   --allow-unauthenticated \
   --min-instances=0 \
   --max-instances=10 \
@@ -51,10 +50,10 @@ gcloud run deploy "$SERVICE_NAME" \
   --project="$PROJECT_ID"
 
 echo ""
-echo "=================================================="
-echo "  ✅ Cloud Run deployment complete!"
-SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
+SERVICE_URL=$(gcloud run services describe "$SERVICE" \
   --region="$REGION" --format="value(status.url)" --project="$PROJECT_ID")
-echo "  Service URL: $SERVICE_URL"
-echo "  Health check: $SERVICE_URL/health"
-echo "=================================================="
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║  ✅ Deployed!                                        ║"
+echo "║  URL: $SERVICE_URL"
+echo "║  Health: ${SERVICE_URL}/health"
+echo "╚══════════════════════════════════════════════════════╝"
