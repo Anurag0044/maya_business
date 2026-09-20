@@ -66,7 +66,6 @@ gcloud sql instances create "$INSTANCE" \
   --enable-point-in-time-recovery \
   --retained-backups-count=7 \
   --retained-transaction-log-days=7 \
-  --no-assign-ip \
   --deletion-protection \
   --project="$PROJECT_ID"
 
