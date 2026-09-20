@@ -3,12 +3,12 @@ import MayaBrand from "./MayaBrand";
 
 export default function Navbar() {
   return (
-    <header className="w-full z-50 px-6 sm:px-10 lg:px-14 py-3 sm:py-4 lg:py-5 flex items-center justify-between">
+    <header className="relative w-full z-50 px-6 sm:px-10 lg:px-14 py-4 sm:py-5 flex items-center justify-between">
       {/* Brand Identity: Authentic Precision Vector Lockup */}
       <MayaBrand />
 
-      {/* Navigation Links: Minimal Apple Aesthetic */}
-      <nav className="hidden md:flex items-center gap-7 lg:gap-9 text-[13px] font-normal text-[#9ca3af]">
+      {/* Navigation Links: Disciplined True Center Alignment */}
+      <nav className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8 lg:gap-10 text-[13px] font-normal tracking-[0.01em] text-[#9ca3af]">
         <a
           href="#product"
           className="hover:text-white transition-colors duration-200"
