@@ -1,0 +1,9 @@
+# Never commit secrets, credentials, or generated env files
+*.env
+*.key
+*.json
+secrets/*.json
+**/.env
+**/*.pem
+**/*.p12
+cloud-sql-proxy
