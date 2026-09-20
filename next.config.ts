@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
         source: "/Night.mp4",
         destination: "/videos/Night.mp4",
       },
+      {
+        source: "/Day.mp4",
+        destination: "/videos/Day.mp4",
+      },
     ];
   },
 };

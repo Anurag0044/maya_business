@@ -6,8 +6,9 @@
     margin: 0;
     padding: 0;
   }
-  
-  html, body {
+
+  html,
+  body {
     background-color: #060709;
     color: #ffffff;
     font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -33,13 +34,16 @@
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: #07080a;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #23272f;
   border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #374151;
 }

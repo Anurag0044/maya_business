@@ -10,7 +10,12 @@ const PATH_USINESS = "M 3348.121 163.074 C 3344.321 163.891, 3343.055 165.350, 3
 
 export default function MayaBrand({ className = "" }: { className?: string }) {
   const rootRef = useRef<HTMLAnchorElement>(null);
-  const markGleamRef = useRef<SVGGElement>(null);
+  const markContainerRef = useRef<HTMLDivElement>(null);
+  const bladeRef = useRef<SVGGElement>(null);
+  const chevronRef = useRef<SVGGElement>(null);
+  const chamferGleamRef = useRef<SVGLineElement>(null);
+  const ridgeGleamRef = useRef<SVGLineElement>(null);
+  const dividerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const bRef = useRef<SVGGElement>(null);
@@ -20,17 +25,48 @@ export default function MayaBrand({ className = "" }: { className?: string }) {
   const usinessClipRef = useRef<SVGRectElement>(null);
 
   useEffect(() => {
-    // Apple-grade GSAP animation context for zero leaks & cleanup
+    // Executive-grade GSAP animation context for clean mount & hot reload
     const ctx = gsap.context(() => {
-      // Calculate responsive width ratio for MB vs MAYA Business
+      // 1. Precise responsive measurement for MB lockup vs full MAYA Business
       const measuredFullWidth = svgRef.current
         ? svgRef.current.getBoundingClientRect().width || 240
         : 240;
-      // MB is ~21.5% of total width (x: 60 to ~1160 out of 5556)
+      // MB is exactly ~21.5% of full wordmark width
       const mbWidth = measuredFullWidth * 0.215;
 
-      // 1. Initial State: Display crisp "MB" monogram
-      // B shifted left to sit right next to M (-1831 units in SVG space)
+      // 2. Initial States on Mount / Refresh:
+      // A) Titanium Icon Elements (Poised to assemble seamlessly)
+      gsap.set(bladeRef.current, {
+        x: -14,
+        y: 12,
+        opacity: 0,
+        scale: 0.94,
+        transformOrigin: "50% 50%",
+      });
+      gsap.set(chevronRef.current, {
+        x: 12,
+        y: 12,
+        opacity: 0,
+        scale: 0.94,
+        transformOrigin: "50% 50%",
+      });
+      gsap.set(chamferGleamRef.current, {
+        strokeDasharray: 370,
+        strokeDashoffset: 370,
+        opacity: 0,
+      });
+      gsap.set(ridgeGleamRef.current, {
+        strokeDasharray: 55,
+        strokeDashoffset: 55,
+        opacity: 0,
+      });
+      gsap.set(dividerRef.current, {
+        scaleY: 0,
+        opacity: 0,
+        transformOrigin: "50% 50%",
+      });
+
+      // B) Wordmark Monogram State (Displays crisp "MB" initially)
       gsap.set(bRef.current, { x: -1831 });
       gsap.set(ayaRef.current, { opacity: 0, x: -35 });
       gsap.set(ayaClipRef.current, { attr: { width: 0 } });
@@ -41,13 +77,109 @@ export default function MayaBrand({ className = "" }: { className?: string }) {
         gsap.set(containerRef.current, { width: mbWidth });
       }
 
-      // 2. Timeline: Brief pregnant pause, then fluid high-end expansion
+      // 3. Orchestrated Timeline:
       const tl = gsap.timeline({
-        delay: 0.38,
         defaults: { ease: "power4.out" },
       });
 
-      // Smoothly expand container width
+      // --- PHASE 1: Titanium Icon Forges & Locks (0.05s - 0.75s) ---
+      // Left Blade glides in smoothly along its chamfer plane
+      tl.to(
+        bladeRef.current,
+        {
+          x: 0,
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 0.75,
+          ease: "power3.out",
+        },
+        0.05
+      );
+
+      // Right Chevron glides in to meet the blade
+      tl.to(
+        chevronRef.current,
+        {
+          x: 0,
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 0.75,
+          ease: "power3.out",
+        },
+        0.09
+      );
+
+      // Hairline divider unrolls from center
+      tl.to(
+        dividerRef.current,
+        {
+          scaleY: 1,
+          opacity: 1,
+          duration: 0.65,
+          ease: "power2.out",
+        },
+        0.18
+      );
+
+      // Specular light beam traces up the blade's chamfer edge
+      tl.to(
+        chamferGleamRef.current,
+        {
+          opacity: 1,
+          strokeDashoffset: 0,
+          duration: 0.42,
+          ease: "power2.out",
+        },
+        0.26
+      );
+      tl.to(
+        chamferGleamRef.current,
+        {
+          opacity: 0.4,
+          duration: 0.35,
+          ease: "power2.inOut",
+        },
+        0.68
+      );
+
+      // Specular light beam traces down the chevron's center ridge
+      tl.to(
+        ridgeGleamRef.current,
+        {
+          opacity: 1,
+          strokeDashoffset: 0,
+          duration: 0.32,
+          ease: "power2.out",
+        },
+        0.30
+      );
+      tl.to(
+        ridgeGleamRef.current,
+        {
+          opacity: 0.85,
+          duration: 0.35,
+          ease: "power2.inOut",
+        },
+        0.62
+      );
+
+      // Subtle pulse on mark container at the moment of lock
+      tl.to(
+        markContainerRef.current,
+        {
+          scale: 1.03,
+          duration: 0.22,
+          yoyo: true,
+          repeat: 1,
+          ease: "power2.out",
+        },
+        0.32
+      );
+
+      // --- PHASE 2: Typography Unfolds MB -> MAYA Business (0.38s - 1.65s) ---
+      // Smoothly expand typography container width
       if (containerRef.current) {
         tl.to(
           containerRef.current,
@@ -61,7 +193,7 @@ export default function MayaBrand({ className = "" }: { className?: string }) {
               }
             },
           },
-          0
+          0.38
         );
       }
 
@@ -73,7 +205,7 @@ export default function MayaBrand({ className = "" }: { className?: string }) {
           duration: 1.35,
           ease: "power4.out",
         },
-        0
+        0.38
       );
 
       // Unmask and reveal AYA (Λ Y Λ) between M and B
@@ -84,7 +216,7 @@ export default function MayaBrand({ className = "" }: { className?: string }) {
           duration: 1.2,
           ease: "power3.out",
         },
-        0.04
+        0.42
       );
       tl.to(
         ayaRef.current,
@@ -94,7 +226,7 @@ export default function MayaBrand({ className = "" }: { className?: string }) {
           duration: 1.15,
           ease: "power3.out",
         },
-        0.04
+        0.42
       );
 
       // Unmask and unfold usiness (u s i n e s s) trailing behind B
@@ -105,7 +237,7 @@ export default function MayaBrand({ className = "" }: { className?: string }) {
           duration: 1.25,
           ease: "power3.out",
         },
-        0.1
+        0.48
       );
       tl.to(
         usinessRef.current,
@@ -115,15 +247,7 @@ export default function MayaBrand({ className = "" }: { className?: string }) {
           duration: 1.2,
           ease: "power3.out",
         },
-        0.1
-      );
-
-      // Specular gleam across the titanium mark facets
-      tl.fromTo(
-        markGleamRef.current,
-        { opacity: 0.65, scale: 0.98 },
-        { opacity: 1, scale: 1, duration: 1.2, ease: "power2.out" },
-        0.15
+        0.48
       );
     }, rootRef);
 
@@ -137,8 +261,11 @@ export default function MayaBrand({ className = "" }: { className?: string }) {
       aria-label="MAYA Business Home"
       className={`group relative inline-flex items-center gap-3.5 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 rounded-sm transition-opacity duration-200 hover:opacity-95 ${className}`}
     >
-      {/* 1. Precision 3D Faceted Titanium Brand Mark */}
-      <div className="relative flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-[1.03]">
+      {/* 1. Precision 3D Faceted Titanium Brand Mark (Smooth Choreographed Entrance) */}
+      <div
+        ref={markContainerRef}
+        className="relative flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-[1.04]"
+      >
         <svg
           viewBox="25 80 460 350"
           className="h-[23px] sm:h-[25px] lg:h-[27px] w-auto"
@@ -169,48 +296,57 @@ export default function MayaBrand({ className = "" }: { className?: string }) {
             </linearGradient>
           </defs>
 
-          <g ref={markGleamRef}>
-            {/* Left Blade: Clean needle-sharp geometry with sweeping upper arc */}
+          {/* Left Blade: Clean needle-sharp geometry with sweeping upper arc */}
+          <g ref={bladeRef}>
             <path
               d="M 29 427 L 144 373 L 361 85 Q 215 245 29 427 Z"
               fill="url(#maya-blade-main)"
             />
-            {/* Subtle chamfer highlight line */}
+            {/* Chamfer highlight line with animated specular trace */}
             <line
+              ref={chamferGleamRef}
               x1="144"
               y1="373"
               x2="361"
               y2="85"
-              stroke="rgba(255,255,255,0.4)"
-              strokeWidth="1.5"
+              stroke="rgba(255,255,255,0.95)"
+              strokeWidth="1.6"
+              strokeLinecap="round"
             />
+          </g>
 
-            {/* Right Chevron: Left Wing */}
+          {/* Right Chevron: Symmetrical faceted monogram */}
+          <g ref={chevronRef}>
+            {/* Left Wing */}
             <path
               d="M 184 388 L 328 214 L 328 259 Z"
               fill="url(#maya-chev-left)"
             />
-
-            {/* Right Chevron: Right Wing */}
+            {/* Right Wing */}
             <path
               d="M 328 214 L 482 420 L 328 259 Z"
               fill="url(#maya-chev-right)"
             />
-            {/* Center ridge specular highlight */}
+            {/* Center ridge specular highlight with animated trace */}
             <line
+              ref={ridgeGleamRef}
               x1="328"
               y1="214"
               x2="328"
               y2="259"
-              stroke="rgba(255,255,255,0.8)"
-              strokeWidth="1.2"
+              stroke="rgba(255,255,255,1)"
+              strokeWidth="1.6"
+              strokeLinecap="round"
             />
           </g>
         </svg>
       </div>
 
-      {/* 2. Apple-grade Hairline Divider */}
-      <div className="w-[1px] h-4.5 sm:h-5 bg-gradient-to-b from-transparent via-white/25 to-transparent mx-0.5 shrink-0" />
+      {/* 2. Apple-grade Hairline Divider (Smooth vertical unroll) */}
+      <div
+        ref={dividerRef}
+        className="w-[1px] h-4.5 sm:h-5 bg-gradient-to-b from-transparent via-white/25 to-transparent mx-0.5 shrink-0"
+      />
 
       {/* 3. High-End Motion Animated Typography: MB -> MAYA Business */}
       <div
