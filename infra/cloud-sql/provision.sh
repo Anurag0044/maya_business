@@ -63,7 +63,7 @@ gcloud sql instances create "$INSTANCE" \
   --storage-auto-increase \
   --backup \
   --backup-start-time=20:30 \
-  --enable-bin-log \
+  --enable-point-in-time-recovery \
   --retained-backups-count=7 \
   --retained-transaction-log-days=7 \
   --no-assign-ip \
