@@ -19,7 +19,7 @@ CONNECTION_NAME="maya-frontdesk:asia-south1:maya-frontdesk-dev"
 DB_NAME="maya_frontdesk"
 DB_USER="maya_app"
 PROXY_PORT=5432
-REPO_DIR="${HOME}/maya-frontdesk"
+REPO_DIR="${HOME}/maya_business"
 BACKEND_DIR="${REPO_DIR}/backend"
 
 echo "╔══════════════════════════════════════════════════════╗"
