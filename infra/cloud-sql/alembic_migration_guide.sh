@@ -21,7 +21,7 @@ echo "PREREQUISITES:"
 echo "  1. You are in GCP Cloud Shell (authenticated as your Google account)"
 echo "  2. Your account has been granted roles/cloudsql.client on the project"
 echo "     (DevOps team does this once — see note below)"
-echo "  3. The backend repo is cloned into ~/maya-frontdesk/backend"
+echo "  3. The backend repo is cloned into ~/maya_business/backend"
 echo ""
 
 # ── Grant  ───────────────────────────
@@ -78,7 +78,7 @@ BACKEND_DIR="${HOME}/maya-frontdesk/backend"
 if [ ! -d "$BACKEND_DIR" ]; then
   echo "ERROR: Backend directory not found at $BACKEND_DIR"
   echo "Please clone the repo first:"
-  echo "  git clone <repo-url> ~/maya-frontdesk"
+  echo "  git clone <repo-url> ~/maya_business"
   kill $PROXY_PID
   exit 1
 fi
