@@ -1,0 +1,13 @@
+{
+  "model": "moonshotai/kimi-k3",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Reply with exactly: KIMI CONNECTION WORKING"
+    }
+  ],
+  "max_tokens": 50,
+  "temperature": 1,
+  "reasoning_effort": "low",
+  "stream": false
+}

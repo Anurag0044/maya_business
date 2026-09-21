@@ -19,7 +19,15 @@ class Settings(BaseSettings):
 
     timezone: str = "Asia/Kolkata"
 
+    # LLM provider boundary: switch providers without changing agent/business logic.
+    llm_provider: str = "nvidia"
+    nvidia_api_key: str | None = None
+    nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
+    nvidia_chat_model: str = "moonshotai/kimi-k3"
+
+    # Retained for embeddings and optional development fallback.
     openai_api_key: str | None = None
+    openai_base_url: str = "https://api.openai.com/v1"
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = 1536
     chat_model: str = "gpt-4o-mini"

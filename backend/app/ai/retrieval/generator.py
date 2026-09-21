@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from app.core.config import settings
+from app.ai.providers.llm import get_llm_provider
 
 
 class AnswerGenerator:
-    """Generate grounded customer-facing answers from retrieved knowledge."""
+    """Generate grounded customer-facing answers through the LLM boundary."""
 
     async def generate(self, question: str, context: str, conversation: str = "") -> str | None:
-        if not settings.openai_api_key:
+        provider = get_llm_provider()
+        if provider is None:
             return None
 
-        from openai import AsyncOpenAI
-
-        client = AsyncOpenAI(api_key=settings.openai_api_key)
         system = (
             "You are MAYA Front Desk. Answer the customer's question using only the "
             "verified knowledge provided in CONTEXT. Do not invent company facts, "
@@ -24,12 +22,8 @@ class AnswerGenerator:
         if conversation:
             user += f"\n\nRECENT CONVERSATION:\n{conversation}"
 
-        response = await client.chat.completions.create(
-            model=settings.chat_model,
+        return await provider.generate(
+            system_prompt=system,
+            user_prompt=user,
             temperature=0.2,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
         )
-        return response.choices[0].message.content.strip()

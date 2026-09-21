@@ -32,6 +32,20 @@ AI actions must flow through:
 
 `Agent → Tool → Service → Model/DB`
 
+## LLM provider boundary
+
+The answer-generation path now goes through a provider-neutral `LLMProvider` interface.
+V1 is configured for NVIDIA NIM's OpenAI-compatible Kimi K3 endpoint:
+
+`moonshotai/kimi-k3` via `https://integrate.api.nvidia.com/v1`
+
+Provider-specific SDK/base-URL/model details stay inside `app/ai/providers/llm.py`.
+This keeps MAYA Business Intelligence independent of the current model provider and
+allows a future local/self-hosted provider without rewriting the agent layer.
+
+OpenAI remains available as an optional adapter and is still used by the current
+embedding path.
+
 ## Current V1 retrieval
 
 The retrieval layer uses a lightweight lexical fallback so the backend can operate
