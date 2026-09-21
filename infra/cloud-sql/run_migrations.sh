@@ -99,6 +99,7 @@ cd "$BACKEND_DIR"
 
 # Install dependencies (quiet)
 echo "    Installing requirements..."
+export PATH="$HOME/.local/bin:$PATH"
 pip install -r requirements.txt -q
 
 # Create manual backup before migration (safety net)
@@ -116,7 +117,7 @@ gcloud sql backups create \
 #   2. Creates all 17 tables with indexes
 echo ""
 echo "    Running: alembic upgrade head"
-alembic upgrade head
+python3 -m alembic upgrade head || alembic upgrade head
 
 # ── Step 5: Verify ────────────────────────────────────────────────────────────
 echo ""
