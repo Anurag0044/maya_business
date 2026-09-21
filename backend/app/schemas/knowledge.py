@@ -19,6 +19,12 @@ class KnowledgeDocumentResponse(KnowledgeDocumentCreate):
     status: str
 
 
+class KnowledgeIngestResponse(BaseModel):
+    document_id: UUID
+    chunks_created: int
+    status: str
+
+
 class FAQCreate(BaseModel):
     question: str = Field(min_length=1)
     answer: str = Field(min_length=1)

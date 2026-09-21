@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai.retrieval.ingestion import ingest_document
 from app.core.exceptions import AppException
 from app.models.knowledge import FAQ, KnowledgeDocument
 
@@ -50,7 +51,8 @@ class KnowledgeService:
             status="PENDING",
         )
         self.db.add(document)
-        await self.db.commit()
+        await self.db.flush()
+        await ingest_document(self.db, business_id, document)
         await self.db.refresh(document)
         return document
 

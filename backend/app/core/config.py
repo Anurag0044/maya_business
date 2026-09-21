@@ -19,6 +19,11 @@ class Settings(BaseSettings):
 
     timezone: str = "Asia/Kolkata"
 
+    openai_api_key: str | None = None
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimensions: int = 1536
+    chat_model: str = "gpt-4o-mini"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
