@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { PageLoadProvider } from "@/context/PageLoadContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -11,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "MAYA Business — Operate Business with MAYA",
+  title: "MAYA Business",
   description:
     "MAYA Business is your always-on AI receptionist, lead manager and operations partner — so you can focus on what truly matters.",
   icons: {
@@ -36,7 +37,9 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased selection:bg-neutral-500/20">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <PageLoadProvider>{children}</PageLoadProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

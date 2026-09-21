@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
+import { usePageLoad } from "@/context/PageLoadContext";
 
 interface FeatureNavItem {
   id: string;
@@ -118,9 +120,14 @@ const NAV_FEATURES: FeatureNavItem[] = [
 ];
 
 export default function BottomNav() {
+  const { isPageReady } = usePageLoad();
+
   return (
-    <nav
+    <motion.nav
       aria-label="Lower Navigation"
+      initial={{ opacity: 0, y: 14 }}
+      animate={isPageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+      transition={{ duration: 0.8, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
       className="flex items-center gap-3 sm:gap-4.5 lg:gap-5.5 overflow-x-auto no-scrollbar select-none py-1"
     >
       {NAV_FEATURES.map((feature) => (
@@ -144,6 +151,6 @@ export default function BottomNav() {
           />
         </React.Fragment>
       ))}
-    </nav>
+    </motion.nav>
   );
 }

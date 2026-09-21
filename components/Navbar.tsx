@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import MayaBrand from "./MayaBrand";
 import ThemeToggle from "./ThemeToggle";
+import { usePageLoad } from "@/context/PageLoadContext";
 
 interface NavItem {
   label: string;
@@ -18,6 +19,7 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export default function Navbar() {
+  const { isPageReady } = usePageLoad();
   const [activeItem, setActiveItem] = useState<string>("#product");
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
@@ -37,7 +39,12 @@ export default function Navbar() {
   const currentSelection = hoveredItem || activeItem;
 
   return (
-    <header className="relative w-full z-50 px-6 sm:px-10 lg:px-14 py-3.5 sm:py-4 flex items-center justify-between border-b border-white/[0.035]">
+    <motion.header
+      initial={{ opacity: 0, y: -10 }}
+      animate={isPageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
+      transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+      className="relative w-full z-50 px-6 sm:px-10 lg:px-14 py-3.5 sm:py-4 flex items-center justify-between border-b border-white/[0.035]"
+    >
       {/* Brand Identity: Authentic Precision Vector Lockup */}
       <MayaBrand />
 
@@ -105,6 +112,6 @@ export default function Navbar() {
           </span>
         </a>
       </div>
-    </header>
+    </motion.header>
   );
 }

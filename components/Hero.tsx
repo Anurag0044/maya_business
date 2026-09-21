@@ -1,39 +1,72 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import Metrics from "./Metrics";
+import { usePageLoad } from "@/context/PageLoadContext";
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.09,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 12, filter: "blur(4px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.75, ease: "easeOut" },
+  },
+};
 
 export default function Hero() {
+  const { isPageReady } = usePageLoad();
+
   return (
-    <div className="flex flex-col justify-center max-w-xl z-10 select-none">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate={isPageReady ? "visible" : "hidden"}
+      className="flex flex-col justify-center max-w-xl z-10 select-none"
+    >
       {/* Eyebrow: Minimalist Architectural Light Sweep */}
-      <motion.div
-        initial={{ opacity: 0, y: 3 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="mb-2 sm:mb-2.5"
-      >
+      <motion.div variants={itemVariants} className="mb-2 sm:mb-2.5">
         <span className="text-[9.5px] sm:text-[10px] font-medium uppercase tracking-[0.24em] inline-block animate-luxury-shimmer select-none">
           Operate Business with MΛYΛ
         </span>
       </motion.div>
 
       {/* Main Headline */}
-      <h1 className="text-[clamp(2.25rem,3.6vw,3.85rem)] font-light tracking-[-0.03em] leading-[0.98] text-white">
+      <motion.h1
+        variants={itemVariants}
+        className="text-[clamp(2.25rem,3.6vw,3.85rem)] font-light tracking-[-0.03em] leading-[0.98] text-white"
+      >
         <div>More</div>
         <div>Business.</div>
         <div className="text-[#586072]">Less Work.</div>
-      </h1>
+      </motion.h1>
 
       {/* Sub-headline / Value Proposition */}
-      <p className="mt-3 sm:mt-3.5 lg:mt-4 text-[#9ca3af] text-[13px] sm:text-[13.5px] lg:text-[14px] leading-[1.6] max-w-[430px] font-normal">
+      <motion.p
+        variants={itemVariants}
+        className="mt-3 sm:mt-3.5 lg:mt-4 text-[#9ca3af] text-[13px] sm:text-[13.5px] lg:text-[14px] leading-[1.6] max-w-[430px] font-normal"
+      >
         MAYA Business is your always-on AI receptionist, lead manager and
         operations partner — so you can focus on what truly matters.
-      </p>
+      </motion.p>
 
       {/* CTAs */}
-      <div className="flex items-center gap-5 sm:gap-6 my-4.5 sm:my-5 lg:my-6">
+      <motion.div
+        variants={itemVariants}
+        className="flex items-center gap-5 sm:gap-6 my-4.5 sm:my-5 lg:my-6"
+      >
         {/* Primary CTA Button */}
         <a
           href="#get-started"
@@ -67,10 +100,12 @@ export default function Hero() {
             </span>
           </div>
         </button>
-      </div>
+      </motion.div>
 
       {/* Metrics Row */}
-      <Metrics />
-    </div>
+      <motion.div variants={itemVariants}>
+        <Metrics />
+      </motion.div>
+    </motion.div>
   );
 }
