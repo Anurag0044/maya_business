@@ -447,7 +447,16 @@ export default function BackgroundVideo() {
         className="absolute bottom-0 left-0 right-0 h-36 pointer-events-none z-26"
         style={{
           background:
-            "linear-gradient(0deg, rgba(6,7,9,0.98) 0%, rgba(6,7,9,0.85) 30%, rgba(6,7,9,0.50) 65%, rgba(6,7,9,0.15) 85%, rgba(6,7,9,0) 100%)",
+            "linear-gradient(0deg, rgba(6,7,9,0.98) 0%, rgba(6,7,9,0.88) 30%, rgba(6,7,9,0.55) 65%, rgba(6,7,9,0.18) 85%, rgba(6,7,9,0) 100%)",
+        }}
+      />
+
+      {/* Watermark Cloak Occlusion (Permanently conceals bottom-right source mark with seamless obsidian radial falloff) */}
+      <div
+        className="absolute bottom-0 right-0 w-[500px] max-w-[48vw] h-40 sm:h-48 pointer-events-none z-26"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 90% at 88% 90%, #060709 0%, #060709 54%, rgba(6,7,9,0.96) 68%, rgba(6,7,9,0.60) 84%, transparent 100%)",
         }}
       />
 

@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "MAYA Business — AI That Works While You Do",
+  title: "MAYA Business — Operate Business with MAYA",
   description:
     "MAYA Business is your always-on AI receptionist, lead manager and operations partner — so you can focus on what truly matters.",
   icons: {

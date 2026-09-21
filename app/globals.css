@@ -47,3 +47,39 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #374151;
 }
+
+/* Minimalist luxury light sweep for editorial eyebrow text: ultra-smooth, calm 60fps glide */
+@keyframes luxuryShimmer {
+  0% {
+    background-position: 150% 0;
+  }
+  100% {
+    background-position: -50% 0;
+  }
+}
+
+.animate-luxury-shimmer {
+  color: #717682;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .animate-luxury-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      #717682 0%,
+      #717682 36%,
+      #9aa2b2 44%,
+      #f1f5f9 50%,
+      #9aa2b2 56%,
+      #717682 64%,
+      #717682 100%
+    );
+    background-size: 200% 100%;
+    animation: luxuryShimmer 9s linear infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    will-change: background-position;
+    transform: translateZ(0);
+  }
+}

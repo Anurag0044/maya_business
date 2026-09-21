@@ -3,7 +3,7 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import LogoCloud from "@/components/LogoCloud";
+import BottomNav from "@/components/BottomNav";
 import RightRail from "@/components/RightRail";
 import BackgroundVideo from "@/components/BackgroundVideo";
 
@@ -29,9 +29,9 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 4. Bottom Social Proof Bar */}
+      {/* 4. Lower Navigation / Capabilities Bar */}
       <div className="relative z-10 w-full px-6 sm:px-10 lg:px-14 pb-3.5 sm:pb-4 lg:pb-5 pt-1">
-        <LogoCloud />
+        <BottomNav />
       </div>
     </main>
   );
