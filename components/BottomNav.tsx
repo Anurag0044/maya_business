@@ -151,6 +151,19 @@ export default function BottomNav() {
           />
         </React.Fragment>
       ))}
+
+      {/* Direct link down to the Light Mode Showcase */}
+      <a
+        href="#maya-agent-showcase"
+        className="group ml-auto flex items-center gap-1.5 text-white/70 hover:text-white transition-colors duration-200 outline-none focus-visible:ring-1 focus-visible:ring-white/40 rounded-full py-1 px-3 bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.12] whitespace-nowrap shrink-0 cursor-pointer"
+      >
+        <span className="text-[9px] sm:text-[9.5px] font-medium tracking-[0.2em] uppercase">
+          Explore Agent
+        </span>
+        <span className="text-[10px] transition-transform duration-200 group-hover:translate-y-0.5">
+          ↓
+        </span>
+      </a>
     </motion.nav>
   );
 }
