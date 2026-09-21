@@ -23,6 +23,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/videos/night_poster.webp"
+          type="image/webp"
+          fetchPriority="high"
+        />
+      </head>
       <body className="antialiased selection:bg-neutral-500/20">
         <ThemeProvider>{children}</ThemeProvider>
       </body>

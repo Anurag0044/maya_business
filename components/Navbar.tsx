@@ -11,7 +11,7 @@ export default function Navbar() {
       <MayaBrand />
 
       {/* Navigation Links: Disciplined True Center Alignment */}
-      <nav className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 lg:gap-3 text-[13px] font-normal tracking-[0.01em] text-[#9ca3af]">
+      <nav className="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center gap-2 lg:gap-3 text-[13px] font-normal tracking-[0.01em] text-[#9ca3af]">
         <a
           href="#product"
           className="px-3 py-1 rounded-full hover:text-white hover:bg-white/[0.06] transition-all duration-200"
