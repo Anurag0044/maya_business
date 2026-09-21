@@ -16,20 +16,30 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("maya-theme") as Theme | null;
-    if (savedTheme === "light" || savedTheme === "dark") {
-      setThemeState(savedTheme);
-      document.documentElement.classList.toggle("light", savedTheme === "light");
-      document.documentElement.setAttribute("data-theme", savedTheme);
-    } else {
-      document.documentElement.setAttribute("data-theme", "dark");
+    // Night mode is the strict default.
+    // Clean up any stale localStorage override so light mode is never permanently stuck.
+    try {
+      localStorage.removeItem("maya-theme");
+      const sessionTheme = sessionStorage.getItem("maya-theme") as Theme | null;
+      if (sessionTheme === "light") {
+        setThemeState("light");
+        document.documentElement.classList.add("light");
+        document.documentElement.setAttribute("data-theme", "light");
+        return;
+      }
+    } catch {
+      // ignore
     }
+
+    setThemeState("dark");
+    document.documentElement.classList.remove("light");
+    document.documentElement.setAttribute("data-theme", "dark");
   }, []);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
     try {
-      localStorage.setItem("maya-theme", newTheme);
+      sessionStorage.setItem("maya-theme", newTheme);
     } catch {
       // ignore in incognito or restricted mode
     }

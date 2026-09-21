@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   title: "MAYA Business — AI That Works While You Do",
   description:
     "MAYA Business is your always-on AI receptionist, lead manager and operations partner — so you can focus on what truly matters.",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -22,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} dark`} data-theme="dark" suppressHydrationWarning>
       <head>
         <link
           rel="preload"

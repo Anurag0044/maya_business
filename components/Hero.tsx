@@ -40,7 +40,7 @@ export default function Hero() {
           type="button"
           className="group flex items-center gap-3 text-left focus:outline-none cursor-pointer"
         >
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/20 bg-white/[0.04] backdrop-blur-md flex items-center justify-center group-hover:border-white/40 group-hover:bg-white/10 group-hover:scale-105 transition-all duration-200">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/15 bg-white/[0.04] flex items-center justify-center group-hover:border-white/35 group-hover:bg-white/[0.08] transition-all duration-300">
             <svg
               className="w-3 h-3 text-white fill-current ml-0.5"
               viewBox="0 0 24 24"

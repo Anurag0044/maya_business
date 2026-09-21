@@ -7,11 +7,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/Night.mp4",
-        destination: "/videos/Night.mp4",
+        destination: "/videos/NIGHT_1080p.mp4",
       },
       {
         source: "/Day.mp4",
-        destination: "/videos/Day.mp4",
+        destination: "/videos/DAY_1080p.mp4",
       },
     ];
   },

@@ -5,16 +5,17 @@ import { useTheme } from "@/context/ThemeContext";
 
 export default function BackgroundVideo() {
   const { theme } = useTheme();
-  const nightVideoRef = useRef<HTMLVideoElement>(null);
-  const dayVideoRef = useRef<HTMLVideoElement>(null);
+  const nightVideoRef = useRef<HTMLVideoElement | null>(null);
+  const dayVideoRef = useRef<HTMLVideoElement | null>(null);
   const settleTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const retryCountRef = useRef({ day: 0, night: 0 });
+  const isSwitchingRef = useRef(false);
 
+  // Night mode is strictly the default
   const isLight = theme === "light";
   const isInitialMount = useRef(true);
 
-  // Ready states for instant poster-to-video crossfade (eliminates black flashes)
-  const [nightVideoReady, setNightVideoReady] = useState(false);
+  // Ready states for instant poster-to-video crossfade (night is default, ready immediately)
+  const [nightVideoReady, setNightVideoReady] = useState(true);
   const [dayVideoReady, setDayVideoReady] = useState(false);
 
   // Track transition state for zero-dip crossfade
@@ -24,10 +25,24 @@ export default function BackgroundVideo() {
   const [dayZIndex, setDayZIndex] = useState(isLight ? 20 : 10);
   const [nightZIndex, setNightZIndex] = useState(isLight ? 10 : 20);
 
-  // Accessibility: respect reduced motion preferences
-  const [reducedMotion, setReducedMotion] = useState(false);
+  // Safe playback trigger configuring DOM properties before play()
+  const safePlay = useCallback((video: HTMLVideoElement | null) => {
+    if (!video) return;
+    video.defaultMuted = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Will resume on gesture or buffer recovery
+      });
+    }
+  }, []);
 
-  // Synchronize playback timestamps so the 3D scene camera angles match 1:1
+  // Synchronize playback timestamps so 3D scene camera angles match 1:1
   const syncPlaybackTime = useCallback(
     (source: HTMLVideoElement, target: HTMLVideoElement) => {
       if (
@@ -42,61 +57,51 @@ export default function BackgroundVideo() {
     []
   );
 
-  // Network error recovery engine with exponential backoff
-  const handleVideoError = useCallback(
-    (video: HTMLVideoElement | null, type: "day" | "night") => {
-      if (!video) return;
-      if (retryCountRef.current[type] < 3) {
-        retryCountRef.current[type]++;
-        const resumeTime = video.currentTime || 0;
-        const delay = retryCountRef.current[type] * 1200;
-        setTimeout(() => {
-          video.load();
-          video.currentTime = resumeTime;
-          const isActive = (type === "day" && isLight) || (type === "night" && !isLight);
-          if (isActive && !reducedMotion) {
-            video.play().catch(() => {});
-          }
-        }, delay);
-      }
-    },
-    [isLight, reducedMotion]
-  );
-
-  // Network buffer stall recovery: resume playback smoothly when buffer recovers
+  // Buffer recovery: resume playback smoothly when buffer recovers
   const handleBufferRecovery = useCallback(() => {
     const active = isLight ? dayVideoRef.current : nightVideoRef.current;
-    if (active && active.paused && !reducedMotion) {
-      active.play().catch(() => {});
+    if (active && active.paused) {
+      safePlay(active);
     }
-  }, [isLight, reducedMotion]);
+  }, [isLight, safePlay]);
 
-  // Check prefers-reduced-motion
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mediaQuery.matches);
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setReducedMotion(e.matches);
-      if (e.matches) {
-        dayVideoRef.current?.pause();
-        nightVideoRef.current?.pause();
-      } else {
-        const active = isLight ? dayVideoRef.current : nightVideoRef.current;
-        active?.play().catch(() => {});
+  // Callback refs to configure video DOM properties immediately upon mount
+  const initNightVideo = useCallback(
+    (el: HTMLVideoElement | null) => {
+      if (el) {
+        el.defaultMuted = true;
+        el.muted = true;
+        el.playsInline = true;
+        nightVideoRef.current = el;
+        if (!isLight && el.paused) {
+          safePlay(el);
+        }
       }
-    };
+    },
+    [isLight, safePlay]
+  );
 
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [isLight]);
+  const initDayVideo = useCallback(
+    (el: HTMLVideoElement | null) => {
+      if (el) {
+        el.defaultMuted = true;
+        el.muted = true;
+        el.playsInline = true;
+        dayVideoRef.current = el;
+        if (isLight && el.paused) {
+          safePlay(el);
+        }
+      }
+    },
+    [isLight, safePlay]
+  );
 
-  // Apple-grade Single-Active-Decoder Engine & Theme Transition
+  // Theme Transition Engine & Active Video Playback
   useEffect(() => {
     const activeVideo = isLight ? dayVideoRef.current : nightVideoRef.current;
     const previousVideo = isLight ? nightVideoRef.current : dayVideoRef.current;
 
-    // Clear any pending settle timer from previous rapid clicks
+    // Clear any pending settle timer from rapid clicks
     if (settleTimerRef.current) {
       clearTimeout(settleTimerRef.current);
       settleTimerRef.current = null;
@@ -117,39 +122,34 @@ export default function BackgroundVideo() {
         setDayOpacity(0);
       }
 
-      // Start ONLY the active video on mount to save 50% GPU/decoder resources
-      if (activeVideo && !reducedMotion) {
-        activeVideo.play().catch(() => {});
+      if (activeVideo) {
+        safePlay(activeVideo);
       }
       return;
     }
 
     // On theme toggle:
+    isSwitchingRef.current = true;
+
     // 1. Instantly synchronize camera timestamp
     if (activeVideo && previousVideo) {
       syncPlaybackTime(previousVideo, activeVideo);
-      if (!reducedMotion) {
-        activeVideo.play().catch(() => {});
-      }
+      safePlay(activeVideo);
     }
 
     if (isLight) {
       // Transitioning to DAY:
-      // Elevate Day to top layer (z: 20), keep Night visible underneath (z: 10, opacity: 1)
       setDayZIndex(20);
       setNightZIndex(10);
       setNightOpacity(1);
 
-      // Trigger Day fade-in on next animation frame
       const frame = requestAnimationFrame(() => {
         setDayOpacity(1);
       });
 
-      // After 1200ms transition settles:
-      // 1. Cleanly set Night's opacity under Day to 0
-      // 2. PAUSE Night video to completely release GPU decoder resources!
       settleTimerRef.current = setTimeout(() => {
         setNightOpacity(0);
+        isSwitchingRef.current = false;
         if (nightVideoRef.current && !nightVideoRef.current.paused) {
           nightVideoRef.current.pause();
         }
@@ -160,21 +160,17 @@ export default function BackgroundVideo() {
       };
     } else {
       // Transitioning to NIGHT:
-      // Elevate Night to top layer (z: 20), keep Day visible underneath (z: 10, opacity: 1)
       setNightZIndex(20);
       setDayZIndex(10);
       setDayOpacity(1);
 
-      // Trigger Night fade-in on next frame
       const frame = requestAnimationFrame(() => {
         setNightOpacity(1);
       });
 
-      // After 1200ms transition settles:
-      // 1. Cleanly set Day's opacity under Night to 0
-      // 2. PAUSE Day video to completely release GPU decoder resources!
       settleTimerRef.current = setTimeout(() => {
         setDayOpacity(0);
+        isSwitchingRef.current = false;
         if (dayVideoRef.current && !dayVideoRef.current.paused) {
           dayVideoRef.current.pause();
         }
@@ -184,79 +180,66 @@ export default function BackgroundVideo() {
         cancelAnimationFrame(frame);
       };
     }
-  }, [isLight, syncPlaybackTime, reducedMotion]);
+  }, [isLight, syncPlaybackTime, safePlay]);
 
-  // Global Page Visibility, Network Online Recovery & Browser Autoplay Handling
+  // Always-Play Guarantee Engine:
+  // Keep background video running continuously, never pause when switching tabs/windows,
+  // recover automatically from user interaction, buffer stalls, or browser power-saving throttles.
   useEffect(() => {
-    const videos = [nightVideoRef.current, dayVideoRef.current].filter(
-      Boolean
-    ) as HTMLVideoElement[];
-
-    // Ensure audio tracks are strictly disabled for background video
-    videos.forEach((video) => {
-      video.defaultMuted = true;
-      video.muted = true;
-      video.playsInline = true;
-    });
-
     const activeVideo = isLight ? dayVideoRef.current : nightVideoRef.current;
-    if (activeVideo && !reducedMotion) {
-      activeVideo.play().catch(() => {});
+    if (activeVideo) {
+      safePlay(activeVideo);
     }
 
-    // 1. VisibilityChange: Pause video when tab is hidden, resume when tab is active
-    const handleVisibilityChange = () => {
+    // 1. Visibility change & window focus: verify active video is playing
+    const handleActive = () => {
       const active = isLight ? dayVideoRef.current : nightVideoRef.current;
-      if (!active) return;
-      if (document.visibilityState === "hidden") {
-        active.pause();
-      } else if (document.visibilityState === "visible") {
-        if (!reducedMotion) {
-          active.play().catch(() => {});
-        }
+      if (active && active.paused) {
+        safePlay(active);
       }
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // 2. Online/Offline Recovery: Automatically resume video when internet reconnects
-    const handleOnline = () => {
-      const active = isLight ? dayVideoRef.current : nightVideoRef.current;
-      if (active && active.paused && !reducedMotion) {
-        active.play().catch(() => {});
-      }
-    };
-    window.addEventListener("online", handleOnline);
+    document.addEventListener("visibilitychange", handleActive);
+    window.addEventListener("focus", handleActive);
+    window.addEventListener("online", handleActive);
 
-    // 3. User Gesture Autoplay Unlock: For strict browser policies or Low Power Mode
+    // 2. User Gesture Autoplay Unlock (pointer, touch, scroll, key)
     const handleUserGesture = () => {
       const active = isLight ? dayVideoRef.current : nightVideoRef.current;
-      if (active && active.paused && !reducedMotion) {
-        active.play().catch(() => {});
+      if (active && active.paused) {
+        safePlay(active);
       }
-      cleanupUserGestures();
-    };
-
-    const cleanupUserGestures = () => {
-      window.removeEventListener("pointerdown", handleUserGesture);
-      window.removeEventListener("touchstart", handleUserGesture);
-      window.removeEventListener("keydown", handleUserGesture);
-      window.removeEventListener("scroll", handleUserGesture);
     };
 
     window.addEventListener("pointerdown", handleUserGesture, { passive: true });
     window.addEventListener("touchstart", handleUserGesture, { passive: true });
     window.addEventListener("keydown", handleUserGesture, { passive: true });
     window.addEventListener("scroll", handleUserGesture, { passive: true });
+    window.addEventListener("click", handleUserGesture, { passive: true });
+
+    // 3. Heartbeat Watcher: Ensures background video NEVER remains paused unexpectedly
+    const heartbeat = setInterval(() => {
+      const active = isLight ? dayVideoRef.current : nightVideoRef.current;
+      if (active && active.paused && !isSwitchingRef.current) {
+        safePlay(active);
+      }
+    }, 2000);
 
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("online", handleOnline);
-      cleanupUserGestures();
+      document.removeEventListener("visibilitychange", handleActive);
+      window.removeEventListener("focus", handleActive);
+      window.removeEventListener("online", handleActive);
+      window.removeEventListener("pointerdown", handleUserGesture);
+      window.removeEventListener("touchstart", handleUserGesture);
+      window.removeEventListener("keydown", handleUserGesture);
+      window.removeEventListener("scroll", handleUserGesture);
+      window.removeEventListener("click", handleUserGesture);
+      clearInterval(heartbeat);
       if (settleTimerRef.current) {
         clearTimeout(settleTimerRef.current);
       }
     };
-  }, [isLight, reducedMotion]);
+  }, [isLight, safePlay]);
 
   return (
     <div
@@ -309,7 +292,7 @@ export default function BackgroundVideo() {
       {/* ========================================================================= */}
       {/* Night Video Layer */}
       <video
-        ref={nightVideoRef}
+        ref={initNightVideo}
         autoPlay={!isLight}
         loop
         muted
@@ -318,9 +301,29 @@ export default function BackgroundVideo() {
         poster="/videos/night_poster.webp"
         onPlaying={() => setNightVideoReady(true)}
         onLoadedData={() => setNightVideoReady(true)}
-        onCanPlay={handleBufferRecovery}
+        onCanPlay={() => {
+          setNightVideoReady(true);
+          handleBufferRecovery();
+        }}
         onWaiting={handleBufferRecovery}
-        onError={() => handleVideoError(nightVideoRef.current, "night")}
+        onEnded={(e) => {
+          e.currentTarget.currentTime = 0;
+          safePlay(e.currentTarget);
+        }}
+        onPause={(e) => {
+          if (!isLight && !isSwitchingRef.current) {
+            safePlay(e.currentTarget);
+          }
+        }}
+        onError={() => {
+          const vid = nightVideoRef.current;
+          if (vid && !isLight) {
+            setTimeout(() => {
+              vid.load();
+              safePlay(vid);
+            }, 1000);
+          }
+        }}
         style={{
           opacity: nightVideoReady ? nightOpacity : 0,
           zIndex: nightZIndex,
@@ -331,14 +334,13 @@ export default function BackgroundVideo() {
         }}
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
       >
-        <source src="/videos/NIGHT_1080p.webm" type="video/webm" media="(max-width: 1920px)" />
-        <source src="/videos/NIGHT_1080p.mp4" type="video/mp4" media="(max-width: 1920px)" />
-        <source src="/videos/NIGHT.mp4" type="video/mp4" />
+        <source src="/videos/NIGHT_1080p.webm" type="video/webm" />
+        <source src="/videos/NIGHT_1080p.mp4" type="video/mp4" />
       </video>
 
       {/* Day Video Layer */}
       <video
-        ref={dayVideoRef}
+        ref={initDayVideo}
         autoPlay={isLight}
         loop
         muted
@@ -347,9 +349,29 @@ export default function BackgroundVideo() {
         poster="/videos/day_poster.webp"
         onPlaying={() => setDayVideoReady(true)}
         onLoadedData={() => setDayVideoReady(true)}
-        onCanPlay={handleBufferRecovery}
+        onCanPlay={() => {
+          setDayVideoReady(true);
+          handleBufferRecovery();
+        }}
         onWaiting={handleBufferRecovery}
-        onError={() => handleVideoError(dayVideoRef.current, "day")}
+        onEnded={(e) => {
+          e.currentTarget.currentTime = 0;
+          safePlay(e.currentTarget);
+        }}
+        onPause={(e) => {
+          if (isLight && !isSwitchingRef.current) {
+            safePlay(e.currentTarget);
+          }
+        }}
+        onError={() => {
+          const vid = dayVideoRef.current;
+          if (vid && isLight) {
+            setTimeout(() => {
+              vid.load();
+              safePlay(vid);
+            }, 1000);
+          }
+        }}
         style={{
           opacity: dayVideoReady ? dayOpacity : 0,
           zIndex: dayZIndex,
@@ -360,9 +382,8 @@ export default function BackgroundVideo() {
         }}
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
       >
-        <source src="/videos/DAY_1080p.webm" type="video/webm" media="(max-width: 1920px)" />
-        <source src="/videos/DAY_1080p.mp4" type="video/mp4" media="(max-width: 1920px)" />
-        <source src="/videos/DAY.mp4" type="video/mp4" />
+        <source src="/videos/DAY_1080p.webm" type="video/webm" />
+        <source src="/videos/DAY_1080p.mp4" type="video/mp4" />
       </video>
 
       {/* ========================================================================= */}

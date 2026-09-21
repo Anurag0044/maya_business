@@ -56,136 +56,67 @@ export default function ThemeToggle({ className = "" }: ThemeToggleProps) {
             : "bg-[#0b0d11] hover:bg-[#13161e] border border-[#1e232f] hover:border-[#333c4e] text-[#f3f4f6]"
         }`}
       >
-        {/* Minimal Architectural Kinetic Glyph */}
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          className="w-4.5 h-4.5 sm:w-5 sm:h-5 transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)]"
-          style={{
-            transform: isDay ? "rotate(90deg)" : "rotate(0deg)",
-          }}
-        >
-          <mask id={maskId}>
-            <rect x="0" y="0" width="24" height="24" fill="white" />
+        <div className="relative w-4.5 h-4.5 sm:w-5 sm:h-5 flex items-center justify-center">
+          {/* Night Mode: Exact Original Mathematical Crescent Moon Glyph */}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className={`w-full h-full transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+              isDay
+                ? "opacity-0 scale-75 rotate-45 pointer-events-none absolute"
+                : "opacity-100 scale-100 rotate-0"
+            }`}
+            aria-hidden="true"
+          >
+            <mask id={maskId}>
+              <rect x="0" y="0" width="24" height="24" fill="white" />
+              <circle
+                cx="12"
+                cy="12"
+                r="4.8"
+                fill="black"
+                style={{
+                  transform: "translate(4.8px, -4.8px)",
+                }}
+              />
+            </mask>
             <circle
               cx="12"
               cy="12"
-              r="4.8"
-              fill="black"
-              style={{
-                transform: isDay
-                  ? "translate(16px, -16px)"
-                  : "translate(4.8px, -4.8px)",
-                transition: "transform 0.3s cubic-bezier(0.2, 0, 0, 1)",
-              }}
+              r="5"
+              mask={`url(#${maskId})`}
+              fill="currentColor"
             />
-          </mask>
+          </svg>
 
-          {/* Core Celestial Body (Razor-sharp Crescent in Night, Clean Disc in Day) */}
-          <circle
-            cx="12"
-            cy="12"
-            r="5"
-            mask={`url(#${maskId})`}
-            fill="currentColor"
-            style={{
-              transform: isDay ? "scale(0.85)" : "scale(1)",
-              transformOrigin: "12px 12px",
-              transition: "transform 0.3s cubic-bezier(0.2, 0, 0, 1)",
-            }}
-          />
-
-          {/* Architectural Cardinal & Diagonal Precision Ticks */}
-          <g
-            style={{
-              transform: isDay ? "scale(1)" : "scale(0.2)",
-              opacity: isDay ? 1 : 0,
-              transformOrigin: "12px 12px",
-              transition:
-                "transform 0.28s cubic-bezier(0.2, 0, 0, 1), opacity 0.2s ease",
-            }}
+          {/* Light Mode: Minimal & Premium Pill-Ray Sun Glyph */}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.85"
+            strokeLinecap="round"
+            className={`w-full h-full transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+              isDay
+                ? "opacity-100 scale-100 rotate-0"
+                : "opacity-0 scale-75 -rotate-45 pointer-events-none absolute"
+            }`}
+            aria-hidden="true"
           >
-            {/* 4 Cardinal Crosshair Ticks */}
-            <line
-              x1="12"
-              y1="1.8"
-              x2="12"
-              y2="4.4"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <line
-              x1="22.2"
-              y1="12"
-              x2="19.6"
-              y2="12"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <line
-              x1="12"
-              y1="22.2"
-              x2="12"
-              y2="19.6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <line
-              x1="1.8"
-              y1="12"
-              x2="4.4"
-              y2="12"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
+            {/* Center Precision Ring */}
+            <circle cx="12" cy="12" r="4.2" />
 
-            {/* 4 Subtle Diagonal Micro-ticks */}
-            <line
-              x1="12"
-              y1="2.6"
-              x2="12"
-              y2="4.4"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              transform="rotate(45 12 12)"
-            />
-            <line
-              x1="12"
-              y1="2.6"
-              x2="12"
-              y2="4.4"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              transform="rotate(135 12 12)"
-            />
-            <line
-              x1="12"
-              y1="2.6"
-              x2="12"
-              y2="4.4"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              transform="rotate(225 12 12)"
-            />
-            <line
-              x1="12"
-              y1="2.6"
-              x2="12"
-              y2="4.4"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              transform="rotate(315 12 12)"
-            />
-          </g>
-        </svg>
+            {/* 8 Symmetrical Radial Pill Rays */}
+            <line x1="12" y1="2.4" x2="12" y2="4.8" />
+            <line x1="12" y1="2.4" x2="12" y2="4.8" transform="rotate(45 12 12)" />
+            <line x1="12" y1="2.4" x2="12" y2="4.8" transform="rotate(90 12 12)" />
+            <line x1="12" y1="2.4" x2="12" y2="4.8" transform="rotate(135 12 12)" />
+            <line x1="12" y1="2.4" x2="12" y2="4.8" transform="rotate(180 12 12)" />
+            <line x1="12" y1="2.4" x2="12" y2="4.8" transform="rotate(225 12 12)" />
+            <line x1="12" y1="2.4" x2="12" y2="4.8" transform="rotate(270 12 12)" />
+            <line x1="12" y1="2.4" x2="12" y2="4.8" transform="rotate(315 12 12)" />
+          </svg>
+        </div>
       </button>
     </div>
   );
