@@ -28,7 +28,11 @@ class OpenAICompatibleLLMProvider:
     def __init__(self, *, api_key: str, base_url: str, model: str) -> None:
         from openai import AsyncOpenAI
 
-        self.client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+        self.client = AsyncOpenAI(
+            api_key=api_key,
+            base_url=base_url,
+            timeout=90.0,  # seconds — default is 600s which causes silent hangs
+        )
         self.model = model
 
     async def generate(
@@ -50,14 +54,30 @@ class OpenAICompatibleLLMProvider:
         return content.strip() if content else None
 
 
-class NVIDIAKimiProvider(OpenAICompatibleLLMProvider):
-    """NVIDIA NIM adapter for Moonshot Kimi K3 (reasoning model).
+class GroqProvider(OpenAICompatibleLLMProvider):
+    """Groq LPU adapter — Llama 3.1 / other open-source models via Groq.
 
-    Kimi K3 is a chain-of-thought / reasoning model — the same family as
-    OpenAI o1/o3.  These models do NOT accept a ``temperature`` parameter
-    (any value other than 1 returns a 400 from the API).  Instead they
-    expose ``reasoning_effort`` to trade off latency against answer quality.
+    Groq's inference is OpenAI-compatible, extremely fast (800+ tokens/sec),
+    and has a generous free tier — making it the recommended provider for
+    development and early production.
     """
+
+    def __init__(self) -> None:
+        if not settings.groq_api_key:
+            raise RuntimeError(
+                "GROQ_API_KEY is not configured. "
+                "Get a free key at https://console.groq.com/keys "
+                "and add it to backend/.env"
+            )
+        super().__init__(
+            api_key=settings.groq_api_key,
+            base_url=settings.groq_base_url,
+            model=settings.groq_chat_model,
+        )
+
+
+class NVIDIAProvider(OpenAICompatibleLLMProvider):
+    """NVIDIA NIM adapter — works with any NVIDIA-hosted model."""
 
     def __init__(self) -> None:
         if not settings.nvidia_api_key:
@@ -68,26 +88,9 @@ class NVIDIAKimiProvider(OpenAICompatibleLLMProvider):
             model=settings.nvidia_chat_model,
         )
 
-    async def generate(
-        self,
-        *,
-        system_prompt: str,
-        user_prompt: str,
-        temperature: float = 1.0,          # accepted value for reasoning models; kept for interface compat
-        reasoning_effort: str = "low",     # "low" | "medium" | "max"
-    ) -> str | None:
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            # temperature is intentionally omitted — reasoning models reject any value != 1
-            # and the OpenAI SDK still sends it even when set to 1, causing API errors.
-            extra_body={"reasoning_effort": reasoning_effort},
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_prompt},
-            ],
-        )
-        content = response.choices[0].message.content
-        return content.strip() if content else None
+
+# Backwards-compatible alias kept in case other code references the old name.
+NVIDIAKimiProvider = NVIDIAProvider
 
 
 class OpenAIProvider(OpenAICompatibleLLMProvider):
@@ -108,10 +111,15 @@ def get_llm_provider() -> LLMProvider | None:
 
     provider = settings.llm_provider.lower().strip()
 
+    if provider == "groq":
+        if not settings.groq_api_key:
+            return None
+        return GroqProvider()
+
     if provider == "nvidia":
         if not settings.nvidia_api_key:
             return None
-        return NVIDIAKimiProvider()
+        return NVIDIAProvider()
 
     if provider == "openai":
         if not settings.openai_api_key:

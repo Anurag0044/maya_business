@@ -38,7 +38,7 @@ try:
         headers=headers,
         json=payload,
         stream=True,
-        timeout=60,
+        timeout=180,   # Kimi K3 reasoning needs up to ~2 min for first token
     )
 
     print("HTTP status:", response.status_code)
