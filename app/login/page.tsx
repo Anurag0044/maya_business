@@ -134,7 +134,7 @@ export default function LoginPage() {
             <h1 className="text-[clamp(2.15rem,3.4vw,3.65rem)] font-light tracking-[-0.03em] leading-[1.05] text-white space-y-0.5">
               <div>Operate</div>
               <div>Smarter.</div>
-              <div className="text-[#586072]">Go Further.</div>
+              <div className="text-[#8e98ab]">Go Further.</div>
             </h1>
           </motion.div>
         </div>
@@ -178,7 +178,7 @@ export default function LoginPage() {
                     {/* Headline */}
                     <h2 className="text-[23px] sm:text-[25px] font-light tracking-[-0.025em] leading-[1.24] sm:leading-[1.26] space-y-1">
                       <div className="text-white">Sign in to</div>
-                      <div className="text-[#586072]">MAYA Business.</div>
+                      <div className="text-[#8e98ab]">MΛYΛ Business.</div>
                     </h2>
                   </div>
 
@@ -345,7 +345,7 @@ export default function LoginPage() {
 
                     <h2 className="text-[23px] sm:text-[25px] font-light tracking-[-0.025em] leading-[1.24] sm:leading-[1.26] space-y-1">
                       <div className="text-white">Create your</div>
-                      <div className="text-[#586072]">MAYA Account.</div>
+                      <div className="text-[#8e98ab]">MΛYΛ Account.</div>
                     </h2>
                   </div>
 
