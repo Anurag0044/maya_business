@@ -76,23 +76,6 @@ class GroqProvider(OpenAICompatibleLLMProvider):
         )
 
 
-class NVIDIAProvider(OpenAICompatibleLLMProvider):
-    """NVIDIA NIM adapter — works with any NVIDIA-hosted model."""
-
-    def __init__(self) -> None:
-        if not settings.nvidia_api_key:
-            raise RuntimeError("NVIDIA_API_KEY is not configured")
-        super().__init__(
-            api_key=settings.nvidia_api_key,
-            base_url=settings.nvidia_base_url,
-            model=settings.nvidia_chat_model,
-        )
-
-
-# Backwards-compatible alias kept in case other code references the old name.
-NVIDIAKimiProvider = NVIDIAProvider
-
-
 class OpenAIProvider(OpenAICompatibleLLMProvider):
     """Optional OpenAI adapter retained for development/fallback use."""
 
@@ -115,11 +98,6 @@ def get_llm_provider() -> LLMProvider | None:
         if not settings.groq_api_key:
             return None
         return GroqProvider()
-
-    if provider == "nvidia":
-        if not settings.nvidia_api_key:
-            return None
-        return NVIDIAProvider()
 
     if provider == "openai":
         if not settings.openai_api_key:

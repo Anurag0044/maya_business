@@ -32,11 +32,6 @@ class Settings(BaseSettings):
     groq_base_url: str = "https://api.groq.com/openai/v1"
     groq_chat_model: str = "llama-3.1-8b-instant"
 
-    # --- NVIDIA NIM (kept as fallback) ---
-    nvidia_api_key: str | None = None
-    nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
-    nvidia_chat_model: str = "nvidia/nemotron-3.5-lightning-30b-a3b"
-
     # --- OpenAI (retained for embeddings and optional fallback) ---
     openai_api_key: str | None = None
     openai_base_url: str = "https://api.openai.com/v1"
