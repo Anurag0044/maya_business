@@ -11,10 +11,12 @@ import {
   BarChart2,
   CheckCircle2,
   RotateCcw,
-  Send,
+  ArrowUp,
   Activity,
   ArrowUpRight,
+  MessageSquare,
 } from "lucide-react";
+import GeometricThinkingAnimation from "./GeometricThinkingAnimation";
 
 interface MayaWorkspaceAnimationProps {
   isDark: boolean;
@@ -28,7 +30,7 @@ type AnimationPhase =
   | "building"
   | "dashboard";
 
-const PROMPT_TEXT = "Maya show me today's analytic updates";
+const PROMPT_TEXT = "How did our business perform today?";
 
 // Signature MAYA Geometric Brand Mark
 function MayaBrandMark({
@@ -61,6 +63,99 @@ function MayaBrandMark({
   );
 }
 
+// Apple-caliber fluid S-curve: smooth ease-in-out cubic for organic rolling numbers
+function appleSmoothEase(t: number): number {
+  return t < 0.5
+    ? 4 * t * t * t
+    : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function AppleCountUp({
+  value,
+  duration = 2.4,
+  delay = 0.25,
+  decimals = 0,
+  suffix = "",
+}: {
+  value: number;
+  duration?: number;
+  delay?: number;
+  decimals?: number;
+  suffix?: string;
+}) {
+  const [displayVal, setDisplayVal] = useState(0);
+
+  useEffect(() => {
+    let startTimestamp: number | null = null;
+    let reqId: number;
+    const delayMs = delay * 1000;
+    const durationMs = duration * 1000;
+
+    const timer = setTimeout(() => {
+      const step = (timestamp: number) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const elapsed = timestamp - startTimestamp;
+        const progress = Math.min(elapsed / durationMs, 1);
+        // Apple fluid S-curve: gentle awakening, mid-flight velocity, velvety deceleration
+        const eased = appleSmoothEase(progress);
+        const current = eased * value;
+
+        setDisplayVal(current);
+
+        if (progress < 1) {
+          reqId = requestAnimationFrame(step);
+        } else {
+          setDisplayVal(value);
+        }
+      };
+      reqId = requestAnimationFrame(step);
+    }, delayMs);
+
+    return () => {
+      clearTimeout(timer);
+      if (reqId) cancelAnimationFrame(reqId);
+    };
+  }, [value, duration, delay]);
+
+  return (
+    <span>
+      {decimals > 0 ? displayVal.toFixed(decimals) : Math.round(displayVal)}
+      {suffix}
+    </span>
+  );
+}
+
+// Apple-grade staggered fluid card entrance animation
+const cardMotion = (idx: number) => ({
+  initial: { opacity: 0, y: 14, scale: 0.97 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  transition: {
+    duration: 0.55,
+    ease: [0.16, 1, 0.3, 1] as const,
+    delay: idx * 0.07,
+  },
+});
+
+// Biomechanical Cubic Bézier point evaluation for natural human motor trajectories
+function getCubicBezier(
+  p0: { x: number; y: number },
+  p1: { x: number; y: number },
+  p2: { x: number; y: number },
+  p3: { x: number; y: number },
+  t: number
+) {
+  const u = 1 - t;
+  const tt = t * t;
+  const uu = u * u;
+  const uuu = uu * u;
+  const ttt = tt * t;
+
+  return {
+    x: uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x,
+    y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y,
+  };
+}
+
 export default function MayaWorkspaceAnimation({
   isDark,
 }: MayaWorkspaceAnimationProps) {
@@ -88,7 +183,7 @@ export default function MayaWorkspaceAnimation({
   });
 
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
-  const runAnimationRef = useRef<() => void>(() => {});
+  const runAnimationRef = useRef<() => void>(() => { });
 
   // Dynamic target position calculation relative to stage (always measures real DOM)
   const getTargetPos = useCallback(() => {
@@ -104,7 +199,7 @@ export default function MayaWorkspaceAnimation({
     if (promptInputRef.current) {
       const i = promptInputRef.current.getBoundingClientRect();
       if (i.width > 0 && i.height > 0) {
-        inputX = i.left - stageRect.left + 28 - 3;
+        inputX = i.left - stageRect.left + 16 - 3;
         inputY = i.top - stageRect.top + i.height / 2 - 3;
       }
     } else if (promptBarRef.current) {
@@ -187,34 +282,62 @@ export default function MayaWorkspaceAnimation({
     timelineRef.current = tl;
 
     // -------------------------------------------------------------
-    // PHASE 1: Slower Deliberate Cursor Glide to Prompt Bar
+    // PHASE 1: Organic Human Cursor Glide to Prompt Bar (Bézier Arc + Fitts's Law Settle)
     // -------------------------------------------------------------
     tl.to(cursor, {
       opacity: 1,
-      duration: 0.6,
-      ease: "power2.out",
+      duration: 0.35,
+      ease: "power1.out",
     });
 
-    // Dynamic function: ALWAYS evaluates live coordinates of prompt input
+    const targetPos = getTargetPos();
+    const p0 = { x: initX, y: initY };
+    const dx = targetPos.inputX - p0.x;
+    const dy = targetPos.inputY - p0.y;
+    const dist = Math.hypot(dx, dy);
+
+    // Biomechanical wrist arc offsets (proportional to distance)
+    const arcX = Math.sign(dx) * Math.min(26, Math.max(10, Math.abs(dx) * 0.055));
+    const arcY = Math.min(32, Math.max(12, dist * 0.075));
+
+    const p1 = { x: p0.x + dx * 0.32 + arcX, y: p0.y + dy * 0.18 + arcY };
+    const p2 = { x: p0.x + dx * 0.74 - arcX * 0.5, y: p0.y + dy * 0.82 - arcY * 0.25 };
+    const pOver = { x: targetPos.inputX - 2.4, y: targetPos.inputY + 1.6 };
+
+    const approachFlight = { t: 0 };
     tl.to(
-      cursor,
+      approachFlight,
       {
-        x: () => getTargetPos().inputX,
-        y: () => getTargetPos().inputY,
-        rotate: -2,
-        duration: 2.2,
+        t: 1,
+        duration: 1.65,
         ease: "power2.inOut",
+        onUpdate: () => {
+          const pt = getCubicBezier(p0, p1, p2, pOver, approachFlight.t);
+          // Subtle dynamic banking / tilt along velocity
+          const tilt = -10 + approachFlight.t * 9 + Math.sin(approachFlight.t * Math.PI) * 2;
+          gsap.set(cursor, { x: pt.x, y: pt.y, rotate: tilt });
+        },
       },
-      "<+=0.1"
+      "<+=0.05"
     );
 
-    // Intentional pause before clicking into the prompt
-    tl.to({}, { duration: 0.3 });
-
-    // Cursor click compression on prompt bar
+    // Fitts's law corrective micro-settle onto input target
     tl.to(cursor, {
-      scale: 0.82,
-      duration: 0.15,
+      x: () => getTargetPos().inputX,
+      y: () => getTargetPos().inputY,
+      rotate: -1,
+      duration: 0.18,
+      ease: "power1.out",
+    });
+
+    // Human ocular verification pause before clicking
+    tl.to({}, { duration: 0.16 });
+
+    // Tactile click compression on prompt bar
+    tl.to(cursor, {
+      scale: 0.86,
+      y: "+=1.2",
+      duration: 0.10,
       ease: "power1.in",
       onComplete: () => {
         setIsFocused(true);
@@ -229,28 +352,30 @@ export default function MayaWorkspaceAnimation({
       },
     });
 
+    // Elastic mouse-up release
     tl.to(cursor, {
       scale: 1,
-      duration: 0.22,
+      y: "-=1.2",
+      duration: 0.18,
       ease: "back.out(2)",
     });
 
-    // Deliberate pause before typing begins
-    tl.to({}, { duration: 0.45 });
+    // Cognitive delay as hands move to keyboard
+    tl.to({}, { duration: 0.28 });
 
     // -------------------------------------------------------------
-    // PHASE 2: Slower, Realistic, Confident Typing Cadence
+    // PHASE 2: Realistic Human Typing Cadence with Natural Parking & Anticipatory Glide
     // -------------------------------------------------------------
     tl.call(() => {
       setPhase("typing");
     });
 
-    // Slower typing speed: words flow with clear, human-like cadence
+    // Fluent, confident typing cadence (faster)
     for (let i = 1; i <= PROMPT_TEXT.length; i++) {
       const sub = PROMPT_TEXT.substring(0, i);
       const isSpace = PROMPT_TEXT[i - 1] === " ";
-      // Spaces give a thoughtful breath between words; letters type at ~0.12s-0.16s
-      const delay = isSpace ? 0.3 : 0.12 + Math.random() * 0.04;
+      // Crisp, responsive cadence: ~50-65ms per letter, 120ms on space
+      const delay = isSpace ? 0.12 : 0.048 + Math.random() * 0.018;
 
       tl.to({}, {
         duration: delay,
@@ -258,10 +383,40 @@ export default function MayaWorkspaceAnimation({
           setTypedText(sub);
         },
       });
+
+      // At character 2: user's hand relaxes and parks mouse slightly out of the way
+      if (i === 2) {
+        tl.to(
+          cursor,
+          {
+            x: () => getTargetPos().inputX + 36,
+            y: () => getTargetPos().inputY + 22,
+            rotate: 0,
+            duration: 0.40,
+            ease: "power1.out",
+          },
+          "<"
+        );
+      }
+
+      // At character 25: hand returns to mouse; anticipatory drift towards Send button
+      if (i === 25) {
+        tl.to(
+          cursor,
+          {
+            x: () => getTargetPos().sendX - 36,
+            y: () => getTargetPos().sendY + 12,
+            rotate: 2,
+            duration: 0.50,
+            ease: "power1.inOut",
+          },
+          "<"
+        );
+      }
     }
 
-    // Deliberate pause after finishing typing
-    tl.to({}, { duration: 0.5 });
+    // Deliberate brief pause after finishing typing
+    tl.to({}, { duration: 0.14 });
 
     // Activate Send button visual state
     tl.call(() => {
@@ -270,28 +425,62 @@ export default function MayaWorkspaceAnimation({
     });
 
     // -------------------------------------------------------------
-    // SLOW DELIBERATE GLIDE TO SEND BUTTON + CLICK
+    // PHASE 2.5: Curved Glide to Send Button + Tactile Click
     // -------------------------------------------------------------
-    // Dynamic function: ALWAYS evaluates live coordinates of Send button
-    tl.to(
-      cursor,
-      {
-        x: () => getTargetPos().sendX,
-        y: () => getTargetPos().sendY,
-        rotate: 0,
-        duration: 1.8,
-        ease: "power2.inOut",
+    const sendFlight: {
+      t: number;
+      p0?: { x: number; y: number };
+      p1?: { x: number; y: number };
+      p2?: { x: number; y: number };
+      pOver?: { x: number; y: number };
+    } = { t: 0 };
+
+    tl.to(sendFlight, {
+      t: 1,
+      duration: 0.60,
+      ease: "power2.out",
+      onStart: () => {
+        const pos = getTargetPos();
+        sendFlight.p0 = { x: pos.sendX - 36, y: pos.sendY + 12 };
+        sendFlight.p1 = { x: pos.sendX - 22, y: pos.sendY + 14 };
+        sendFlight.p2 = { x: pos.sendX - 6, y: pos.sendY - 2 };
+        sendFlight.pOver = { x: pos.sendX + 1.2, y: pos.sendY - 0.8 };
       },
-      "+=0.08"
-    );
+      onUpdate: () => {
+        if (sendFlight.p0 && sendFlight.p1 && sendFlight.p2 && sendFlight.pOver) {
+          const pt = getCubicBezier(
+            sendFlight.p0,
+            sendFlight.p1,
+            sendFlight.p2,
+            sendFlight.pOver,
+            sendFlight.t
+          );
+          gsap.set(cursor, { x: pt.x, y: pt.y, rotate: 2 - sendFlight.t * 2 });
+        }
+      },
+    });
 
-    // Deliberate hover pause over the Send button
-    tl.to({}, { duration: 0.35 });
-
-    // Press Send Button down (cursor + button depression effect)
+    // Micro-settle into Send button center
     tl.to(cursor, {
-      scale: 0.78,
-      duration: 0.14,
+      x: () => getTargetPos().sendX,
+      y: () => getTargetPos().sendY,
+      rotate: 0,
+      duration: 0.15,
+      ease: "power1.out",
+    });
+
+    // Hover reaction on Send button + human target confirmation pause
+    tl.to(sendBtnRef.current, {
+      scale: 1.08,
+      duration: 0.16,
+      ease: "power1.out",
+    });
+
+    // Tactile Send button depression
+    tl.to(cursor, {
+      scale: 0.80,
+      y: "+=1",
+      duration: 0.11,
       ease: "power1.in",
     });
 
@@ -299,7 +488,7 @@ export default function MayaWorkspaceAnimation({
       sendBtnRef.current,
       {
         scale: 0.86,
-        duration: 0.14,
+        duration: 0.11,
         ease: "power1.in",
         onComplete: () => {
           if (ripple) {
@@ -315,90 +504,49 @@ export default function MayaWorkspaceAnimation({
       "<"
     );
 
-    // Spring button and cursor back
+    // Elastic spring back
     tl.to(cursor, {
       scale: 1,
-      duration: 0.22,
-      ease: "back.out(2.2)",
+      y: "-=1",
+      duration: 0.18,
+      ease: "back.out(2)",
     });
 
     tl.to(
       sendBtnRef.current,
       {
         scale: 1.05,
-        duration: 0.22,
+        duration: 0.20,
         ease: "back.out(2.2)",
       },
       "<"
     );
 
-    // Cursor drifts naturally away and fades
+    // Natural follow-through relaxation: Hand eases down-right and fades out
     tl.to(cursor, {
       opacity: 0,
-      x: "+=22",
-      y: "+=26",
-      duration: 0.6,
-      ease: "power2.in",
+      x: "+=26",
+      y: "+=20",
+      rotate: "+=4",
+      duration: 0.65,
+      ease: "power2.out",
     });
 
     // -------------------------------------------------------------
-    // PHASE 3: "Maya is thinking"
+    // PHASE 3: Thinking Sequence (Maya is thinking -> Searching resources -> Building the final result)
     // -------------------------------------------------------------
     tl.call(() => {
       setPhase("thinking");
     });
 
-    tl.to({}, { duration: 1.5 });
+    tl.to({}, { duration: 5.0 });
 
     // -------------------------------------------------------------
-    // PHASE 4: "Maya is building"
-    // -------------------------------------------------------------
-    tl.call(() => {
-      setPhase("building");
-    });
-
-    tl.to({}, { duration: 1.4 });
-
-    // -------------------------------------------------------------
-    // PHASE 5: Dashboard Production (The Climax Reveal)
+    // PHASE 5: Dashboard Production (The Final Result Reveal)
     // -------------------------------------------------------------
     tl.call(() => {
       setPhase("dashboard");
-
-      // Number count-up animation
-      const countObj = { calls: 0, leads: 0, appointments: 0, conversion: 0 };
-      gsap.to(countObj, {
-        calls: 24,
-        leads: 12,
-        appointments: 8,
-        conversion: 18.4,
-        duration: 1.4,
-        ease: "power2.out",
-        onUpdate: () => {
-          setMetrics({
-            calls: Math.round(countObj.calls),
-            leads: Math.round(countObj.leads),
-            appointments: Math.round(countObj.appointments),
-            conversion: Number(countObj.conversion.toFixed(1)),
-          });
-        },
-      });
     });
-
-    // Animate Chart Spline Stroke drawing in
-    tl.fromTo(
-      chartPathRef.current,
-      { strokeDashoffset: 600, strokeDasharray: 600 },
-      { strokeDashoffset: 0, duration: 1.4, ease: "power2.out" },
-      "+=0.1"
-    );
-
-    tl.fromTo(
-      chartAreaRef.current,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.8, ease: "power2.out" },
-      "-=0.7"
-    );
   }, [getTargetPos, restartAnimation]);
 
   runAnimationRef.current = runAnimation;
@@ -419,39 +567,34 @@ export default function MayaWorkspaceAnimation({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full min-h-[480px] sm:min-h-[520px] rounded-2xl sm:rounded-3xl border overflow-hidden flex flex-col transition-colors duration-300 select-none ${
-        isDark
-          ? "bg-[#0B0D13]/95 border-white/[0.08] shadow-[0_24px_70px_-15px_rgba(0,0,0,0.85)]"
-          : "bg-white border-[#E2E8F0] shadow-[0_24px_60px_-12px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.03)]"
-      }`}
+      className={`relative w-full min-h-[480px] sm:min-h-[520px] rounded-2xl sm:rounded-3xl border overflow-hidden flex flex-col transition-colors duration-300 select-none ${isDark
+        ? "bg-[#0B0D13]/95 border-white/[0.08] shadow-[0_24px_70px_-15px_rgba(0,0,0,0.85)]"
+        : "bg-white border-[#E2E8F0] shadow-[0_24px_60px_-12px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.03)]"
+        }`}
     >
       {/* ----------------------------------------------------------------- */}
       {/* Top Window Header Bar: Minimal, Clean, Premium (No clutter)      */}
       {/* ----------------------------------------------------------------- */}
       <div
-        className={`px-4 sm:px-5 py-3 border-b flex items-center justify-between text-[11px] font-mono tracking-wider transition-colors z-20 ${
-          isDark
-            ? "bg-[#0E121B]/90 border-white/[0.07] text-[#717682]"
-            : "bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B]"
-        }`}
+        className={`px-4 sm:px-5 py-3 border-b flex items-center justify-between text-[11px] font-mono tracking-wider transition-colors z-20 ${isDark
+          ? "bg-[#0E121B]/90 border-white/[0.07] text-[#717682]"
+          : "bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B]"
+          }`}
       >
         <div className="flex items-center gap-2">
           {/* Subtle Muted Traffic Dots */}
           <div className="flex items-center gap-1.5">
             <span
-              className={`w-2 h-2 rounded-full inline-block ${
-                isDark ? "bg-white/20" : "bg-slate-300"
-              }`}
+              className={`w-2 h-2 rounded-full inline-block ${isDark ? "bg-white/20" : "bg-slate-300"
+                }`}
             />
             <span
-              className={`w-2 h-2 rounded-full inline-block ${
-                isDark ? "bg-white/20" : "bg-slate-300"
-              }`}
+              className={`w-2 h-2 rounded-full inline-block ${isDark ? "bg-white/20" : "bg-slate-300"
+                }`}
             />
             <span
-              className={`w-2 h-2 rounded-full inline-block ${
-                isDark ? "bg-white/20" : "bg-slate-300"
-              }`}
+              className={`w-2 h-2 rounded-full inline-block ${isDark ? "bg-white/20" : "bg-slate-300"
+                }`}
             />
           </div>
         </div>
@@ -462,11 +605,10 @@ export default function MayaWorkspaceAnimation({
             onClick={() => restartAnimation()}
             title="Replay Animation"
             type="button"
-            className={`p-1.5 rounded-md border transition-all cursor-pointer ${
-              isDark
-                ? "border-white/[0.08] hover:bg-white/[0.06] text-[#717682] hover:text-white"
-                : "border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-slate-900"
-            }`}
+            className={`p-1.5 rounded-md border transition-all cursor-pointer ${isDark
+              ? "border-white/[0.08] hover:bg-white/[0.06] text-[#717682] hover:text-white"
+              : "border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-slate-900"
+              }`}
           >
             <RotateCcw className="w-3 h-3" />
           </button>
@@ -496,134 +638,137 @@ export default function MayaWorkspaceAnimation({
         {(phase === "cursor-enter" ||
           phase === "typing" ||
           phase === "clicking-send") && (
-          <motion.div
-            key="prompt-phase"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
-            transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col items-center justify-center my-auto"
-          >
-            {/* Center Brand Mark Icon & Heading: Exact Original Resting Position */}
-            <div className="flex flex-col items-center mb-6 text-center">
-              <div
-                className={`w-12 h-12 rounded-2xl border flex items-center justify-center mb-3 shadow-sm transition-colors ${
-                  isDark
+            <motion.div
+              key="prompt-phase"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 flex flex-col items-center justify-center my-auto"
+            >
+              {/* Center Brand Mark Icon & Heading */}
+              <div className="flex flex-col items-center mb-6 text-center">
+                <div
+                  className={`w-12 h-12 rounded-2xl border flex items-center justify-center mb-3 shadow-sm transition-colors ${isDark
                     ? "bg-[#121622] border-white/[0.08]"
                     : "bg-[#F1F5F9] border-[#E2E8F0]"
-                }`}
-              >
-                <MayaBrandMark isDark={isDark} className="h-5 w-auto" />
-              </div>
-
-              <h4
-                className={`text-[17px] sm:text-[18px] font-light tracking-[-0.02em] leading-snug ${
-                  isDark ? "text-white" : "text-[#0F172A]"
-                }`}
-              >
-                What would you like Maya to analyze?
-              </h4>
-              <p
-                className={`text-[12px] mt-1 font-normal tracking-[-0.005em] ${
-                  isDark ? "text-[#8e95a5]" : "text-[#64748B]"
-                }`}
-              >
-                Natural language query into live visual dashboards
-              </p>
-            </div>
-
-            {/* Glowing Prompt Bar */}
-            <div className="w-full max-w-md relative group">
-              <div
-                ref={promptBarRef}
-                className={`relative rounded-xl px-4 py-3 flex items-center justify-between border shadow-sm transition-all duration-300 ${
-                  isFocused
-                    ? isDark
-                      ? "bg-[#0E121B] border-white/30 ring-1 ring-white/10 shadow-[0_0_25px_rgba(255,255,255,0.03)]"
-                      : "bg-white border-slate-400 ring-1 ring-slate-200"
-                    : isDark
-                    ? "bg-[#0E121B] border-white/[0.08] hover:border-white/20"
-                    : "bg-[#F8FAFC] border-[#E2E8F0] hover:border-slate-300"
-                }`}
-              >
-                {/* Input Text / Caret */}
-                <div
-                  ref={promptInputRef}
-                  className="flex items-center gap-2.5 flex-1 overflow-hidden pr-2"
+                    }`}
                 >
-                  <MayaBrandMark
-                    isDark={isDark}
-                    className="h-3.5 w-auto shrink-0 opacity-70"
-                  />
-                  <div className="flex items-center text-[12.5px] tracking-[-0.01em] font-normal truncate">
-                    {typedText ? (
-                      <span className={isDark ? "text-white" : "text-[#0F172A]"}>
-                        {typedText}
-                      </span>
-                    ) : (
-                      <span
-                        className={
-                          isDark ? "text-[#717682]" : "text-[#94A3B8]"
-                        }
-                      >
-                        Ask Maya anything or query metrics...
-                      </span>
-                    )}
-
-                    {/* Blinking Typing Caret */}
-                    {isFocused && (
-                      <span
-                        className={`inline-block w-[1.5px] h-3.5 ml-0.5 animate-pulse ${
-                          isDark ? "bg-white" : "bg-[#0F172A]"
-                        }`}
-                      />
-                    )}
-                  </div>
+                  <MayaBrandMark isDark={isDark} className="h-5 w-auto" />
                 </div>
 
-                {/* Send Button: Consistent with Hero Get Started Button */}
-                <button
-                  ref={sendBtnRef}
-                  type="button"
-                  aria-label="Send prompt"
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 cursor-pointer will-change-transform ${
-                    isSendActive
+                <h4
+                  className={`text-[17px] sm:text-[18px] font-light tracking-[-0.02em] leading-snug ${isDark ? "text-white" : "text-[#0F172A]"
+                    }`}
+                >
+                  What would you like MAYA to handle today?
+                </h4>
+              </div>
+
+              {/* Glowing Premium Floating Prompt Capsule */}
+              <div className="w-full max-w-md relative group">
+                {/* Ambient Unidirectional Soft Glow on Hover */}
+                <div
+                  className={`absolute -inset-[2px] rounded-full pointer-events-none overflow-hidden transition-opacity duration-500 blur-[8px] ${isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    }`}
+                >
+                  <motion.div
+                    className="w-full h-full"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }}
+                    style={{
+                      background: isDark
+                        ? "linear-gradient(90deg, transparent 0%, rgba(251, 191, 36, 0.16) 35%, rgba(255, 255, 255, 0.22) 50%, rgba(251, 191, 36, 0.16) 65%, transparent 100%)"
+                        : "linear-gradient(90deg, transparent 0%, rgba(217, 119, 6, 0.12) 35%, rgba(15, 23, 42, 0.12) 50%, rgba(217, 119, 6, 0.12) 65%, transparent 100%)",
+                    }}
+                  />
+                </div>
+
+                {/* Precision Unidirectional Border Beam: Left-to-Right Edge Flow */}
+                <div
+                  className={`absolute -inset-[1px] rounded-full pointer-events-none overflow-hidden transition-opacity duration-500 ${isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    }`}
+                  style={{
+                    padding: "1px",
+                    WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                    WebkitMaskComposite: "xor",
+                    maskComposite: "exclude",
+                  } as React.CSSProperties}
+                >
+                  <motion.div
+                    className="w-full h-full"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }}
+                    style={{
+                      background: isDark
+                        ? "linear-gradient(90deg, transparent 0%, rgba(251, 191, 36, 0.25) 30%, rgba(255, 255, 255, 0.95) 50%, rgba(251, 191, 36, 0.25) 70%, transparent 100%)"
+                        : "linear-gradient(90deg, transparent 0%, rgba(217, 119, 6, 0.25) 30%, rgba(15, 23, 42, 0.85) 50%, rgba(217, 119, 6, 0.25) 70%, transparent 100%)",
+                    }}
+                  />
+                </div>
+
+                {/* Primary Capsule Container with Clean Specular Edge */}
+                <div
+                  ref={promptBarRef}
+                  className={`relative rounded-full px-5 py-2.5 sm:py-3 flex items-center justify-between border backdrop-blur-xl transition-all duration-500 ease-out ${isFocused
+                    ? isDark
+                      ? "bg-[#0E121B] border-white/25 ring-1 ring-white/10 shadow-[0_4px_28px_rgba(0,0,0,0.5),0_0_20px_rgba(255,255,255,0.03)]"
+                      : "bg-white border-slate-400 ring-1 ring-slate-200 shadow-[0_4px_24px_rgba(15,23,42,0.08)]"
+                    : isDark
+                      ? "bg-[#0E121B]/95 border-white/[0.09] hover:border-white/25 hover:shadow-[0_8px_32px_rgba(0,0,0,0.45),0_0_18px_rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.35)]"
+                      : "bg-[#F8FAFC] border-[#E2E8F0] hover:border-slate-300 hover:shadow-[0_8px_24px_rgba(15,23,42,0.06),0_0_16px_rgba(15,23,42,0.02)] shadow-[0_4px_16px_rgba(15,23,42,0.04)]"
+                    }`}
+                >
+                  {/* Input Text / Caret */}
+                  <div
+                    ref={promptInputRef}
+                    className="flex items-center flex-1 overflow-hidden pr-2 pl-1"
+                  >
+                    <div className="flex items-center text-[13px] tracking-[-0.01em] font-normal truncate">
+                      {typedText ? (
+                        <span className={isDark ? "text-white" : "text-[#0F172A]"}>
+                          {typedText}
+                        </span>
+                      ) : (
+                        <span
+                          className={
+                            isDark ? "text-white/40" : "text-slate-400"
+                          }
+                        >
+                          Ask MAYA anything...
+                        </span>
+                      )}
+
+                      {/* Blinking Typing Caret */}
+                      {isFocused && (
+                        <span
+                          className={`inline-block w-[1.5px] h-3.5 ml-0.5 animate-pulse ${isDark ? "bg-white" : "bg-[#0F172A]"
+                            }`}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Send Button: Minimal & Premium Circular Arrow Button */}
+                  <button
+                    ref={sendBtnRef}
+                    type="button"
+                    aria-label="Send prompt"
+                    className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer will-change-transform shrink-0 ${isSendActive
                       ? isDark
                         ? "bg-white text-black shadow-sm scale-105"
                         : "bg-[#0F172A] text-white shadow-sm scale-105"
                       : isDark
-                      ? "bg-white/[0.05] text-[#717682] border border-white/[0.08]"
-                      : "bg-slate-100 text-[#94A3B8] border border-slate-200"
-                  }`}
-                >
-                  <Send className="w-3 h-3" />
-                </button>
+                        ? "bg-white/[0.06] text-white/40 border border-white/[0.08]"
+                        : "bg-slate-100 text-[#94A3B8] border border-slate-200"
+                      }`}
+                  >
+                    <ArrowUp className="w-3.5 h-3.5 stroke-[2.4]" />
+                  </button>
+                </div>
               </div>
-
-              {/* Shortcut Suggestion Pills */}
-              <div className="flex items-center justify-center gap-2 mt-3 text-[10px] font-mono">
-                <span
-                  className={`px-2 py-0.5 rounded-md border ${
-                    isDark
-                      ? "bg-white/[0.03] border-white/[0.07] text-[#717682]"
-                      : "bg-slate-100 border-slate-200 text-slate-600"
-                  }`}
-                >
-                  Tab: Autocomplete
-                </span>
-                <span
-                  className={`px-2 py-0.5 rounded-md border ${
-                    isDark
-                      ? "bg-white/[0.03] border-white/[0.07] text-[#717682]"
-                      : "bg-slate-100 border-slate-200 text-slate-600"
-                  }`}
-                >
-                  Return: Build Dashboards
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
         {/* =============================================================== */}
         {/* PHASE 3: "Maya is thinking" State (Minimal & Clean)             */}
@@ -631,67 +776,19 @@ export default function MayaWorkspaceAnimation({
         {phase === "thinking" && (
           <motion.div
             key="thinking-phase"
-            initial={{ opacity: 0, scale: 0.97 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.35 }}
-            className="flex-1 flex flex-col items-center justify-center my-auto"
+            exit={{ opacity: 0, y: -6, scale: 0.99 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="flex-1 flex flex-col items-center justify-center my-auto w-full"
           >
-            {/* Minimal Brand Container */}
-            <div
-              className={`w-12 h-12 rounded-xl border flex items-center justify-center mb-4 shadow-sm ${
-                isDark
-                  ? "bg-[#121622] border-white/[0.08]"
-                  : "bg-[#F1F5F9] border-[#E2E8F0]"
-              }`}
-            >
-              <MayaBrandMark isDark={isDark} className="h-5 w-auto" />
-            </div>
-
-            {/* Prompt Echo */}
-            <div
-              className={`px-3 py-1 rounded-full text-[11px] font-mono mb-3 border ${
-                isDark
-                  ? "bg-white/[0.03] border-white/[0.08] text-[#8e95a5]"
-                  : "bg-slate-100 border-slate-200 text-slate-700"
-              }`}
-            >
-              &ldquo;{PROMPT_TEXT}&rdquo;
-            </div>
-
-            {/* Thinking Editorial Shimmer Text */}
-            <div className="flex items-center gap-2 text-[17px] sm:text-[18px] font-light tracking-[-0.02em]">
-              <span className="animate-luxury-shimmer">Maya is thinking</span>
-              <span className="flex items-center gap-1">
-                <span
-                  className={`w-1.5 h-1.5 rounded-full animate-bounce ${
-                    isDark ? "bg-white/90" : "bg-[#0F172A]"
-                  }`}
-                />
-                <span
-                  className={`w-1.5 h-1.5 rounded-full animate-bounce ${
-                    isDark ? "bg-white/60" : "bg-[#64748B]"
-                  }`}
-                  style={{ animationDelay: "150ms" }}
-                />
-                <span
-                  className={`w-1.5 h-1.5 rounded-full animate-bounce ${
-                    isDark ? "bg-white/30" : "bg-[#CBD5E1]"
-                  }`}
-                  style={{ animationDelay: "300ms" }}
-                />
-              </span>
-            </div>
-
-            <p
-              className={`text-[12px] mt-1.5 font-normal tracking-[-0.005em] ${
-                isDark ? "text-[#717682]" : "text-[#64748B]"
-              }`}
-            >
-              Synthesizing 24 inbound calls, conversion velocity, and lead data...
-            </p>
+            <GeometricThinkingAnimation
+              isDark={isDark}
+              promptText={PROMPT_TEXT}
+            />
           </motion.div>
         )}
+
 
         {/* =============================================================== */}
         {/* PHASE 4: "Maya is building" (Minimalist Skeleton Assembly)      */}
@@ -710,9 +807,8 @@ export default function MayaWorkspaceAnimation({
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" />
                 <span
-                  className={`text-[12.5px] font-medium tracking-[-0.01em] ${
-                    isDark ? "text-white" : "text-[#0F172A]"
-                  }`}
+                  className={`text-[12.5px] font-medium tracking-[-0.01em] ${isDark ? "text-white" : "text-[#0F172A]"
+                    }`}
                 >
                   Maya is building dashboards...
                 </span>
@@ -727,26 +823,22 @@ export default function MayaWorkspaceAnimation({
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className={`rounded-xl p-3 border border-dashed flex flex-col justify-between h-20 transition-all animate-pulse ${
-                    isDark
-                      ? "border-white/[0.07] bg-white/[0.015]"
-                      : "border-slate-200 bg-slate-50/50"
-                  }`}
+                  className={`rounded-xl p-3 border border-dashed flex flex-col justify-between h-20 transition-all animate-pulse ${isDark
+                    ? "border-white/[0.07] bg-white/[0.015]"
+                    : "border-slate-200 bg-slate-50/50"
+                    }`}
                 >
                   <div
-                    className={`h-2.5 w-16 rounded ${
-                      isDark ? "bg-white/[0.06]" : "bg-slate-200"
-                    }`}
+                    className={`h-2.5 w-16 rounded ${isDark ? "bg-white/[0.06]" : "bg-slate-200"
+                      }`}
                   />
                   <div
-                    className={`h-6 w-12 rounded my-1 ${
-                      isDark ? "bg-white/[0.09]" : "bg-slate-300"
-                    }`}
+                    className={`h-6 w-12 rounded my-1 ${isDark ? "bg-white/[0.09]" : "bg-slate-300"
+                      }`}
                   />
                   <div
-                    className={`h-2 w-10 rounded ${
-                      isDark ? "bg-white/[0.06]" : "bg-slate-200"
-                    }`}
+                    className={`h-2 w-10 rounded ${isDark ? "bg-white/[0.06]" : "bg-slate-200"
+                      }`}
                   />
                 </div>
               ))}
@@ -756,22 +848,19 @@ export default function MayaWorkspaceAnimation({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">
               {/* Wide Chart Wireframe */}
               <div
-                className={`md:col-span-2 rounded-xl p-4 border border-dashed flex flex-col justify-between min-h-[140px] animate-pulse ${
-                  isDark
-                    ? "border-white/[0.07] bg-white/[0.015]"
-                    : "border-slate-200 bg-slate-50/50"
-                }`}
+                className={`md:col-span-2 rounded-xl p-4 border border-dashed flex flex-col justify-between min-h-[140px] animate-pulse ${isDark
+                  ? "border-white/[0.07] bg-white/[0.015]"
+                  : "border-slate-200 bg-slate-50/50"
+                  }`}
               >
                 <div className="flex justify-between">
                   <div
-                    className={`h-3 w-36 rounded ${
-                      isDark ? "bg-white/[0.06]" : "bg-slate-200"
-                    }`}
+                    className={`h-3 w-36 rounded ${isDark ? "bg-white/[0.06]" : "bg-slate-200"
+                      }`}
                   />
                   <div
-                    className={`h-3 w-16 rounded ${
-                      isDark ? "bg-white/[0.06]" : "bg-slate-200"
-                    }`}
+                    className={`h-3 w-16 rounded ${isDark ? "bg-white/[0.06]" : "bg-slate-200"
+                      }`}
                   />
                 </div>
                 {/* Simulated Waveform Wireframe */}
@@ -781,9 +870,8 @@ export default function MayaWorkspaceAnimation({
                       <div
                         key={idx}
                         style={{ height: `${h}%` }}
-                        className={`flex-1 rounded-t transition-all ${
-                          isDark ? "bg-white/[0.05]" : "bg-slate-200"
-                        }`}
+                        className={`flex-1 rounded-t transition-all ${isDark ? "bg-white/[0.05]" : "bg-slate-200"
+                          }`}
                       />
                     )
                   )}
@@ -792,38 +880,32 @@ export default function MayaWorkspaceAnimation({
 
               {/* AI Insight Pill Wireframe */}
               <div
-                className={`rounded-xl p-4 border border-dashed flex flex-col justify-between min-h-[140px] animate-pulse ${
-                  isDark
-                    ? "border-white/[0.07] bg-white/[0.015]"
-                    : "border-slate-200 bg-slate-50/50"
-                }`}
+                className={`rounded-xl p-4 border border-dashed flex flex-col justify-between min-h-[140px] animate-pulse ${isDark
+                  ? "border-white/[0.07] bg-white/[0.015]"
+                  : "border-slate-200 bg-slate-50/50"
+                  }`}
               >
                 <div
-                  className={`h-3 w-28 rounded ${
-                    isDark ? "bg-white/[0.06]" : "bg-slate-200"
-                  }`}
+                  className={`h-3 w-28 rounded ${isDark ? "bg-white/[0.06]" : "bg-slate-200"
+                    }`}
                 />
                 <div className="flex flex-col gap-2 my-2">
                   <div
-                    className={`h-2.5 w-full rounded ${
-                      isDark ? "bg-white/[0.06]" : "bg-slate-200"
-                    }`}
+                    className={`h-2.5 w-full rounded ${isDark ? "bg-white/[0.06]" : "bg-slate-200"
+                      }`}
                   />
                   <div
-                    className={`h-2.5 w-4/5 rounded ${
-                      isDark ? "bg-white/[0.06]" : "bg-slate-200"
-                    }`}
+                    className={`h-2.5 w-4/5 rounded ${isDark ? "bg-white/[0.06]" : "bg-slate-200"
+                      }`}
                   />
                   <div
-                    className={`h-2.5 w-3/5 rounded ${
-                      isDark ? "bg-white/[0.06]" : "bg-slate-200"
-                    }`}
+                    className={`h-2.5 w-3/5 rounded ${isDark ? "bg-white/[0.06]" : "bg-slate-200"
+                      }`}
                   />
                 </div>
                 <div
-                  className={`h-5 w-24 rounded ${
-                    isDark ? "bg-white/[0.09]" : "bg-slate-300"
-                  }`}
+                  className={`h-5 w-24 rounded ${isDark ? "bg-white/[0.09]" : "bg-slate-300"
+                    }`}
                 />
               </div>
             </div>
@@ -836,253 +918,217 @@ export default function MayaWorkspaceAnimation({
         {phase === "dashboard" && (
           <motion.div
             key="dashboard-phase"
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
             className="flex-1 flex flex-col gap-3.5 justify-between"
           >
-            {/* Docked Top Command Context Bar */}
-            <div
-              className={`rounded-xl px-3.5 py-2 border flex items-center justify-between transition-colors ${
-                isDark
-                  ? "bg-[#121622]/85 border-white/[0.06]"
-                  : "bg-slate-50 border-[#E2E8F0]"
-              }`}
-            >
-              <div className="flex items-center gap-2.5 truncate pr-2">
-                <div
-                  className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
-                    isDark
-                      ? "bg-white/[0.04] border-white/[0.08]"
-                      : "bg-white border-[#E2E8F0]"
-                  }`}
-                >
-                  <MayaBrandMark isDark={isDark} className="h-2.5 w-auto" />
-                </div>
-                <span
-                  className={`text-[12px] font-normal tracking-[-0.01em] truncate ${
-                    isDark ? "text-[#8e95a5]" : "text-slate-600"
-                  }`}
-                >
-                  Prompt:{" "}
-                  <span
-                    className={`font-medium ${
-                      isDark ? "text-white" : "text-[#0F172A]"
-                    }`}
-                  >
-                    &ldquo;{PROMPT_TEXT}&rdquo;
-                  </span>
-                </span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="hidden sm:inline-block text-[9.5px] font-mono text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
-                  Built in 1.4s
-                </span>
-                <span
-                  className={`text-[9.5px] font-mono uppercase tracking-wider ${
-                    isDark ? "text-[#717682]" : "text-[#64748B]"
-                  }`}
-                >
-                  Live Today
-                </span>
-              </div>
-            </div>
-
-            {/* 4 KPI Metric Cards */}
+            {/* 4 KPI Metric Cards with Staggered Entrance & Apple Rolling Numbers */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {/* Metric 1: Calls Handled */}
-              <div
-                className={`rounded-xl p-3 flex flex-col justify-between border transition-all ${
-                  isDark
-                    ? "bg-[#121622]/85 border-white/[0.06]"
-                    : "bg-[#F8FAFC] border-[#E2E8F0]/80"
-                }`}
+              {/* Metric 1: Calls handled */}
+              <motion.div
+                {...cardMotion(0)}
+                className={`rounded-xl p-3 flex flex-col justify-between border transition-all ${isDark
+                  ? "bg-[#121622]/85 border-white/[0.06]"
+                  : "bg-[#F8FAFC] border-[#E2E8F0]/80"
+                  }`}
               >
                 <div className="flex items-start justify-between">
                   <span
-                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${
-                      isDark ? "text-[#8e95a5]" : "text-[#64748B]"
-                    }`}
+                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                      }`}
                   >
-                    Calls Handled
+                    Calls handled
                   </span>
                   <Phone
-                    className={`w-3.5 h-3.5 ${
-                      isDark ? "text-[#64748B]" : "text-[#94A3B8]"
-                    }`}
+                    className={`w-3.5 h-3.5 ${isDark ? "text-[#64748B]" : "text-[#94A3B8]"
+                      }`}
                   />
                 </div>
                 <div className="my-1.5 flex items-baseline justify-between">
-                  <span
-                    className={`text-[24px] sm:text-[26px] font-light tracking-[-0.035em] tabular-nums ${
-                      isDark ? "text-white" : "text-[#0F172A]"
-                    }`}
+                  <motion.span
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+                    className={`text-[24px] sm:text-[26px] font-light tracking-[-0.035em] tabular-nums inline-block ${isDark ? "text-white" : "text-[#0F172A]"
+                      }`}
                   >
-                    {metrics.calls}
-                  </span>
+                    <AppleCountUp value={24} delay={0.25} duration={2.4} />
+                  </motion.span>
                 </div>
-                <div className="flex items-center text-[10px] font-medium font-mono text-[#10B981]">
+                <motion.div
+                  initial={{ opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.45, delay: 1.15 }}
+                  className={`flex items-center text-[10px] font-medium font-mono ${isDark ? "text-[#FBBF24]" : "text-[#D97706]"
+                    }`}
+                >
                   <TrendingUp className="w-3 h-3 mr-1" />
                   <span>+12%</span>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
               {/* Metric 2: Leads Qualified */}
-              <div
-                className={`rounded-xl p-3 flex flex-col justify-between border transition-all ${
-                  isDark
-                    ? "bg-[#121622]/85 border-white/[0.06]"
-                    : "bg-[#F8FAFC] border-[#E2E8F0]/80"
-                }`}
+              <motion.div
+                {...cardMotion(1)}
+                className={`rounded-xl p-3 flex flex-col justify-between border transition-all ${isDark
+                  ? "bg-[#121622]/85 border-white/[0.06]"
+                  : "bg-[#F8FAFC] border-[#E2E8F0]/80"
+                  }`}
               >
                 <div className="flex items-start justify-between">
                   <span
-                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${
-                      isDark ? "text-[#8e95a5]" : "text-[#64748B]"
-                    }`}
+                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                      }`}
                   >
                     Leads Qualified
                   </span>
                   <Users
-                    className={`w-3.5 h-3.5 ${
-                      isDark ? "text-[#64748B]" : "text-[#94A3B8]"
-                    }`}
+                    className={`w-3.5 h-3.5 ${isDark ? "text-[#64748B]" : "text-[#94A3B8]"
+                      }`}
                   />
                 </div>
                 <div className="my-1.5 flex items-baseline justify-between">
-                  <span
-                    className={`text-[24px] sm:text-[26px] font-light tracking-[-0.035em] tabular-nums ${
-                      isDark ? "text-white" : "text-[#0F172A]"
-                    }`}
+                  <motion.span
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.22 }}
+                    className={`text-[24px] sm:text-[26px] font-light tracking-[-0.035em] tabular-nums inline-block ${isDark ? "text-white" : "text-[#0F172A]"
+                      }`}
                   >
-                    {metrics.leads}
-                  </span>
+                    <AppleCountUp value={12} delay={0.35} duration={2.3} />
+                  </motion.span>
                 </div>
-                <div className="flex items-center text-[10px] font-medium font-mono text-[#10B981]">
+                <motion.div
+                  initial={{ opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.45, delay: 1.25 }}
+                  className={`flex items-center text-[10px] font-medium font-mono ${isDark ? "text-[#FBBF24]" : "text-[#D97706]"
+                    }`}
+                >
                   <TrendingUp className="w-3 h-3 mr-1" />
                   <span>+8%</span>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
               {/* Metric 3: Appointments */}
-              <div
-                className={`rounded-xl p-3 flex flex-col justify-between border transition-all ${
-                  isDark
-                    ? "bg-[#121622]/85 border-white/[0.06]"
-                    : "bg-[#F8FAFC] border-[#E2E8F0]/80"
-                }`}
+              <motion.div
+                {...cardMotion(2)}
+                className={`rounded-xl p-3 flex flex-col justify-between border transition-all ${isDark
+                  ? "bg-[#121622]/85 border-white/[0.06]"
+                  : "bg-[#F8FAFC] border-[#E2E8F0]/80"
+                  }`}
               >
                 <div className="flex items-start justify-between">
                   <span
-                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${
-                      isDark ? "text-[#8e95a5]" : "text-[#64748B]"
-                    }`}
+                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                      }`}
                   >
                     Appointments
                   </span>
                   <Calendar
-                    className={`w-3.5 h-3.5 ${
-                      isDark ? "text-[#64748B]" : "text-[#94A3B8]"
-                    }`}
+                    className={`w-3.5 h-3.5 ${isDark ? "text-[#64748B]" : "text-[#94A3B8]"
+                      }`}
                   />
                 </div>
                 <div className="my-1.5 flex items-baseline justify-between">
-                  <span
-                    className={`text-[24px] sm:text-[26px] font-light tracking-[-0.035em] tabular-nums ${
-                      isDark ? "text-white" : "text-[#0F172A]"
-                    }`}
+                  <motion.span
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.29 }}
+                    className={`text-[24px] sm:text-[26px] font-light tracking-[-0.035em] tabular-nums inline-block ${isDark ? "text-white" : "text-[#0F172A]"
+                      }`}
                   >
-                    {metrics.appointments}
-                  </span>
+                    <AppleCountUp value={8} delay={0.45} duration={2.2} />
+                  </motion.span>
                 </div>
-                <div className="flex items-center text-[10px] font-medium font-mono text-[#10B981]">
+                <motion.div
+                  initial={{ opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.45, delay: 1.35 }}
+                  className={`flex items-center text-[10px] font-medium font-mono ${isDark ? "text-[#FBBF24]" : "text-[#D97706]"
+                    }`}
+                >
                   <TrendingUp className="w-3 h-3 mr-1" />
                   <span>+20%</span>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
-              {/* Metric 4: Conversion Rate */}
-              <div
-                className={`rounded-xl p-3 flex flex-col justify-between border transition-all ${
-                  isDark
-                    ? "bg-[#121622]/85 border-white/[0.06]"
-                    : "bg-[#F8FAFC] border-[#E2E8F0]/80"
-                }`}
+              {/* Metric 4: Conversation rate */}
+              <motion.div
+                {...cardMotion(3)}
+                className={`rounded-xl p-3 flex flex-col justify-between border transition-all ${isDark
+                  ? "bg-[#121622]/85 border-white/[0.06]"
+                  : "bg-[#F8FAFC] border-[#E2E8F0]/80"
+                  }`}
               >
                 <div className="flex items-start justify-between">
                   <span
-                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${
-                      isDark ? "text-[#8e95a5]" : "text-[#64748B]"
-                    }`}
+                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                      }`}
                   >
-                    Conversion Rate
+                    Conversation rate
                   </span>
-                  <BarChart2
-                    className={`w-3.5 h-3.5 ${
-                      isDark ? "text-[#64748B]" : "text-[#94A3B8]"
-                    }`}
+                  <MessageSquare
+                    className={`w-3.5 h-3.5 ${isDark ? "text-[#64748B]" : "text-[#94A3B8]"
+                      }`}
                   />
                 </div>
                 <div className="my-1.5 flex items-baseline justify-between">
-                  <span
-                    className={`text-[24px] sm:text-[26px] font-light tracking-[-0.035em] tabular-nums ${
-                      isDark ? "text-white" : "text-[#0F172A]"
-                    }`}
+                  <motion.span
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.36 }}
+                    className={`text-[24px] sm:text-[26px] font-light tracking-[-0.035em] tabular-nums inline-block ${isDark ? "text-white" : "text-[#0F172A]"
+                      }`}
                   >
-                    {metrics.conversion}%
-                  </span>
+                    <AppleCountUp value={18.4} decimals={1} suffix="%" delay={0.55} duration={2.4} />
+                  </motion.span>
                 </div>
-                <div className="flex items-center text-[10px] font-medium font-mono text-[#10B981]">
+                <motion.div
+                  initial={{ opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.45, delay: 1.45 }}
+                  className={`flex items-center text-[10px] font-medium font-mono ${isDark ? "text-[#FBBF24]" : "text-[#D97706]"
+                    }`}
+                >
                   <TrendingUp className="w-3 h-3 mr-1" />
                   <span>+6%</span>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </div>
 
-            {/* Visual Analytics Chart & Maya Executive Synthesis */}
+            {/* Visual Analytics Chart & Maya Executive Synthesis with Apple Staggered Reveal */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 flex-1">
-              {/* Left / Main Spline Area Chart (7 Cols) */}
-              <div
-                className={`md:col-span-7 rounded-xl p-3.5 flex flex-col justify-between border transition-colors ${
-                  isDark
-                    ? "bg-[#121622]/85 border-white/[0.06]"
-                    : "bg-[#F8FAFC] border-[#E2E8F0]/80"
-                }`}
+              {/* Left / Activity over the day Spline Chart (7 Cols) */}
+              <motion.div
+                {...cardMotion(4)}
+                className={`md:col-span-7 rounded-xl p-3.5 flex flex-col justify-between border transition-colors ${isDark
+                  ? "bg-[#121622]/85 border-white/[0.06]"
+                  : "bg-[#F8FAFC] border-[#E2E8F0]/80"
+                  }`}
               >
                 <div
-                  className={`flex items-center justify-between pb-2 border-b ${
-                    isDark ? "border-white/[0.06]" : "border-[#E2E8F0]"
-                  }`}
+                  className={`flex items-center justify-between pb-2 border-b ${isDark ? "border-white/[0.06]" : "border-[#E2E8F0]"
+                    }`}
                 >
                   <div>
                     <h5
-                      className={`text-[12px] font-medium tracking-[-0.01em] ${
-                        isDark ? "text-white" : "text-[#0F172A]"
-                      }`}
+                      className={`text-[12px] font-medium tracking-[-0.01em] ${isDark ? "text-white" : "text-[#0F172A]"
+                        }`}
                     >
-                      Hourly Call &amp; Qualification Velocity
+                      Activity over the day
                     </h5>
                     <p
-                      className={`text-[10px] font-mono ${
-                        isDark ? "text-[#8e95a5]" : "text-[#64748B]"
-                      }`}
+                      className={`text-[10px] font-mono ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                        }`}
                     >
                       Peak engagement between 1:00 PM – 3:30 PM
                     </p>
                   </div>
-                  <div
-                    className={`flex items-center gap-1.5 text-[9.5px] font-mono px-2 py-0.5 rounded border ${
-                      isDark
-                        ? "bg-white/[0.03] border-white/[0.08] text-[#8e95a5]"
-                        : "bg-slate-100 border-slate-200 text-slate-600"
-                    }`}
-                  >
-                    <Activity className="w-3 h-3" />
-                    <span>Live Spline</span>
-                  </div>
                 </div>
 
-                {/* SVG Area & Stroke Drawing: Disciplined Monochrome Line */}
+                {/* SVG Area & Stroke Drawing: Fluid Apple-Style Path Draw */}
                 <div className="relative w-full h-28 my-1 flex items-end">
                   <svg
                     viewBox="0 0 400 120"
@@ -1128,64 +1174,110 @@ export default function MayaWorkspaceAnimation({
                       strokeDasharray="4 4"
                     />
 
-                    {/* Gradient Area Fill */}
-                    <path
-                      ref={chartAreaRef}
+                    {/* Gradient Area Fill: Gentle Dissolve */}
+                    <motion.path
                       d="M 0 100 Q 60 70, 110 82 T 220 30 T 310 55 T 400 15 L 400 120 L 0 120 Z"
                       fill="url(#chartMonochromeGradient)"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 1.4, ease: "easeOut", delay: 0.8 }}
                     />
 
-                    {/* Main Spline Line: Crisp Razor Line */}
-                    <path
-                      ref={chartPathRef}
+                    {/* Vertical Dashed Peak Guideline */}
+                    <motion.line
+                      x1="220"
+                      y1="34"
+                      x2="220"
+                      y2="115"
+                      stroke={isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)"}
+                      strokeDasharray="2 3"
+                      strokeWidth="1"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.45, delay: 1.50 }}
+                    />
+
+                    {/* Main Spline Line: Fluid Progressive Draw-in */}
+                    <motion.path
                       d="M 0 100 Q 60 70, 110 82 T 220 30 T 310 55 T 400 15"
                       fill="none"
                       stroke={isDark ? "#FFFFFF" : "#0F172A"}
                       strokeWidth="1.75"
                       strokeLinecap="round"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{
+                        pathLength: { duration: 2.8, ease: [0.16, 1, 0.3, 1], delay: 0.25 },
+                        opacity: { duration: 0.3, delay: 0.25 },
+                      }}
                     />
 
-                    {/* Peak Point Pulsing Radar Dot */}
-                    <circle
+                    {/* Peak Point Concentric Halo */}
+                    <motion.circle
                       cx="220"
                       cy="30"
-                      r="3.5"
-                      fill={isDark ? "#FFFFFF" : "#0F172A"}
-                    />
-                    <circle
-                      cx="220"
-                      cy="30"
-                      r="8"
+                      r="6.5"
                       fill="none"
                       stroke={isDark ? "#FFFFFF" : "#0F172A"}
-                      strokeOpacity="0.3"
                       strokeWidth="1"
-                      className="animate-ping"
+                      strokeOpacity="0.22"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 350,
+                        damping: 20,
+                        delay: 1.48,
+                      }}
+                    />
+
+                    {/* Peak Point Core Dot */}
+                    <motion.circle
+                      cx="220"
+                      cy="30"
+                      r="3"
+                      fill={isDark ? "#FFFFFF" : "#0F172A"}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 420,
+                        damping: 22,
+                        delay: 1.48,
+                      }}
                     />
                   </svg>
 
-                  {/* Floating Peak Tooltip */}
-                  <div
-                    className="absolute top-1 left-[46%] -translate-x-1/2 px-2.5 py-0.5 rounded text-[9px] font-mono tracking-wider shadow-md border backdrop-blur-md pointer-events-none"
-                    style={{
-                      backgroundColor: isDark
-                        ? "rgba(11, 13, 19, 0.95)"
-                        : "rgba(255, 255, 255, 0.95)",
-                      borderColor: isDark
-                        ? "rgba(255, 255, 255, 0.12)"
-                        : "rgba(226, 232, 240, 1)",
-                      color: isDark ? "#FFFFFF" : "#0F172A",
-                    }}
+                  {/* Minimal Frosted Peak Annotation Pill */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 3 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 1.55 }}
+                    className="absolute top-1.5 left-[55%] -translate-x-1/2 pointer-events-none"
                   >
-                    Peak: 2:15 PM • 6 calls/hr
-                  </div>
+                    <div
+                      className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-mono tracking-tight border backdrop-blur-md transition-colors ${isDark
+                        ? "bg-white/[0.07] border-white/10 text-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                        : "bg-white/90 border-slate-200/90 text-slate-800 shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
+                        }`}
+                    >
+                      <span
+                        className={`w-1 h-1 rounded-full shrink-0 ${isDark
+                          ? "bg-amber-400 shadow-[0_0_4px_rgba(251,191,36,0.6)]"
+                          : "bg-amber-500"
+                          }`}
+                      />
+                      <span className="font-semibold">6/hr</span>
+                      <span className="opacity-30">•</span>
+                      <span className="opacity-70">2:15 PM</span>
+                    </div>
+                  </motion.div>
                 </div>
 
                 {/* X Axis Time Labels */}
                 <div
-                  className={`flex justify-between text-[9px] font-mono pt-1 ${
-                    isDark ? "text-[#717682]" : "text-[#94A3B8]"
-                  }`}
+                  className={`flex justify-between text-[9px] font-mono pt-1 ${isDark ? "text-[#717682]" : "text-[#94A3B8]"
+                    }`}
                 >
                   <span>9:00 AM</span>
                   <span>12:00 PM</span>
@@ -1193,80 +1285,70 @@ export default function MayaWorkspaceAnimation({
                   <span>4:00 PM</span>
                   <span>Now</span>
                 </div>
-              </div>
+              </motion.div>
 
-              {/* Right / Maya Executive Synthesis Card (5 Cols) */}
-              <div
-                className={`md:col-span-5 rounded-xl p-3.5 flex flex-col justify-between border transition-colors ${
-                  isDark
-                    ? "bg-[#121622]/85 border-white/[0.06]"
-                    : "bg-[#F8FAFC] border-[#E2E8F0]/80"
-                }`}
+              {/* Right / Executive summary Card (5 Cols) */}
+              <motion.div
+                {...cardMotion(5)}
+                className={`md:col-span-5 rounded-xl p-3.5 flex flex-col justify-between border transition-colors ${isDark
+                  ? "bg-[#121622]/85 border-white/[0.06]"
+                  : "bg-[#F8FAFC] border-[#E2E8F0]/80"
+                  }`}
               >
                 <div>
                   <div
-                    className={`flex items-center justify-between pb-2 border-b ${
-                      isDark ? "border-white/[0.06]" : "border-[#E2E8F0]"
-                    }`}
+                    className={`flex items-center pb-2 border-b ${isDark ? "border-white/[0.06]" : "border-[#E2E8F0]"
+                      }`}
                   >
                     <div className="flex items-center gap-1.5">
                       <MayaBrandMark isDark={isDark} className="h-3 w-auto" />
                       <span
-                        className={`text-[11px] font-medium tracking-tight ${
-                          isDark ? "text-white" : "text-[#0F172A]"
-                        }`}
+                        className={`text-[11px] font-medium tracking-tight ${isDark ? "text-white" : "text-[#0F172A]"
+                          }`}
                       >
-                        Maya Executive Brief
+                        Executive summary
                       </span>
                     </div>
-                    <span className="text-[9px] font-mono text-[#10B981] bg-[#10B981]/10 px-1.5 py-0.5 rounded border border-[#10B981]/20">
-                      High Confidence
-                    </span>
                   </div>
 
-                  <p
-                    className={`text-[11.5px] leading-relaxed mt-2.5 font-normal tracking-[-0.005em] ${
-                      isDark ? "text-[#9ca3af]" : "text-[#334155]"
-                    }`}
-                  >
-                    &ldquo;Inbound calls surged +34% after 1 PM. Conversion
-                    reached{" "}
-                    <strong
-                      className={`font-medium ${
-                        isDark ? "text-white" : "text-[#0F172A]"
+                  <motion.p
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.52 }}
+                    className={`text-[11.5px] leading-relaxed mt-2.5 font-normal tracking-[-0.005em] ${isDark ? "text-[#9ca3af]" : "text-[#334155]"
                       }`}
-                    >
-                      18.4%
-                    </strong>{" "}
-                    with 8 consultations booked directly into your
-                    calendar.&rdquo;
-                  </p>
+                  >
+                    &ldquo;Today our business handled 24 customer calls with an 18.4% conversation rate, qualifying 12 high-intent leads and scheduling 8 appointments directly into your calendar.&rdquo;
+                  </motion.p>
                 </div>
 
                 {/* Bottom Action CTAs: Matching Hero CTAs */}
-                <div className="flex items-center gap-2 pt-3">
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.62 }}
+                  className="flex items-center gap-2 pt-3"
+                >
                   <div
-                    className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-[10.5px] font-medium border transition-colors cursor-pointer ${
-                      isDark
-                        ? "bg-white/[0.04] hover:bg-white/[0.08] text-white border-white/[0.1]"
-                        : "bg-white hover:bg-slate-100 text-slate-800 border-slate-200"
-                    }`}
+                    className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-[10.5px] font-medium border transition-colors cursor-pointer ${isDark
+                      ? "bg-white/[0.04] hover:bg-white/[0.08] text-white border-white/[0.1]"
+                      : "bg-white hover:bg-slate-100 text-slate-800 border-slate-200"
+                      }`}
                   >
-                    <span>Export Brief</span>
+                    <span>Export Summary</span>
                     <ArrowUpRight className="w-3 h-3" />
                   </div>
                   <div
-                    className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-colors cursor-pointer shadow-sm ${
-                      isDark
-                        ? "bg-white text-black hover:bg-neutral-100"
-                        : "bg-[#0F172A] text-white hover:bg-black"
-                    }`}
+                    className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-colors cursor-pointer shadow-sm ${isDark
+                      ? "bg-white text-black hover:bg-neutral-100"
+                      : "bg-[#0F172A] text-white hover:bg-black"
+                      }`}
                   >
                     <CheckCircle2 className="w-3 h-3" />
                     <span>Sync CRM</span>
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </div>
           </motion.div>
         )}
@@ -1284,7 +1366,7 @@ export default function MayaWorkspaceAnimation({
             height="22"
             viewBox="0 0 24 24"
             fill="none"
-            className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)]"
+            className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.32)] drop-shadow-[0_6px_14px_rgba(0,0,0,0.22)]"
           >
             <path
               d="M3 3L10.5 21L14 13.5L21.5 10L3 3Z"
