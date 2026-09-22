@@ -10,7 +10,6 @@ import {
   TrendingUp,
   BarChart2,
   CheckCircle2,
-  RotateCcw,
   ArrowUp,
   Activity,
   ArrowUpRight,
@@ -32,7 +31,7 @@ type AnimationPhase =
 
 const PROMPT_TEXT = "How did our business perform today?";
 
-// Signature MAYA Geometric Brand Mark
+// Signature MAYA Geometric Brand Mark (Faceted Titanium Vector Rendering)
 function MayaBrandMark({
   isDark,
   className = "h-4 w-auto",
@@ -40,6 +39,7 @@ function MayaBrandMark({
   isDark: boolean;
   className?: string;
 }) {
+  const uniqueId = React.useId().replace(/:/g, "_");
   return (
     <svg
       viewBox="25 80 460 350"
@@ -47,18 +47,69 @@ function MayaBrandMark({
       shapeRendering="geometricPrecision"
       aria-hidden="true"
     >
-      <path
-        d="M 29 427 L 144 373 L 361 85 Q 215 245 29 427 Z"
-        fill={isDark ? "#FFFFFF" : "#0F172A"}
-      />
-      <path
-        d="M 184 388 L 328 214 L 328 259 Z"
-        fill={isDark ? "#64748B" : "#475569"}
-      />
-      <path
-        d="M 328 214 L 482 420 L 328 259 Z"
-        fill={isDark ? "#FFFFFF" : "#0F172A"}
-      />
+      <defs>
+        {/* Left Blade - Main Specular Face */}
+        <linearGradient id={`maya-blade-${uniqueId}`} x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={isDark ? "#808EA3" : "#64748B"} />
+          <stop offset="35%" stopColor={isDark ? "#E2E8F0" : "#94A3B8"} />
+          <stop offset="70%" stopColor={isDark ? "#FFFFFF" : "#0F172A"} />
+          <stop offset="100%" stopColor={isDark ? "#CBD5E1" : "#334155"} />
+        </linearGradient>
+
+        {/* Right Chevron - Left Face */}
+        <linearGradient id={`maya-chev-left-${uniqueId}`} x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={isDark ? "#64748B" : "#475569"} />
+          <stop offset="45%" stopColor={isDark ? "#CBD5E1" : "#94A3B8"} />
+          <stop offset="100%" stopColor={isDark ? "#FFFFFF" : "#0F172A"} />
+        </linearGradient>
+
+        {/* Right Chevron - Right Face */}
+        <linearGradient id={`maya-chev-right-${uniqueId}`} x1="0%" y1="100%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={isDark ? "#FFFFFF" : "#0F172A"} />
+          <stop offset="45%" stopColor={isDark ? "#CBD5E1" : "#64748B"} />
+          <stop offset="100%" stopColor={isDark ? "#475569" : "#334155"} />
+        </linearGradient>
+      </defs>
+
+      {/* Left Blade: Clean razor-sharp geometry with sweeping upper arc */}
+      <g>
+        <path
+          d="M 29 427 L 144 373 L 361 85 Q 215 245 29 427 Z"
+          fill={`url(#maya-blade-${uniqueId})`}
+        />
+        {/* Chamfer highlight line with specular trace */}
+        <line
+          x1="144"
+          y1="373"
+          x2="361"
+          y2="85"
+          stroke={isDark ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.85)"}
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
+      </g>
+
+      {/* Right Chevron: Symmetrical faceted monogram */}
+      <g>
+        <path
+          d="M 184 388 L 328 214 L 328 259 Z"
+          fill={`url(#maya-chev-left-${uniqueId})`}
+        />
+        <path
+          d="M 328 214 L 482 420 L 328 259 Z"
+          fill={`url(#maya-chev-right-${uniqueId})`}
+        />
+        {/* Center ridge specular highlight */}
+        <line
+          x1="328"
+          y1="214"
+          x2="328"
+          y2="259"
+          stroke={isDark ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.9)"}
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
+      </g>
     </svg>
   );
 }
@@ -168,6 +219,8 @@ export default function MayaWorkspaceAnimation({
   const rippleRef = useRef<HTMLDivElement>(null);
   const chartPathRef = useRef<SVGPathElement>(null);
   const chartAreaRef = useRef<SVGPathElement>(null);
+  const iconHeadingRef = useRef<HTMLDivElement>(null);
+  const chatWindowRef = useRef<HTMLDivElement>(null);
 
   const [phase, setPhase] = useState<AnimationPhase>("cursor-enter");
   const [typedText, setTypedText] = useState("");
@@ -229,6 +282,13 @@ export default function MayaWorkspaceAnimation({
       timelineRef.current.kill();
     }
 
+    if (chatWindowRef.current) {
+      gsap.set(chatWindowRef.current, { scale: 1, rotateX: 0, rotateY: 0, transformOrigin: "center center" });
+    }
+    if (iconHeadingRef.current) {
+      gsap.set(iconHeadingRef.current, { opacity: 1, filter: "blur(0px)" });
+    }
+
     setPhase("cursor-enter");
     setTypedText("");
     setIsFocused(false);
@@ -258,6 +318,14 @@ export default function MayaWorkspaceAnimation({
       gsap.set(ripple, { scale: 0, opacity: 0 });
     }
 
+    // Initialize first interface camera state: normal POV, zero tilt
+    if (chatWindowRef.current) {
+      gsap.set(chatWindowRef.current, { scale: 1, rotateX: 0, rotateY: 0, transformOrigin: "center center" });
+    }
+    if (iconHeadingRef.current) {
+      gsap.set(iconHeadingRef.current, { opacity: 1, filter: "blur(0px)" });
+    }
+
     // Dynamic initial cursor position: bottom-right of stage
     const s = stage.getBoundingClientRect();
     const initX = s.width > 500 ? s.width * 0.74 : s.width * 0.82;
@@ -282,11 +350,11 @@ export default function MayaWorkspaceAnimation({
     timelineRef.current = tl;
 
     // -------------------------------------------------------------
-    // PHASE 1: Organic Human Cursor Glide to Prompt Bar (Bézier Arc + Fitts's Law Settle)
+    // PHASE 1: Organic Human Cursor Glide to Prompt Bar (Natural Pacing & Settle)
     // -------------------------------------------------------------
     tl.to(cursor, {
       opacity: 1,
-      duration: 0.35,
+      duration: 0.25,
       ease: "power1.out",
     });
 
@@ -297,41 +365,41 @@ export default function MayaWorkspaceAnimation({
     const dist = Math.hypot(dx, dy);
 
     // Biomechanical wrist arc offsets (proportional to distance)
-    const arcX = Math.sign(dx) * Math.min(26, Math.max(10, Math.abs(dx) * 0.055));
-    const arcY = Math.min(32, Math.max(12, dist * 0.075));
+    const arcX = Math.sign(dx) * Math.min(22, Math.max(8, Math.abs(dx) * 0.04));
+    const arcY = Math.min(26, Math.max(10, dist * 0.06));
 
-    const p1 = { x: p0.x + dx * 0.32 + arcX, y: p0.y + dy * 0.18 + arcY };
-    const p2 = { x: p0.x + dx * 0.74 - arcX * 0.5, y: p0.y + dy * 0.82 - arcY * 0.25 };
-    const pOver = { x: targetPos.inputX - 2.4, y: targetPos.inputY + 1.6 };
+    const p1 = { x: p0.x + dx * 0.35 + arcX, y: p0.y + dy * 0.22 + arcY };
+    const p2 = { x: p0.x + dx * 0.78 - arcX * 0.4, y: p0.y + dy * 0.85 - arcY * 0.2 };
+    const pOver = { x: targetPos.inputX - 1.5, y: targetPos.inputY + 1.0 };
 
     const approachFlight = { t: 0 };
     tl.to(
       approachFlight,
       {
         t: 1,
-        duration: 1.65,
-        ease: "power2.inOut",
+        duration: 0.85,
+        ease: "power2.out",
         onUpdate: () => {
           const pt = getCubicBezier(p0, p1, p2, pOver, approachFlight.t);
           // Subtle dynamic banking / tilt along velocity
-          const tilt = -10 + approachFlight.t * 9 + Math.sin(approachFlight.t * Math.PI) * 2;
+          const tilt = -10 + approachFlight.t * 9 + Math.sin(approachFlight.t * Math.PI) * 1.5;
           gsap.set(cursor, { x: pt.x, y: pt.y, rotate: tilt });
         },
       },
-      "<+=0.05"
+      "<+=0.04"
     );
 
     // Fitts's law corrective micro-settle onto input target
     tl.to(cursor, {
       x: () => getTargetPos().inputX,
       y: () => getTargetPos().inputY,
-      rotate: -1,
-      duration: 0.18,
+      rotate: 0,
+      duration: 0.12,
       ease: "power1.out",
     });
 
     // Human ocular verification pause before clicking
-    tl.to({}, { duration: 0.16 });
+    tl.to({}, { duration: 0.12 });
 
     // Tactile click compression on prompt bar
     tl.to(cursor, {
@@ -360,47 +428,86 @@ export default function MayaWorkspaceAnimation({
       ease: "back.out(2)",
     });
 
+    // -------------------------------------------------------------
+    // CAMERA FOCUS ON CHAT WINDOW (Only in first interface)
+    // -------------------------------------------------------------
+    tl.to(
+      chatWindowRef.current,
+      {
+        scale: 1.09,
+        rotateX: 3.2,
+        rotateY: -1.8,
+        duration: 0.65,
+        ease: "power2.inOut",
+      },
+      "<+=0.04"
+    );
+
+    tl.to(
+      iconHeadingRef.current,
+      {
+        opacity: 0.45,
+        filter: "blur(1.5px)",
+        duration: 0.65,
+        ease: "power2.inOut",
+      },
+      "<"
+    );
+
     // Cognitive delay as hands move to keyboard
     tl.to({}, { duration: 0.28 });
 
     // -------------------------------------------------------------
-    // PHASE 2: Realistic Human Typing Cadence with Natural Parking & Anticipatory Glide
+    // PHASE 2: Natural, Rhythmic Human Typing Cadence with Cognitive Pacing
     // -------------------------------------------------------------
     tl.call(() => {
       setPhase("typing");
     });
 
-    // Fluent, confident typing cadence (faster)
     for (let i = 1; i <= PROMPT_TEXT.length; i++) {
-      const sub = PROMPT_TEXT.substring(0, i);
-      const isSpace = PROMPT_TEXT[i - 1] === " ";
-      // Crisp, responsive cadence: ~50-65ms per letter, 120ms on space
-      const delay = isSpace ? 0.12 : 0.048 + Math.random() * 0.018;
+      const char = PROMPT_TEXT[i - 1];
+      const prevChar = i > 1 ? PROMPT_TEXT[i - 2] : "";
+      const isSpace = char === " ";
+      const isPunctuation = char === "?" || char === "." || char === "!";
+
+      // Realistic human typing cadence:
+      // - Punctuation mark: deliberate pause (~190ms)
+      // - Space between words: natural word-boundary hesitation (~155ms)
+      // - Word-initial keystroke: slight cognitive trigger (~110ms)
+      // - Intra-word characters: fluid, natural variance (~82ms - 100ms)
+      let delay = 0.088 + Math.sin(i * 1.5) * 0.014;
+      if (isSpace) {
+        delay = 0.155;
+      } else if (isPunctuation) {
+        delay = 0.19;
+      } else if (prevChar === " ") {
+        delay = 0.11;
+      }
 
       tl.to({}, {
         duration: delay,
         onStart: () => {
-          setTypedText(sub);
+          setTypedText(PROMPT_TEXT.substring(0, i));
         },
       });
 
-      // At character 2: user's hand relaxes and parks mouse slightly out of the way
-      if (i === 2) {
+      // At character 3: user's hand relaxes and parks mouse slightly out of the way
+      if (i === 3) {
         tl.to(
           cursor,
           {
-            x: () => getTargetPos().inputX + 36,
+            x: () => getTargetPos().inputX + 38,
             y: () => getTargetPos().inputY + 22,
             rotate: 0,
-            duration: 0.40,
+            duration: 0.45,
             ease: "power1.out",
           },
           "<"
         );
       }
 
-      // At character 25: hand returns to mouse; anticipatory drift towards Send button
-      if (i === 25) {
+      // At character 27: hand returns to mouse; anticipatory drift towards Send button
+      if (i === 27) {
         tl.to(
           cursor,
           {
@@ -415,8 +522,8 @@ export default function MayaWorkspaceAnimation({
       }
     }
 
-    // Deliberate brief pause after finishing typing
-    tl.to({}, { duration: 0.14 });
+    // Deliberate ocular confirmation pause after finishing typing
+    tl.to({}, { duration: 0.28 });
 
     // Activate Send button visual state
     tl.call(() => {
@@ -437,14 +544,14 @@ export default function MayaWorkspaceAnimation({
 
     tl.to(sendFlight, {
       t: 1,
-      duration: 0.60,
+      duration: 0.52,
       ease: "power2.out",
       onStart: () => {
         const pos = getTargetPos();
         sendFlight.p0 = { x: pos.sendX - 36, y: pos.sendY + 12 };
         sendFlight.p1 = { x: pos.sendX - 22, y: pos.sendY + 14 };
         sendFlight.p2 = { x: pos.sendX - 6, y: pos.sendY - 2 };
-        sendFlight.pOver = { x: pos.sendX + 1.2, y: pos.sendY - 0.8 };
+        sendFlight.pOver = { x: pos.sendX + 1.0, y: pos.sendY - 0.5 };
       },
       onUpdate: () => {
         if (sendFlight.p0 && sendFlight.p1 && sendFlight.p2 && sendFlight.pOver) {
@@ -465,14 +572,14 @@ export default function MayaWorkspaceAnimation({
       x: () => getTargetPos().sendX,
       y: () => getTargetPos().sendY,
       rotate: 0,
-      duration: 0.15,
+      duration: 0.12,
       ease: "power1.out",
     });
 
     // Hover reaction on Send button + human target confirmation pause
     tl.to(sendBtnRef.current, {
       scale: 1.08,
-      duration: 0.16,
+      duration: 0.14,
       ease: "power1.out",
     });
 
@@ -522,6 +629,32 @@ export default function MayaWorkspaceAnimation({
       "<"
     );
 
+    // -------------------------------------------------------------
+    // CAMERA RETURN: Smoothly return to normal POV as prompt is sent
+    // -------------------------------------------------------------
+    tl.to(
+      chatWindowRef.current,
+      {
+        scale: 1.0,
+        rotateX: 0,
+        rotateY: 0,
+        duration: 0.65,
+        ease: "power2.inOut",
+      },
+      "<"
+    );
+
+    tl.to(
+      iconHeadingRef.current,
+      {
+        opacity: 1,
+        filter: "blur(0px)",
+        duration: 0.65,
+        ease: "power2.inOut",
+      },
+      "<"
+    );
+
     // Natural follow-through relaxation: Hand eases down-right and fades out
     tl.to(cursor, {
       opacity: 0,
@@ -530,7 +663,7 @@ export default function MayaWorkspaceAnimation({
       rotate: "+=4",
       duration: 0.65,
       ease: "power2.out",
-    });
+    }, "<");
 
     // -------------------------------------------------------------
     // PHASE 3: Thinking Sequence (Maya is thinking -> Searching resources -> Building the final result)
@@ -598,21 +731,6 @@ export default function MayaWorkspaceAnimation({
             />
           </div>
         </div>
-
-        {/* Minimalist Replay Button */}
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => restartAnimation()}
-            title="Replay Animation"
-            type="button"
-            className={`p-1.5 rounded-md border transition-all cursor-pointer ${isDark
-              ? "border-white/[0.08] hover:bg-white/[0.06] text-[#717682] hover:text-white"
-              : "border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-slate-900"
-              }`}
-          >
-            <RotateCcw className="w-3 h-3" />
-          </button>
-        </div>
       </div>
 
       {/* ----------------------------------------------------------------- */}
@@ -647,14 +765,20 @@ export default function MayaWorkspaceAnimation({
               className="flex-1 flex flex-col items-center justify-center my-auto"
             >
               {/* Center Brand Mark Icon & Heading */}
-              <div className="flex flex-col items-center mb-6 text-center">
-                <div
-                  className={`w-12 h-12 rounded-2xl border flex items-center justify-center mb-3 shadow-sm transition-colors ${isDark
-                    ? "bg-[#121622] border-white/[0.08]"
-                    : "bg-[#F1F5F9] border-[#E2E8F0]"
-                    }`}
-                >
-                  <MayaBrandMark isDark={isDark} className="h-5 w-auto" />
+              <div
+                ref={iconHeadingRef}
+                className="flex flex-col items-center mb-5 text-center will-change-transform"
+              >
+                <div className="relative mb-3 flex items-center justify-center">
+                  {/* Subtle ethereal diffuse glow behind the pure mark */}
+                  <div
+                    className={`absolute w-12 h-12 rounded-full blur-xl pointer-events-none transition-opacity duration-500 ${isDark ? "bg-white/[0.08]" : "bg-slate-400/[0.12]"
+                      }`}
+                  />
+                  <MayaBrandMark
+                    isDark={isDark}
+                    className="h-7 sm:h-7.5 w-auto relative z-10 transition-transform duration-300 hover:scale-105"
+                  />
                 </div>
 
                 <h4
@@ -666,7 +790,14 @@ export default function MayaWorkspaceAnimation({
               </div>
 
               {/* Glowing Premium Floating Prompt Capsule */}
-              <div className="w-full max-w-md relative group">
+              <div
+                ref={chatWindowRef}
+                className="w-full max-w-md relative group will-change-transform"
+                style={{
+                  transformOrigin: "center center",
+                  transformStyle: "preserve-3d",
+                }}
+              >
                 {/* Ambient Unidirectional Soft Glow on Hover */}
                 <div
                   className={`absolute -inset-[2px] rounded-full pointer-events-none overflow-hidden transition-opacity duration-500 blur-[8px] ${isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -1322,29 +1453,31 @@ export default function MayaWorkspaceAnimation({
                   </motion.p>
                 </div>
 
-                {/* Bottom Action CTAs: Matching Hero CTAs */}
+                {/* Static Executive Status Indicators (Professional & Clean Metadata matching UI) */}
                 <motion.div
-                  initial={{ opacity: 0, y: 8 }}
+                  initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.62 }}
-                  className="flex items-center gap-2 pt-3"
+                  className="flex items-center gap-2 pt-3 select-none"
                 >
                   <div
-                    className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-[10.5px] font-medium border transition-colors cursor-pointer ${isDark
-                      ? "bg-white/[0.04] hover:bg-white/[0.08] text-white border-white/[0.1]"
-                      : "bg-white hover:bg-slate-100 text-slate-800 border-slate-200"
-                      }`}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10.5px] font-medium tracking-tight border ${
+                      isDark
+                        ? "bg-white/[0.03] border-white/[0.07] text-[#9ca3af]"
+                        : "bg-white border-[#E2E8F0] text-[#64748B]"
+                    }`}
                   >
-                    <span>Export Summary</span>
-                    <ArrowUpRight className="w-3 h-3" />
+                    <ArrowUpRight className="w-3 h-3 opacity-60" />
+                    <span>Export summary</span>
                   </div>
                   <div
-                    className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-colors cursor-pointer shadow-sm ${isDark
-                      ? "bg-white text-black hover:bg-neutral-100"
-                      : "bg-[#0F172A] text-white hover:bg-black"
-                      }`}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10.5px] font-medium tracking-tight border ${
+                      isDark
+                        ? "bg-white/[0.03] border-white/[0.07] text-[#9ca3af]"
+                        : "bg-white border-[#E2E8F0] text-[#64748B]"
+                    }`}
                   >
-                    <CheckCircle2 className="w-3 h-3" />
+                    <CheckCircle2 className="w-3 h-3 opacity-60" />
                     <span>Sync CRM</span>
                   </div>
                 </motion.div>
@@ -1356,9 +1489,14 @@ export default function MayaWorkspaceAnimation({
         {/* =============================================================== */}
         {/* Animated Virtual Cursor                                         */}
         {/* =============================================================== */}
+        {/* Animated Virtual Cursor - strictly visible only on chat interface */}
         <div
           ref={cursorRef}
-          className="absolute top-0 left-0 pointer-events-none z-50 will-change-transform"
+          className={`absolute top-0 left-0 pointer-events-none z-50 will-change-transform transition-opacity duration-200 ${
+            phase === "cursor-enter" || phase === "typing" || phase === "clicking-send"
+              ? "opacity-100"
+              : "opacity-0 invisible"
+          }`}
           style={{ transform: "translate3d(340px, 280px, 0)" }}
         >
           <svg
@@ -1381,7 +1519,11 @@ export default function MayaWorkspaceAnimation({
         {/* Tactile Click Ripple (Subtle Glass Wave) */}
         <div
           ref={rippleRef}
-          className="absolute pointer-events-none z-40 rounded-full w-8 h-8 -translate-x-1/2 -translate-y-1/2"
+          className={`absolute pointer-events-none z-40 rounded-full w-8 h-8 -translate-x-1/2 -translate-y-1/2 ${
+            phase === "cursor-enter" || phase === "typing" || phase === "clicking-send"
+              ? ""
+              : "opacity-0 invisible"
+          }`}
           style={{
             background: isDark
               ? "radial-gradient(circle, rgba(255, 255, 255, 0.45) 0%, transparent 70%)"

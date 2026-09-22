@@ -19,6 +19,9 @@ export default function Home() {
       {/* 0. Executive Sleek Motion Loader with MAYA Logo on every refresh */}
       <MotionLoader />
 
+      {/* Persistent Fixed Top Navigation: Remains pinned to head on scroll */}
+      <Navbar />
+
       <motion.main
         initial={{ opacity: 0.88, scale: 0.995 }}
         animate={isPageReady ? { opacity: 1, scale: 1 } : { opacity: 0.88, scale: 0.995 }}
@@ -32,8 +35,8 @@ export default function Home() {
           {/* Ambient Background Video (Night & Day Mode Seamless Crossfade) */}
           <BackgroundVideo />
 
-          {/* Top Navigation with Mode Switcher */}
-          <Navbar />
+          {/* Spacer preserving exact hero flex proportions and vertical balance */}
+          <div className="w-full h-14 sm:h-16 shrink-0 pointer-events-none" aria-hidden="true" />
 
           {/* Main Stage: Hero (Left) & Right Rail (Right) */}
           <div className="relative z-10 w-full px-6 sm:px-10 lg:px-14 flex-1 flex items-center justify-between min-h-0 py-1">

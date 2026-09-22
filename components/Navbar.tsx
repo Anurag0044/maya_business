@@ -22,6 +22,7 @@ export default function Navbar() {
   const { isPageReady } = usePageLoad();
   const [activeItem, setActiveItem] = useState<string>("#product");
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   // Sync active item with hash on mount and hashchange
   useEffect(() => {
@@ -36,6 +37,16 @@ export default function Navbar() {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
+  // Track scroll position to transition backdrop when scrolling down
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const currentSelection = hoveredItem || activeItem;
 
   return (
@@ -43,7 +54,10 @@ export default function Navbar() {
       initial={{ opacity: 0, y: -10 }}
       animate={isPageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
       transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-      className="relative w-full z-50 px-6 sm:px-10 lg:px-14 py-3.5 sm:py-4 flex items-center justify-between border-b border-white/[0.035]"
+      className={`fixed top-0 inset-x-0 z-50 px-6 sm:px-10 lg:px-14 flex items-center justify-between transition-all duration-300 ${isScrolled
+          ? "py-2.5 sm:py-3 bg-[#060709]/85 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.45)]"
+          : "py-3.5 sm:py-4 bg-transparent border-b border-white/[0.035]"
+        }`}
     >
       {/* Brand Identity: Authentic Precision Vector Lockup */}
       <MayaBrand />
@@ -84,11 +98,10 @@ export default function Navbar() {
 
               {/* Text Label with Smooth Contrast */}
               <span
-                className={`relative z-10 transition-colors duration-400 ease-out ${
-                  isSelected
+                className={`relative z-10 transition-colors duration-400 ease-out ${isSelected
                     ? "text-white font-medium"
                     : "text-[#9ca3af] hover:text-[#e5e7eb] font-normal"
-                }`}
+                  }`}
               >
                 {item.label}
               </span>

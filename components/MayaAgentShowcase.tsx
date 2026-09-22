@@ -1,27 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
+import { motion } from "framer-motion";
 import {
-  ArrowRight,
-  Play,
   Phone,
   Users,
   Calendar,
   CheckCircle2,
   BarChart2,
   TrendingUp,
-  X,
-  Sparkles,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import MayaWorkspaceAnimation from "./MayaWorkspaceAnimation";
+import MayaWordmark from "./MayaWordmark";
 
 export default function MayaAgentShowcase() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   return (
     <section
@@ -105,9 +100,8 @@ export default function MayaAgentShowcase() {
               appointments and keeping follow-ups on track.
             </p>
 
-            {/* CTAs Row: Identical proportions, weights and transitions */}
-            <div className="flex items-center gap-5 sm:gap-6 my-5 sm:my-6">
-              {/* Primary CTA Button */}
+            {/* CTA: Explore MAYA Agent with Authentic Brand Wordmark Typography */}
+            <div className="flex items-center my-5 sm:my-6">
               <a
                 href="#get-started"
                 className={`group inline-flex items-center gap-2 px-5 py-2 sm:px-5.5 sm:py-2.5 rounded-full font-medium text-[12.5px] active:scale-[0.98] transition-all duration-300 shadow-sm ${
@@ -116,47 +110,15 @@ export default function MayaAgentShowcase() {
                     : "bg-[#0B0F17] text-white hover:bg-[#1E293B]"
                 }`}
               >
-                <span>Get started</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span>Explore</span>
+                  <MayaWordmark className="h-2.5 sm:h-[11px] w-auto text-current" />
+                  <span>Agent</span>
+                </span>
                 <span className="text-[12.5px] leading-none transition-transform duration-200 group-hover:translate-x-0.5">
                   →
                 </span>
               </a>
-
-              {/* Secondary Video CTA */}
-              <button
-                type="button"
-                onClick={() => setIsVideoModalOpen(true)}
-                className="group flex items-center gap-3 text-left focus:outline-none cursor-pointer"
-              >
-                <div
-                  className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full border flex items-center justify-center transition-all duration-300 ${
-                    isDark
-                      ? "border-white/15 bg-white/[0.04] text-white group-hover:border-white/35 group-hover:bg-white/[0.08]"
-                      : "border-black/10 bg-black/[0.03] text-black group-hover:border-black/25 group-hover:bg-black/[0.06]"
-                  }`}
-                >
-                  <svg
-                    className="w-2.5 h-2.5 fill-current ml-0.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                </div>
-                <div className="flex flex-col">
-                  <span
-                    className={`text-[12.5px] font-medium transition-colors ${
-                      isDark
-                        ? "text-white group-hover:text-white/90"
-                        : "text-[#0F172A] group-hover:text-black"
-                    }`}
-                  >
-                    See MAYA in action
-                  </span>
-                  <span className="text-[10.5px] text-[#717682] font-normal leading-none mt-0.5">
-                    2 min
-                  </span>
-                </div>
-              </button>
             </div>
           </motion.div>
 
@@ -420,98 +382,6 @@ export default function MayaAgentShowcase() {
           </div>
         </motion.div>
       </div>
-
-      {/* Interactive Modal for "See MAYA in action" */}
-      <AnimatePresence>
-        {isVideoModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={() => setIsVideoModalOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className={`relative w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border ${isDark
-                ? "bg-[#0E1118] border-white/[0.1] text-white"
-                : "bg-white border-[#E2E8F0] text-[#0F172A]"
-                }`}
-            >
-              {/* Modal Header */}
-              <div
-                className={`flex items-center justify-between px-6 py-4 border-b ${isDark ? "border-white/[0.08]" : "border-[#E2E8F0]"
-                  }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Sparkles
-                    className={`w-4 h-4 ${isDark ? "text-white" : "text-[#0F172A]"
-                      }`}
-                  />
-                  <span
-                    className={`font-medium text-[13px] sm:text-[13.5px] tracking-tight ${isDark ? "text-white" : "text-[#0F172A]"
-                      }`}
-                  >
-                    MAYA in Action • 2 Min Product Overview
-                  </span>
-                </div>
-                <button
-                  onClick={() => setIsVideoModalOpen(false)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${isDark
-                    ? "text-[#94A3B8] hover:text-white hover:bg-white/[0.08]"
-                    : "text-[#64748B] hover:text-black hover:bg-[#F1F5F9]"
-                    }`}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Modal Content */}
-              <div
-                className={`p-6 sm:p-8 flex flex-col items-center justify-center text-center gap-4 ${isDark ? "bg-[#07090E]" : "bg-[#F8FAFC]"
-                  }`}
-              >
-                <div
-                  className={`w-16 h-16 rounded-full border shadow-sm flex items-center justify-center ${isDark
-                    ? "bg-white/[0.08] border-white/[0.12] text-white"
-                    : "bg-white border-[#E2E8F0] text-[#0F172A]"
-                    }`}
-                >
-                  <Play className="w-6 h-6 fill-current ml-0.5" />
-                </div>
-                <div>
-                  <h4
-                    className={`text-[16px] sm:text-[17px] font-light tracking-[-0.02em] ${isDark ? "text-white" : "text-[#0F172A]"
-                      }`}
-                  >
-                    Interactive MAYA Agent Walkthrough
-                  </h4>
-                  <p
-                    className={`text-[12.5px] sm:text-[13px] leading-[1.6] font-normal mt-1 max-w-md ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
-                      }`}
-                  >
-                    Watch how MAYA autonomously answers incoming inquiries,
-                    qualifies leads with tailored intelligence, and books directly
-                    into your calendar.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsVideoModalOpen(false)}
-                  className={`mt-2 px-5.5 py-2 sm:py-2.5 rounded-full text-[12.5px] font-medium transition-colors cursor-pointer shadow-sm ${isDark
-                    ? "bg-white hover:bg-neutral-200 text-black"
-                    : "bg-[#0F172A] hover:bg-black text-white"
-                    }`}
-                >
-                  Close Preview
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   );
 }

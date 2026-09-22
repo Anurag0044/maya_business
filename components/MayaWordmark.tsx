@@ -11,6 +11,7 @@ export default function MayaWordmark({ className = "h-2.5 w-auto" }: MayaWordmar
       viewBox="58 45 2165 370"
       className={className}
       shapeRendering="geometricPrecision"
+      role="img"
       aria-label="MAYA"
     >
       <path d={PATH_M} fill="currentColor" fillRule="evenodd" />
