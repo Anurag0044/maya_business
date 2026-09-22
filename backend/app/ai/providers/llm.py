@@ -51,7 +51,13 @@ class OpenAICompatibleLLMProvider:
 
 
 class NVIDIAKimiProvider(OpenAICompatibleLLMProvider):
-    """NVIDIA NIM adapter for Moonshot Kimi K3."""
+    """NVIDIA NIM adapter for Moonshot Kimi K3 (reasoning model).
+
+    Kimi K3 is a chain-of-thought / reasoning model — the same family as
+    OpenAI o1/o3.  These models do NOT accept a ``temperature`` parameter
+    (any value other than 1 returns a 400 from the API).  Instead they
+    expose ``reasoning_effort`` to trade off latency against answer quality.
+    """
 
     def __init__(self) -> None:
         if not settings.nvidia_api_key:
@@ -61,6 +67,27 @@ class NVIDIAKimiProvider(OpenAICompatibleLLMProvider):
             base_url=settings.nvidia_base_url,
             model=settings.nvidia_chat_model,
         )
+
+    async def generate(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 1.0,          # accepted value for reasoning models; kept for interface compat
+        reasoning_effort: str = "low",     # "low" | "medium" | "max"
+    ) -> str | None:
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            # temperature is intentionally omitted — reasoning models reject any value != 1
+            # and the OpenAI SDK still sends it even when set to 1, causing API errors.
+            extra_body={"reasoning_effort": reasoning_effort},
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": user_prompt},
+            ],
+        )
+        content = response.choices[0].message.content
+        return content.strip() if content else None
 
 
 class OpenAIProvider(OpenAICompatibleLLMProvider):

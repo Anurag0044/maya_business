@@ -1,6 +1,11 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Resolve the backend/ root from this file's location so the .env is always
+# found regardless of the current working directory (IDE, Docker, scripts, etc.)
+_BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
@@ -33,7 +38,8 @@ class Settings(BaseSettings):
     chat_model: str = "gpt-4o-mini"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Absolute path — works from any CWD (IDE, Docker, test runner, CLI).
+        env_file=str(_BACKEND_DIR / ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -42,6 +48,12 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
+    """Return the singleton Settings instance.
+
+    The result is cached for the lifetime of the process.  In tests, call
+    ``get_settings.cache_clear()`` after patching environment variables so
+    the next call picks up the new values instead of returning the stale copy.
+    """
     return Settings()
 
 
