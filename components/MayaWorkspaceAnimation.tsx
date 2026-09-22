@@ -16,6 +16,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import GeometricThinkingAnimation from "./GeometricThinkingAnimation";
+import { usePageLoad } from "@/context/PageLoadContext";
 
 interface MayaWorkspaceAnimationProps {
   isDark: boolean;
@@ -210,6 +211,10 @@ function getCubicBezier(
 export default function MayaWorkspaceAnimation({
   isDark,
 }: MayaWorkspaceAnimationProps) {
+  const { isPageReady } = usePageLoad();
+  const hasStartedRef = useRef(false);
+  const isInViewRef = useRef(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const promptBarRef = useRef<HTMLDivElement>(null);
@@ -684,18 +689,87 @@ export default function MayaWorkspaceAnimation({
 
   runAnimationRef.current = runAnimation;
 
+  // IntersectionObserver: Triggers animation when the user scrolls down to the agent showcase
   useEffect(() => {
-    const timer = setTimeout(() => {
-      runAnimation();
-    }, 120);
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        const isIntersecting = entry.isIntersecting;
+        isInViewRef.current = isIntersecting;
+
+        // When the workspace card enters view and the page loader is finished
+        if (isIntersecting && isPageReady && !hasStartedRef.current) {
+          hasStartedRef.current = true;
+          setTimeout(() => {
+            runAnimation();
+          }, 220);
+        }
+      },
+      {
+        threshold: 0.2, // Triggers when at least 20% of the showcase card is visible
+        rootMargin: "0px 0px -40px 0px",
+      }
+    );
+
+    observer.observe(container);
 
     return () => {
-      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, [isPageReady, runAnimation]);
+
+  // If the user refreshed while already scrolled down to this section:
+  // Wait for isPageReady (loader finished), then trigger smoothly
+  useEffect(() => {
+    if (isPageReady && isInViewRef.current && !hasStartedRef.current) {
+      hasStartedRef.current = true;
+      const timer = setTimeout(() => {
+        runAnimation();
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [isPageReady, runAnimation]);
+
+  // If the user scrolls all the way back to the top (Hero section),
+  // reset so that the next time they scroll down it plays again from the beginning!
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY < 40 && hasStartedRef.current) {
+        hasStartedRef.current = false;
+        if (timelineRef.current) {
+          timelineRef.current.kill();
+        }
+        setPhase("cursor-enter");
+        setTypedText("");
+        setIsFocused(false);
+        setIsSendActive(false);
+        setMetrics({ calls: 0, leads: 0, appointments: 0, conversion: 0 });
+        if (cursorRef.current) {
+          gsap.set(cursorRef.current, { opacity: 0 });
+        }
+        if (chatWindowRef.current) {
+          gsap.set(chatWindowRef.current, { scale: 1, rotateX: 0, rotateY: 0 });
+        }
+        if (iconHeadingRef.current) {
+          gsap.set(iconHeadingRef.current, { opacity: 1, filter: "blur(0px)" });
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    return () => {
       if (timelineRef.current) {
         timelineRef.current.kill();
       }
     };
-  }, [runAnimation]);
+  }, []);
 
   return (
     <div

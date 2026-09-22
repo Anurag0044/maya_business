@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import MayaBrand from "./MayaBrand";
 import ThemeToggle from "./ThemeToggle";
@@ -115,15 +116,15 @@ export default function Navbar() {
         {/* Premium Minimal Mode Switching Icon */}
         <ThemeToggle />
 
-        <a
-          href="#signin"
+        <Link
+          href="/login"
           className="group relative inline-flex items-center gap-1.5 px-4.5 py-1.5 sm:px-5 sm:py-2 rounded-full bg-white text-black font-medium text-[12.5px] hover:bg-neutral-100 active:scale-[0.98] transition-all duration-300 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-white/80"
         >
           <span>Sign in</span>
           <span className="text-[13px] leading-none transition-transform duration-300 ease-out group-hover:translate-x-0.5">
             →
           </span>
-        </a>
+        </Link>
       </div>
     </motion.header>
   );
