@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Mail,
@@ -59,6 +60,7 @@ function AppleIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -68,12 +70,13 @@ export default function LoginPage() {
   const [keepSignedIn, setKeepSignedIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-    }, 1000);
+      router.push("/workspace");
+    }, 250);
   };
 
   return (
@@ -140,12 +143,7 @@ export default function LoginPage() {
         </div>
 
         {/* Right Column: Sleek, Compact Luxury Glass Card matching main UI discipline */}
-        <motion.div
-          initial={{ opacity: 0, y: 14, scale: 0.99 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[365px] sm:max-w-[375px] relative shrink-0"
-        >
+        <div className="w-full max-w-[365px] sm:max-w-[375px] relative shrink-0">
           {/* Soft ambient aura behind card */}
           <div
             className="absolute -inset-2 rounded-[32px] pointer-events-none opacity-20 blur-[28px]"
@@ -156,8 +154,8 @@ export default function LoginPage() {
           />
 
           {/* Frosted Obsidian Glass Card Surface */}
-          <div className="relative rounded-[26px] sm:rounded-[28px] p-6 sm:p-7 bg-[#090C12]/85 backdrop-blur-2xl border border-white/[0.08] shadow-[0_25px_65px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.06)] flex flex-col">
-            <AnimatePresence mode="wait">
+          <div className="relative rounded-[26px] sm:rounded-[28px] p-6 sm:p-7 bg-[#090C12]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_25px_65px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.06)] flex flex-col">
+            <AnimatePresence mode="wait" initial={false}>
               {authMode === "signin" ? (
                 <motion.div
                   key="signin"
@@ -183,7 +181,7 @@ export default function LoginPage() {
                   </div>
 
                   {/* Form */}
-                  <form onSubmit={handleSubmit} className="flex flex-col gap-2.5 sm:gap-3">
+                  <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-2.5 sm:gap-3">
                     {/* Email Input Field */}
                     <div className="relative group">
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-[#6b7280] group-focus-within:text-white transition-colors pointer-events-none" />
@@ -192,7 +190,6 @@ export default function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Email address"
-                        required
                         autoComplete="email"
                         className="w-full h-11 pl-10 pr-4 rounded-[14px] bg-[#0b0e16]/80 border border-white/[0.08] text-[13px] text-white placeholder:text-[#556070] focus:outline-none focus:border-white/25 focus:bg-[#0e121d] focus:ring-1 focus:ring-white/10 transition-all duration-200"
                       />
@@ -206,7 +203,6 @@ export default function LoginPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Password"
-                        required
                         autoComplete="current-password"
                         className="w-full h-11 pl-10 pr-10 rounded-[14px] bg-[#0b0e16]/80 border border-white/[0.08] text-[13px] text-white placeholder:text-[#556070] focus:outline-none focus:border-white/25 focus:bg-[#0e121d] focus:ring-1 focus:ring-white/10 transition-all duration-200"
                       />
@@ -256,6 +252,7 @@ export default function LoginPage() {
                     {/* Primary Action Button (Sign in →) matching main UI discipline */}
                     <button
                       type="submit"
+                      onClick={() => handleSubmit()}
                       disabled={isSubmitting}
                       className="group relative w-full h-11 rounded-full mt-1.5 bg-white text-black font-medium text-[13px] tracking-tight flex items-center justify-center gap-2 hover:bg-neutral-100 active:scale-[0.99] transition-all duration-200 shadow-[0_2px_14px_rgba(255,255,255,0.08)] outline-none focus-visible:ring-2 focus-visible:ring-white/80 cursor-pointer disabled:opacity-60 select-none"
                     >
@@ -276,7 +273,7 @@ export default function LoginPage() {
                       {/* Google */}
                       <button
                         type="button"
-                        onClick={() => { }}
+                        onClick={() => handleSubmit()}
                         className="h-10 rounded-[12px] bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] hover:border-white/20 active:scale-[0.98] transition-all flex items-center justify-center group cursor-pointer"
                         aria-label="Continue with Google"
                       >
@@ -286,7 +283,7 @@ export default function LoginPage() {
                       {/* Microsoft */}
                       <button
                         type="button"
-                        onClick={() => { }}
+                        onClick={() => handleSubmit()}
                         className="h-10 rounded-[12px] bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] hover:border-white/20 active:scale-[0.98] transition-all flex items-center justify-center group cursor-pointer"
                         aria-label="Continue with Microsoft"
                       >
@@ -296,7 +293,7 @@ export default function LoginPage() {
                       {/* Apple */}
                       <button
                         type="button"
-                        onClick={() => { }}
+                        onClick={() => handleSubmit()}
                         className="h-10 rounded-[12px] bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] hover:border-white/20 active:scale-[0.98] transition-all flex items-center justify-center group text-white/90 hover:text-white cursor-pointer"
                         aria-label="Continue with Apple"
                       >
@@ -440,6 +437,7 @@ export default function LoginPage() {
                     {/* Submit Button */}
                     <button
                       type="submit"
+                      onClick={() => handleSubmit()}
                       disabled={isSubmitting}
                       className="group relative w-full h-10 sm:h-11 rounded-full mt-1 bg-white text-black font-medium text-[13px] tracking-tight flex items-center justify-center gap-2 hover:bg-neutral-100 active:scale-[0.99] transition-all duration-200 shadow-[0_2px_14px_rgba(255,255,255,0.08)] outline-none focus-visible:ring-2 focus-visible:ring-white/80 cursor-pointer disabled:opacity-60 select-none"
                     >
@@ -463,7 +461,7 @@ export default function LoginPage() {
               )}
             </AnimatePresence>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* ========================================================================= */}

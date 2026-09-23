@@ -111,10 +111,17 @@ export default function Navbar() {
         })}
       </nav>
 
-      {/* Header Actions: Theme Switcher & Sign In CTA */}
-      <div className="flex items-center gap-3.5 sm:gap-4 text-[13px]">
+      {/* Header Actions: Theme Switcher, Workspace Link & Sign In CTA */}
+      <div className="flex items-center gap-2.5 sm:gap-3.5 text-[13px]">
         {/* Premium Minimal Mode Switching Icon */}
         <ThemeToggle />
+
+        <Link
+          href="/workspace"
+          className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full border border-white/10 hover:border-white/20 text-white/90 hover:text-white font-medium text-[12.5px] hover:bg-white/[0.04] transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+        >
+          <span>Workspace</span>
+        </Link>
 
         <Link
           href="/login"
