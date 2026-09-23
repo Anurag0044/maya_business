@@ -57,13 +57,13 @@ export default function WorkspaceRightRail({
       <div
         className={`p-2.5 sm:p-3 rounded-xl border transition-all duration-300 flex items-center justify-between cursor-pointer group shrink-0 ${
           isDark
-            ? "bg-[#0e121b]/85 border-white/[0.08] hover:border-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+            ? "bg-gradient-to-b from-[#111724]/95 via-[#0c101a]/95 to-[#080b12]/98 border-white/[0.09] hover:border-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_rgba(0,0,0,0.3)]"
             : "bg-white border-[#E2E8F0] hover:border-slate-300 shadow-2xs"
         }`}
       >
         <div className="flex items-center gap-2.5">
           <div className="relative flex items-center justify-center shrink-0">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
             <span className="absolute w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-60" />
           </div>
           <div className="flex flex-col text-left">
@@ -92,10 +92,10 @@ export default function WorkspaceRightRail({
 
       {/* 2. Upcoming Appointments Card */}
       <div
-        className={`p-3 sm:p-3.5 rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden flex-1 min-h-0 ${
+        className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden flex-1 min-h-0 ${
           isDark
-            ? "bg-[#0e121b]/85 border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
-            : "bg-white border-[#E2E8F0] shadow-2xs"
+            ? "bg-gradient-to-b from-[#111724]/95 via-[#0c101a]/95 to-[#080b12]/98 border-white/[0.09] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_8px_24px_-6px_rgba(0,0,0,0.55)]"
+            : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200/90 shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_4px_16px_rgba(15,23,42,0.05)]"
         }`}
       >
         <div
@@ -191,8 +191,8 @@ export default function WorkspaceRightRail({
       <div
         className={`relative rounded-2xl p-4 border overflow-hidden transition-all duration-300 flex flex-col justify-between shrink-0 ${
           isDark
-            ? "bg-[#0e121b]/85 border-white/[0.08] text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
-            : "bg-white border-[#E2E8F0] text-[#0B0F17] shadow-2xs"
+            ? "bg-gradient-to-b from-[#111724]/95 via-[#0c101a]/95 to-[#080b12]/98 border-white/[0.09] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_8px_24px_-6px_rgba(0,0,0,0.55)]"
+            : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200/90 text-[#0B0F17] shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_4px_16px_rgba(15,23,42,0.05)]"
         }`}
       >
         {/* Misty Mountain Artistic SVG Backdrop */}

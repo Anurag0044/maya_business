@@ -37,25 +37,25 @@ export default function WorkspaceAppointmentTrendChart() {
 
   return (
     <div
-      className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden ${
+      className={`relative p-4 sm:p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden select-none ${
         isDark
-          ? "bg-[#0e121b]/85 border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
-          : "bg-white border-[#E2E8F0] shadow-2xs"
+          ? "bg-gradient-to-b from-[#111724]/95 via-[#0c101a]/95 to-[#080b12]/98 border-white/[0.09] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_8px_24px_-6px_rgba(0,0,0,0.55)]"
+          : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200/90 shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_4px_16px_rgba(15,23,42,0.05)]"
       }`}
     >
       {/* Header Row */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between relative z-10 shrink-0">
         <div>
           <h3
-            className={`text-[12.5px] font-medium tracking-[-0.01em] ${
+            className={`text-[13.5px] font-medium tracking-tight ${
               isDark ? "text-white" : "text-[#0B0F17]"
             }`}
           >
             Appointment Trend
           </h3>
           <p
-            className={`text-[10.5px] mt-0.5 ${
-              isDark ? "text-[#9ca3af]" : "text-[#64748B]"
+            className={`text-[11px] mt-0.5 ${
+              isDark ? "text-[#8e95a5]" : "text-[#64748B]"
             }`}
           >
             Appointments scheduled this week
@@ -67,10 +67,10 @@ export default function WorkspaceAppointmentTrendChart() {
           <button
             type="button"
             onClick={() => setFilterOpen(!filterOpen)}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-medium border transition-colors cursor-pointer ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border transition-all cursor-pointer ${
               isDark
-                ? "bg-white/[0.03] border-white/[0.08] text-[#8e95a5] hover:text-white hover:bg-white/[0.06]"
-                : "bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:bg-slate-100"
+                ? "bg-white/[0.04] border-white/[0.1] text-white/90 hover:bg-white/[0.08] hover:border-white/20 shadow-2xs"
+                : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 shadow-2xs"
             }`}
           >
             <span>{filter}</span>
@@ -79,9 +79,9 @@ export default function WorkspaceAppointmentTrendChart() {
 
           {filterOpen && (
             <div
-              className={`absolute right-0 top-full mt-1.5 w-32 py-1 rounded-xl border shadow-xl z-20 backdrop-blur-xl ${
+              className={`absolute right-0 top-full mt-1.5 w-34 py-1 rounded-xl border shadow-xl z-30 backdrop-blur-2xl ${
                 isDark
-                  ? "bg-[#10141E]/95 border-white/10 text-white"
+                  ? "bg-[#111622]/95 border-white/10 text-white"
                   : "bg-white border-slate-200 text-slate-800"
               }`}
             >
@@ -95,8 +95,12 @@ export default function WorkspaceAppointmentTrendChart() {
                   }}
                   className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors cursor-pointer ${
                     filter === opt
-                      ? "font-medium text-white bg-white/[0.08]"
-                      : "text-[#8e95a5] hover:text-white hover:bg-white/[0.04]"
+                      ? isDark
+                        ? "font-medium text-white bg-white/[0.08]"
+                        : "font-medium text-[#0F172A] bg-slate-100"
+                      : isDark
+                      ? "text-[#8e95a5] hover:text-white hover:bg-white/[0.04]"
+                      : "text-[#64748B] hover:text-[#0F172A] hover:bg-slate-50"
                   }`}
                 >
                   {opt}
@@ -107,8 +111,8 @@ export default function WorkspaceAppointmentTrendChart() {
         </div>
       </div>
 
-      {/* Main Chart Canvas with SVG */}
-      <div className="relative w-full h-28 my-1 flex items-center">
+      {/* Main Chart Canvas with Scaled SVG */}
+      <div className="relative w-full h-36 sm:h-40 my-auto flex items-center">
         {/* Y Axis Labels */}
         <div
           className={`absolute left-0 top-0 bottom-2 w-5 flex flex-col justify-between text-[8.5px] font-mono select-none ${
