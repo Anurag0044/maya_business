@@ -37,26 +37,23 @@ export default function WorkspaceAppointmentTrendChart() {
 
   return (
     <div
-      className={`relative p-4 sm:p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden select-none ${
-        isDark
+      className={`relative p-4 sm:p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden select-none ${isDark
           ? "bg-gradient-to-b from-[#111724]/95 via-[#0c101a]/95 to-[#080b12]/98 border-white/[0.09] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_8px_24px_-6px_rgba(0,0,0,0.55)]"
           : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200/90 shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_4px_16px_rgba(15,23,42,0.05)]"
-      }`}
+        }`}
     >
       {/* Header Row */}
       <div className="flex items-start justify-between relative z-10 shrink-0">
         <div>
           <h3
-            className={`text-[13.5px] font-medium tracking-tight ${
-              isDark ? "text-white" : "text-[#0B0F17]"
-            }`}
+            className={`text-[13.5px] font-medium tracking-tight ${isDark ? "text-white" : "text-[#0B0F17]"
+              }`}
           >
             Appointment Trend
           </h3>
           <p
-            className={`text-[11px] mt-0.5 ${
-              isDark ? "text-[#8e95a5]" : "text-[#64748B]"
-            }`}
+            className={`text-[11px] mt-0.5 ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+              }`}
           >
             Appointments scheduled this week
           </p>
@@ -67,11 +64,10 @@ export default function WorkspaceAppointmentTrendChart() {
           <button
             type="button"
             onClick={() => setFilterOpen(!filterOpen)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border transition-all cursor-pointer ${
-              isDark
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border transition-all cursor-pointer ${isDark
                 ? "bg-white/[0.04] border-white/[0.1] text-white/90 hover:bg-white/[0.08] hover:border-white/20 shadow-2xs"
                 : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 shadow-2xs"
-            }`}
+              }`}
           >
             <span>{filter}</span>
             <ChevronDown className="w-3 h-3 opacity-60" />
@@ -79,11 +75,10 @@ export default function WorkspaceAppointmentTrendChart() {
 
           {filterOpen && (
             <div
-              className={`absolute right-0 top-full mt-1.5 w-34 py-1 rounded-xl border shadow-xl z-30 backdrop-blur-2xl ${
-                isDark
+              className={`absolute right-0 top-full mt-1.5 w-34 py-1 rounded-xl border shadow-xl z-30 backdrop-blur-2xl ${isDark
                   ? "bg-[#111622]/95 border-white/10 text-white"
                   : "bg-white border-slate-200 text-slate-800"
-              }`}
+                }`}
             >
               {["This Week", "Last Week", "This Month"].map((opt) => (
                 <button
@@ -93,15 +88,14 @@ export default function WorkspaceAppointmentTrendChart() {
                     setFilter(opt);
                     setFilterOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors cursor-pointer ${
-                    filter === opt
+                  className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors cursor-pointer ${filter === opt
                       ? isDark
                         ? "font-medium text-white bg-white/[0.08]"
                         : "font-medium text-[#0F172A] bg-slate-100"
                       : isDark
-                      ? "text-[#8e95a5] hover:text-white hover:bg-white/[0.04]"
-                      : "text-[#64748B] hover:text-[#0F172A] hover:bg-slate-50"
-                  }`}
+                        ? "text-[#8e95a5] hover:text-white hover:bg-white/[0.04]"
+                        : "text-[#64748B] hover:text-[#0F172A] hover:bg-slate-50"
+                    }`}
                 >
                   {opt}
                 </button>
@@ -115,9 +109,8 @@ export default function WorkspaceAppointmentTrendChart() {
       <div className="relative w-full h-36 sm:h-40 my-auto flex items-center">
         {/* Y Axis Labels */}
         <div
-          className={`absolute left-0 top-0 bottom-2 w-5 flex flex-col justify-between text-[8.5px] font-mono select-none ${
-            isDark ? "text-[#717682]" : "text-[#94A3B8]"
-          }`}
+          className={`absolute left-0 top-0 bottom-2 w-6 flex flex-col justify-between text-[10px] sm:text-[10.5px] font-medium tabular-nums select-none ${isDark ? "text-[#717682]" : "text-[#94A3B8]"
+            }`}
         >
           <span>15</span>
           <span>10</span>
@@ -133,21 +126,68 @@ export default function WorkspaceAppointmentTrendChart() {
             preserveAspectRatio="none"
           >
             <defs>
-              <linearGradient id="monochrome-chart-grad-sm" x1="0" y1="0" x2="0" y2="1">
+              {/* Apple-Grade 4-Stop Atmospheric Area Fade */}
+              <linearGradient id="apple-area-gradient" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="0%"
                   stopColor={isDark ? "#FFFFFF" : "#0F172A"}
-                  stopOpacity={isDark ? "0.10" : "0.06"}
+                  stopOpacity={isDark ? "0.12" : "0.06"}
+                />
+                <stop
+                  offset="40%"
+                  stopColor={isDark ? "#FFFFFF" : "#0F172A"}
+                  stopOpacity={isDark ? "0.04" : "0.02"}
+                />
+                <stop
+                  offset="80%"
+                  stopColor={isDark ? "#FFFFFF" : "#0F172A"}
+                  stopOpacity={isDark ? "0.008" : "0.004"}
                 />
                 <stop
                   offset="100%"
                   stopColor={isDark ? "#FFFFFF" : "#0F172A"}
-                  stopOpacity="0.0"
+                  stopOpacity="0"
                 />
+              </linearGradient>
+
+              {/* Platinum Velocity Stroke Gradient (Luminous apex at peak) */}
+              <linearGradient id="apple-spline-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop
+                  offset="0%"
+                  stopColor={isDark ? "#94a3b8" : "#64748b"}
+                  stopOpacity={isDark ? "0.55" : "0.5"}
+                />
+                <stop
+                  offset="35%"
+                  stopColor={isDark ? "#cbd5e1" : "#475569"}
+                  stopOpacity={isDark ? "0.85" : "0.8"}
+                />
+                <stop
+                  offset="65%"
+                  stopColor={isDark ? "#ffffff" : "#0f172a"}
+                  stopOpacity="1"
+                />
+                <stop
+                  offset="85%"
+                  stopColor={isDark ? "#e2e8f0" : "#334155"}
+                  stopOpacity={isDark ? "0.9" : "0.85"}
+                />
+                <stop
+                  offset="100%"
+                  stopColor={isDark ? "#94a3b8" : "#64748b"}
+                  stopOpacity={isDark ? "0.6" : "0.55"}
+                />
+              </linearGradient>
+
+              {/* Living Specular Shimmer Beam */}
+              <linearGradient id="spline-shimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+                <stop offset="50%" stopColor="#ffffff" stopOpacity={isDark ? "0.45" : "0.6"} />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
               </linearGradient>
             </defs>
 
-            {/* Horizontal Grid Guidelines */}
+            {/* Horizontal Grid Guidelines (Whisper-thin hairlines) */}
             {[18, 45, 72, 100].map((yVal, i) => (
               <line
                 key={i}
@@ -155,98 +195,180 @@ export default function WorkspaceAppointmentTrendChart() {
                 y1={yVal}
                 x2="375"
                 y2={yVal}
-                stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}
-                strokeDasharray="4 4"
+                stroke={isDark ? "rgba(255,255,255,0.035)" : "rgba(0,0,0,0.035)"}
+                strokeWidth="0.65"
+                strokeDasharray="2 3"
               />
             ))}
 
-            {/* Gradient Area Fill */}
+            {/* Atmospheric Gradient Area Fill */}
             <motion.path
+              key={`area-${filter}`}
               d={areaPath}
-              fill="url(#monochrome-chart-grad-sm)"
+              fill="url(#apple-area-gradient)"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+              transition={{ duration: 0.9, delay: 0.15 }}
             />
 
-            {/* Main Smooth Spline Stroke */}
+            {/* Ambient Optical Penumbra (Behind the line, subtle depth diffusion) */}
             <motion.path
               d={linePath}
               fill="none"
-              stroke={isDark ? "#FFFFFF" : "#0B0F17"}
-              strokeWidth="1.75"
+              stroke={isDark ? "#ffffff" : "#0f172a"}
+              strokeWidth="2.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`pointer-events-none ${isDark ? "opacity-12" : "opacity-8"}`}
+            />
+
+            {/* Core Architectural Spline Hairline */}
+            <motion.path
+              key={`line-${filter}`}
+              d={linePath}
+              fill="none"
+              stroke="url(#apple-spline-gradient)"
+              strokeWidth="1.4"
               strokeLinecap="round"
               strokeLinejoin="round"
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 1 }}
               transition={{
-                pathLength: { duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.15 },
-                opacity: { duration: 0.3, delay: 0.15 },
+                pathLength: { duration: 1.35, ease: [0.16, 1, 0.3, 1], delay: 0.1 },
+                opacity: { duration: 0.25, delay: 0.1 },
               }}
             />
+
+            {/* Living Specular Sweep along the curve */}
+            <motion.path
+              d={linePath}
+              fill="none"
+              stroke="url(#spline-shimmer)"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeDasharray="65 320"
+              animate={{ strokeDashoffset: [385, -385] }}
+              transition={{
+                duration: 7.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="pointer-events-none"
+              style={{
+                mixBlendMode: isDark ? "overlay" : "soft-light",
+              }}
+            />
+
+            {/* Active Point Vertical Hairline Guide */}
+            {activePoint && (
+              <line
+                x1={activePoint.x}
+                y1={activePoint.y + 6}
+                x2={activePoint.x}
+                y2="100"
+                stroke={isDark ? "rgba(255,255,255,0.14)" : "rgba(15,23,42,0.14)"}
+                strokeWidth="0.75"
+                strokeDasharray="2 2"
+              />
+            )}
 
             {/* Data Points */}
             {DATA_POINTS.map((pt) => {
               const isSelected = activePoint?.day === pt.day;
 
               return (
-                <g key={pt.day} className="cursor-pointer" onClick={() => setActivePoint(pt)}>
-                  <circle cx={pt.x} cy={pt.y} r="12" fill="transparent" />
+                <g
+                  key={pt.day}
+                  className="cursor-pointer"
+                  onClick={() => setActivePoint(pt)}
+                  onMouseEnter={() => setActivePoint(pt)}
+                >
+                  {/* Generous touch/hover hit zone */}
+                  <circle cx={pt.x} cy={pt.y} r="16" fill="transparent" />
 
-                  {isSelected && (
-                    <motion.circle
+                  {isSelected ? (
+                    <g>
+                      {/* Active Precision Reticle Halo */}
+                      <motion.circle
+                        cx={pt.x}
+                        cy={pt.y}
+                        r="6"
+                        fill="none"
+                        stroke={isDark ? "rgba(255,255,255,0.35)" : "rgba(15,23,42,0.35)"}
+                        strokeWidth="0.85"
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                      />
+                      {/* Precision Core Node */}
+                      <circle
+                        cx={pt.x}
+                        cy={pt.y}
+                        r="2.5"
+                        fill={isDark ? "#FFFFFF" : "#0B0F17"}
+                      />
+                    </g>
+                  ) : (
+                    /* Delicate Resting Anchor Tick */
+                    <circle
                       cx={pt.x}
                       cy={pt.y}
-                      r="5.5"
-                      fill="none"
-                      stroke={isDark ? "#FFFFFF" : "#0B0F17"}
-                      strokeWidth="1"
-                      strokeOpacity="0.25"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                      r="1.2"
+                      fill={isDark ? "rgba(255,255,255,0.22)" : "rgba(15,23,42,0.22)"}
+                      className="transition-opacity duration-200"
                     />
                   )}
-
-                  <circle
-                    cx={pt.x}
-                    cy={pt.y}
-                    r={isSelected ? "2.5" : "1.75"}
-                    fill={isDark ? "#FFFFFF" : "#0B0F17"}
-                  />
                 </g>
               );
             })}
           </svg>
 
-          {/* Frosted Peak Annotation Pill */}
+          {/* Frosted Peak Annotation Pill (Apple-Grade Minimalist Tooltip) */}
           {activePoint && (
             <motion.div
-              initial={{ opacity: 0, y: 3, scale: 0.95 }}
+              key={activePoint.day}
+              initial={{ opacity: 0, y: 2.5, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
               className="absolute pointer-events-none select-none z-10"
               style={{
                 left: `${(activePoint.x / 390) * 100}%`,
                 top: `${(activePoint.y / 115) * 100}%`,
-                transform: "translate(-50%, -125%)",
+                transform:
+                  activePoint.x <= 45
+                    ? "translate(-10%, -125%)"
+                    : activePoint.x >= 340
+                      ? "translate(-90%, -125%)"
+                      : "translate(-50%, -125%)",
               }}
             >
               <div
-                className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-mono tracking-tight border backdrop-blur-md transition-colors ${
-                  isDark
-                    ? "bg-[#121622]/90 border-white/10 text-white/95 shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
-                    : "bg-white/95 border-slate-200 text-slate-800 shadow-[0_4px_16px_rgba(15,23,42,0.08)]"
-                }`}
-              >
-                <span
-                  className={`w-1 h-1 rounded-full shrink-0 ${
-                    isDark ? "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]" : "bg-amber-500"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border backdrop-blur-2xl transition-all ${isDark
+                    ? "bg-[#0c101a]/95 border-white/[0.12] text-white shadow-[0_12px_28px_-6px_rgba(0,0,0,0.75),inset_0_1px_0_0_rgba(255,255,255,0.12)]"
+                    : "bg-white/95 border-slate-200/90 text-[#0F172A] shadow-[0_8px_20px_rgba(15,23,42,0.08),inset_0_1px_0_0_rgba(255,255,255,1)]"
                   }`}
-                />
-                <span className="font-semibold">{activePoint.value} appts</span>
-                <span className="opacity-30">•</span>
-                <span className="opacity-75">{activePoint.day}</span>
+              >
+                <span className="font-light text-[13.5px] sm:text-[14px] tabular-nums leading-none tracking-tight text-white">
+                  {activePoint.value}
+                </span>
+                <span
+                  className={`font-normal text-[11px] leading-none tracking-normal ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                    }`}
+                >
+                  appointments
+                </span>
+                <span
+                  className={`text-[9px] leading-none select-none ${isDark ? "text-white/20" : "text-slate-300"
+                    }`}
+                >
+                  ·
+                </span>
+                <span
+                  className={`text-[11px] font-medium leading-none tracking-tight ${isDark ? "text-white/90" : "text-[#0F172A]"
+                    }`}
+                >
+                  {activePoint.day}
+                </span>
               </div>
             </motion.div>
           )}
@@ -255,21 +377,21 @@ export default function WorkspaceAppointmentTrendChart() {
 
       {/* X Axis Days Row */}
       <div
-        className={`flex justify-between pl-7 pr-3 text-[9px] font-mono ${
-          isDark ? "text-[#717682]" : "text-[#94A3B8]"
-        }`}
+        className={`flex justify-between pl-7 pr-3 text-[11px] sm:text-[11.5px] select-none ${isDark ? "text-[#717682]" : "text-[#94A3B8]"
+          }`}
       >
         {DATA_POINTS.map((pt) => (
           <span
             key={pt.day}
             onClick={() => setActivePoint(pt)}
-            className={`cursor-pointer transition-colors ${
-              activePoint?.day === pt.day
+            className={`cursor-pointer transition-colors duration-150 ${activePoint?.day === pt.day
                 ? isDark
-                  ? "text-white font-semibold"
+                  ? "text-white font-medium"
                   : "text-[#0B0F17] font-semibold"
-                : "hover:text-white"
-            }`}
+                : isDark
+                  ? "font-normal hover:text-white/80"
+                  : "font-normal hover:text-slate-900"
+              }`}
           >
             {pt.day}
           </span>

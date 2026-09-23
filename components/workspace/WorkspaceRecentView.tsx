@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
-  Clock,
   Filter,
   UserPlus,
   PhoneCall,
@@ -206,39 +205,43 @@ export default function WorkspaceRecentView({
     >
       {/* Top Header & Actions Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3.5 sm:gap-4">
           <button
             type="button"
             onClick={onBackToOverview}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11.5px] font-medium transition-all duration-200 cursor-pointer ${
+            className={`w-10 h-10 sm:w-10.5 sm:h-10.5 rounded-full border flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 shrink-0 ${
               isDark
-                ? "bg-[#0b0e16]/80 border-white/[0.08] text-white hover:bg-white/[0.06] hover:border-white/20"
-                : "bg-white border-[#E2E8F0] text-slate-800 hover:bg-slate-100 shadow-2xs"
+                ? "bg-white/[0.04] border-white/[0.08] text-neutral-300 hover:text-white hover:bg-white/[0.08] hover:border-white/20 shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
+                : "bg-white border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300 shadow-xs"
             }`}
+            aria-label="Back to Overview"
             title="Back to Overview"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Overview</span>
+            <ArrowLeft className="w-4.5 h-4.5 stroke-[1.9]" />
           </button>
           <div>
-            <span className="text-[9px] font-medium uppercase tracking-[0.24em] inline-block animate-luxury-shimmer">
-              LIVE STREAM
-            </span>
             <h2
-              className={`text-[20px] font-light tracking-[-0.03em] leading-tight ${
+              className={`text-[19px] sm:text-[21px] font-medium tracking-tight leading-none ${
                 isDark ? "text-white" : "text-[#0B0F17]"
               }`}
             >
               Recent Activities & Leads
             </h2>
+            <p
+              className={`text-[12px] sm:text-[12.5px] font-normal leading-normal mt-1 ${
+                isDark ? "text-[#9ca3af]" : "text-[#64748B]"
+              }`}
+            >
+              Real-time stream of incoming customer leads and front desk events
+            </p>
           </div>
         </div>
 
         {/* Filter Tabs & Search */}
         <div className="flex items-center gap-2">
-          {/* Quick Filter Segmented Pills */}
+          {/* Quick Filter Segmented Pills with Smooth Gliding Indicator */}
           <div
-            className={`flex items-center p-0.5 rounded-full border ${
+            className={`relative flex items-center p-0.5 rounded-full border ${
               isDark
                 ? "bg-[#0b0e16]/80 border-white/[0.08]"
                 : "bg-[#F8FAFC] border-[#E2E8F0]"
@@ -248,24 +251,36 @@ export default function WorkspaceRecentView({
               { id: "all", label: "All" },
               { id: "leads", label: "Leads" },
               { id: "activities", label: "Activities" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveFilter(tab.id as typeof activeFilter)}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer ${
-                  activeFilter === tab.id
-                    ? isDark
-                      ? "bg-white text-black font-semibold shadow-sm"
-                      : "bg-[#0B0F17] text-white font-semibold shadow-sm"
-                    : isDark
-                    ? "text-[#8e95a5] hover:text-white"
-                    : "text-[#64748B] hover:text-[#0B0F17]"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+            ].map((tab) => {
+              const isActive = activeFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveFilter(tab.id as typeof activeFilter)}
+                  className={`relative px-3.5 py-1 rounded-full text-[11px] font-medium transition-colors duration-150 cursor-pointer select-none active:scale-95 ${
+                    isActive
+                      ? isDark
+                        ? "text-black font-semibold"
+                        : "text-white font-semibold"
+                      : isDark
+                      ? "text-[#8e95a5] hover:text-white"
+                      : "text-[#64748B] hover:text-[#0B0F17]"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="recent-filter-indicator"
+                      transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                      className={`absolute inset-0 rounded-full shadow-xs ${
+                        isDark ? "bg-white" : "bg-[#0B0F17]"
+                      }`}
+                    />
+                  )}
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Quick Search */}
@@ -290,14 +305,24 @@ export default function WorkspaceRecentView({
         </div>
       </div>
 
-      {/* Main Content: Split Grid of Recent Leads & Activity Timeline */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 overflow-hidden">
-        {/* Left: Recent Leads Directory */}
-        {(activeFilter === "all" || activeFilter === "leads") && (
-          <div
-            className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden h-full ${
-              activeFilter === "leads" ? "lg:col-span-2" : ""
-            } ${
+      {/* Main Content: Split Grid of Recent Leads & Activity Timeline with Smooth Transitions */}
+      <motion.div
+        layout
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 overflow-hidden"
+      >
+        <AnimatePresence mode="popLayout">
+          {/* Left: Recent Leads Directory */}
+          {(activeFilter === "all" || activeFilter === "leads") && (
+            <motion.div
+              layout
+              key="leads-card"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className={`p-4 rounded-2xl border transition-colors duration-300 flex flex-col justify-between overflow-hidden h-full ${
+                activeFilter === "leads" ? "lg:col-span-2" : ""
+              } ${
               isDark
                 ? "bg-[#0e121b]/85 border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
                 : "bg-white border-[#E2E8F0] shadow-xs"
@@ -409,13 +434,19 @@ export default function WorkspaceRecentView({
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Right: Chronological Activity Feed */}
         {(activeFilter === "all" || activeFilter === "activities") && (
-          <div
-            className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden h-full ${
+          <motion.div
+            layout
+            key="activities-card"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className={`p-4 rounded-2xl border transition-colors duration-300 flex flex-col justify-between overflow-hidden h-full ${
               activeFilter === "activities" ? "lg:col-span-2" : ""
             } ${
               isDark
@@ -494,9 +525,10 @@ export default function WorkspaceRecentView({
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         )}
-      </div>
+        </AnimatePresence>
+      </motion.div>
     </motion.div>
   );
 }

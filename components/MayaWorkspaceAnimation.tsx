@@ -1140,10 +1140,10 @@ export default function MayaWorkspaceAnimation({
               >
                 <div className="flex items-start justify-between">
                   <span
-                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                    className={`text-[12px] font-normal tracking-[-0.01em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
                       }`}
                   >
-                    Calls handled
+                    Calls Handled
                   </span>
                   <Phone
                     className={`w-3.5 h-3.5 ${isDark ? "text-[#64748B]" : "text-[#94A3B8]"
@@ -1165,15 +1165,15 @@ export default function MayaWorkspaceAnimation({
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 1.15 }}
-                  className={`flex items-center text-[10px] font-medium font-mono ${isDark ? "text-[#FBBF24]" : "text-[#D97706]"
+                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-emerald-400" : "text-emerald-600"
                     }`}
                 >
-                  <TrendingUp className="w-3 h-3 mr-1" />
+                  <TrendingUp className="w-2.5 h-2.5 stroke-[2.2]" />
                   <span>+12%</span>
                 </motion.div>
               </motion.div>
 
-              {/* Metric 2: Leads Qualified */}
+              {/* Metric 2: New Leads */}
               <motion.div
                 {...cardMotion(1)}
                 className={`rounded-xl p-3 flex flex-col justify-between border transition-all ${isDark
@@ -1183,10 +1183,10 @@ export default function MayaWorkspaceAnimation({
               >
                 <div className="flex items-start justify-between">
                   <span
-                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                    className={`text-[12px] font-normal tracking-[-0.01em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
                       }`}
                   >
-                    Leads Qualified
+                    New Leads
                   </span>
                   <Users
                     className={`w-3.5 h-3.5 ${isDark ? "text-[#64748B]" : "text-[#94A3B8]"
@@ -1208,10 +1208,10 @@ export default function MayaWorkspaceAnimation({
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 1.25 }}
-                  className={`flex items-center text-[10px] font-medium font-mono ${isDark ? "text-[#FBBF24]" : "text-[#D97706]"
+                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-emerald-400" : "text-emerald-600"
                     }`}
                 >
-                  <TrendingUp className="w-3 h-3 mr-1" />
+                  <TrendingUp className="w-2.5 h-2.5 stroke-[2.2]" />
                   <span>+8%</span>
                 </motion.div>
               </motion.div>
@@ -1226,7 +1226,7 @@ export default function MayaWorkspaceAnimation({
               >
                 <div className="flex items-start justify-between">
                   <span
-                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                    className={`text-[12px] font-normal tracking-[-0.01em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
                       }`}
                   >
                     Appointments
@@ -1251,15 +1251,15 @@ export default function MayaWorkspaceAnimation({
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 1.35 }}
-                  className={`flex items-center text-[10px] font-medium font-mono ${isDark ? "text-[#FBBF24]" : "text-[#D97706]"
+                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-emerald-400" : "text-emerald-600"
                     }`}
                 >
-                  <TrendingUp className="w-3 h-3 mr-1" />
+                  <TrendingUp className="w-2.5 h-2.5 stroke-[2.2]" />
                   <span>+20%</span>
                 </motion.div>
               </motion.div>
 
-              {/* Metric 4: Conversation rate */}
+              {/* Metric 4: Conversion rate */}
               <motion.div
                 {...cardMotion(3)}
                 className={`rounded-xl p-3 flex flex-col justify-between border transition-all ${isDark
@@ -1269,10 +1269,10 @@ export default function MayaWorkspaceAnimation({
               >
                 <div className="flex items-start justify-between">
                   <span
-                    className={`text-[9px] font-medium uppercase tracking-[0.18em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                    className={`text-[12px] font-normal tracking-[-0.01em] select-none ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"
                       }`}
                   >
-                    Conversation rate
+                    Conversion Rate
                   </span>
                   <MessageSquare
                     className={`w-3.5 h-3.5 ${isDark ? "text-[#64748B]" : "text-[#94A3B8]"
@@ -1294,10 +1294,10 @@ export default function MayaWorkspaceAnimation({
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 1.45 }}
-                  className={`flex items-center text-[10px] font-medium font-mono ${isDark ? "text-[#FBBF24]" : "text-[#D97706]"
+                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-emerald-400" : "text-emerald-600"
                     }`}
                 >
-                  <TrendingUp className="w-3 h-3 mr-1" />
+                  <TrendingUp className="w-2.5 h-2.5 stroke-[2.2]" />
                   <span>+6%</span>
                 </motion.div>
               </motion.div>
