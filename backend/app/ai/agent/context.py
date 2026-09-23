@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any
 from uuid import UUID
+from datetime import datetime
 
 
 @dataclass
@@ -16,6 +17,9 @@ class ConversationContext:
     turn_count: int = 0
     language: str = "en-IN"
     history: list[dict[str, str]] = field(default_factory=list)
+    appointment_start_time: datetime | None = None
+    appointment_end_time: datetime | None = None
+    pending_action: str | None = None
 
     def add_turn(self, speaker: str, message: str) -> None:
         self.history.append({

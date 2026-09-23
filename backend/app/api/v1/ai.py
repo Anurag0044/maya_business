@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai.agent.context import ConversationContext
+from app.ai.agent.session_store import get_or_create_context
 from app.ai.agent.orchestrator import AgentOrchestrator
 from app.api.deps import get_current_user, get_database
 from app.models.user import User
@@ -23,14 +23,19 @@ async def chat(
         from app.core.exceptions import AppException
         raise AppException("Business access denied", "FORBIDDEN", 403)
 
-    context = ConversationContext(
-        session_id=session_id,
-        business_id=business_id,
-    )
+    context = get_or_create_context(
+    business_id,
+    session_id,
+)
 
     decision = await AgentOrchestrator(db).handle_message(
         context,
         message,
+    )
+    if decision.response:
+        context.add_turn(
+        "ASSISTANT",
+        decision.response,
     )
 
     return {
