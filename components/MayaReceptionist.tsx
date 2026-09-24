@@ -13,11 +13,10 @@ export default function MayaReceptionist() {
   return (
     <section
       id="maya-receptionist"
-      className={`relative w-full pt-16 sm:pt-24 lg:pt-32 pb-0 overflow-hidden font-sans transition-colors duration-300 select-none ${
-        isDark
+      className={`relative w-full pt-16 sm:pt-24 lg:pt-32 pb-0 overflow-hidden font-sans transition-colors duration-300 select-none ${isDark
           ? "bg-[#060709] text-white selection:bg-neutral-800"
           : "bg-[#FFFFFF] text-[#0F172A] selection:bg-neutral-200"
-      }`}
+        }`}
     >
       {/* ========================================================================= */}
       {/* SEAMLESS AMBIENT HORIZON BLEND (Zero middle lines, tight optical focus)   */}
@@ -57,7 +56,7 @@ export default function MayaReceptionist() {
             className="lg:col-span-5 flex flex-col justify-center"
           >
             {/* Eyebrow: Minimalist Architectural Light Sweep */}
-            <div className="mb-2.5 sm:mb-3">
+            <div className="mb-2 sm:mb-2.5">
               <span className="text-[9.5px] sm:text-[10px] font-medium uppercase tracking-[0.24em] inline-block animate-luxury-shimmer select-none">
                 INTRODUCING
               </span>
@@ -65,21 +64,21 @@ export default function MayaReceptionist() {
 
             {/* Headline: Clean, airy editorial typography matching Agent & Hero */}
             <h2 className="text-[clamp(2.25rem,3.6vw,3.85rem)] font-light tracking-[-0.03em] leading-[0.98]">
-              <span className="block mb-1 sm:mb-1.5 leading-none">
+              <div className="mb-[0.20em] leading-none">
                 <span className="sr-only">MAYA</span>
                 <MayaWordmark
-                  className="h-[0.78em] sm:h-[0.80em] w-auto inline-block align-baseline transition-all"
+                  className="h-[0.78em] sm:h-[0.80em] w-auto block transition-all"
                   gradient={true}
                   isDark={isDark}
                 />
-              </span>
-              <span
-                className={`block transition-colors ${
+              </div>
+              <div
+                className={`transition-colors ${
                   isDark ? "text-[#586072]" : "text-[#64748B]"
                 }`}
               >
-                Receptionist
-              </span>
+                Voice Receptionist
+              </div>
             </h2>
 
             {/* Value Proposition Paragraph */}
@@ -121,25 +120,13 @@ export default function MayaReceptionist() {
             className="lg:col-span-7 flex justify-center lg:justify-end w-full"
           >
             <div
-              className={`relative w-full max-w-[620px] aspect-[16/10.5] rounded-2xl sm:rounded-3xl border overflow-hidden flex flex-col transition-all duration-300 ${
+              className={`relative w-full max-w-[620px] aspect-[16/10.5] rounded-2xl sm:rounded-3xl border overflow-hidden flex items-center justify-center p-4 sm:p-6 transition-all duration-300 ${
                 isDark
                   ? "bg-[#050608] border-white/[0.08] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.95),0_0_1px_1px_rgba(255,255,255,0.06)]"
                   : "bg-[#080A10] border-slate-300/80 shadow-[0_24px_60px_-15px_rgba(15,23,42,0.18),0_2px_8px_rgba(15,23,42,0.04)]"
               }`}
             >
-              {/* Window Frame Header Bar (matching reference mockup) */}
-              <div
-                className={`w-full h-10 sm:h-11 border-b flex items-center px-5 shrink-0 transition-colors ${
-                  isDark
-                    ? "border-white/[0.06] bg-white/[0.015]"
-                    : "border-white/[0.08] bg-white/[0.03]"
-                }`}
-              />
-
-              {/* Stage Area: Centered Luminous Voice Visualizer */}
-              <div className="relative flex-1 w-full flex items-center justify-center p-4 overflow-hidden">
-                <MayaReceptionistVisualizer />
-              </div>
+              <MayaReceptionistVisualizer />
             </div>
           </motion.div>
         </div>
@@ -148,9 +135,8 @@ export default function MayaReceptionist() {
         {/* SECTION DIVIDER: Exactly matching line above "WHAT MAYA HANDLES"  */}
         {/* ================================================================= */}
         <div
-          className={`mt-20 sm:mt-24 lg:mt-28 border-t ${
-            isDark ? "border-white/[0.08]" : "border-[#E2E8F0]"
-          }`}
+          className={`mt-20 sm:mt-24 lg:mt-28 border-t ${isDark ? "border-white/[0.08]" : "border-[#E2E8F0]"
+            }`}
         />
       </div>
     </section>

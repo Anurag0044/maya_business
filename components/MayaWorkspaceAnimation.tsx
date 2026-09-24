@@ -128,12 +128,14 @@ function AppleCountUp({
   delay = 0.25,
   decimals = 0,
   suffix = "",
+  suffixClassName = "",
 }: {
   value: number;
   duration?: number;
   delay?: number;
   decimals?: number;
   suffix?: string;
+  suffixClassName?: string;
 }) {
   const [displayVal, setDisplayVal] = useState(0);
 
@@ -172,7 +174,9 @@ function AppleCountUp({
   return (
     <span>
       {decimals > 0 ? displayVal.toFixed(decimals) : Math.round(displayVal)}
-      {suffix}
+      {suffix && (
+        <span className={suffixClassName ? ` ${suffixClassName}` : ""}>{suffix}</span>
+      )}
     </span>
   );
 }
@@ -1165,7 +1169,7 @@ export default function MayaWorkspaceAnimation({
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 1.15 }}
-                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-emerald-400" : "text-emerald-600"
+                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-[#fbbf24]" : "text-[#d97706]"
                     }`}
                 >
                   <TrendingUp className="w-2.5 h-2.5 stroke-[2.2]" />
@@ -1208,7 +1212,7 @@ export default function MayaWorkspaceAnimation({
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 1.25 }}
-                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-emerald-400" : "text-emerald-600"
+                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-[#fbbf24]" : "text-[#d97706]"
                     }`}
                 >
                   <TrendingUp className="w-2.5 h-2.5 stroke-[2.2]" />
@@ -1251,7 +1255,7 @@ export default function MayaWorkspaceAnimation({
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 1.35 }}
-                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-emerald-400" : "text-emerald-600"
+                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-[#fbbf24]" : "text-[#d97706]"
                     }`}
                 >
                   <TrendingUp className="w-2.5 h-2.5 stroke-[2.2]" />
@@ -1284,17 +1288,23 @@ export default function MayaWorkspaceAnimation({
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.36 }}
-                    className={`text-[24px] sm:text-[26px] font-light tracking-[-0.035em] tabular-nums inline-block ${isDark ? "text-white" : "text-[#0F172A]"
+                    className={`text-[24px] sm:text-[26px] font-light tracking-[-0.035em] tabular-nums inline-block ${isDark ? "text-white" : "text-black"
                       }`}
                   >
-                    <AppleCountUp value={18.4} decimals={1} suffix="%" delay={0.55} duration={2.4} />
+                    <AppleCountUp
+                      value={18.4}
+                      decimals={1}
+                      suffix="%"
+                      delay={0.55}
+                      duration={2.4}
+                    />
                   </motion.span>
                 </div>
                 <motion.div
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 1.45 }}
-                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-emerald-400" : "text-emerald-600"
+                  className={`inline-flex items-center gap-0.5 text-[10.5px] font-medium tabular-nums tracking-tight ${isDark ? "text-[#fbbf24]" : "text-[#d97706]"
                     }`}
                 >
                   <TrendingUp className="w-2.5 h-2.5 stroke-[2.2]" />
@@ -1523,7 +1533,7 @@ export default function MayaWorkspaceAnimation({
                     className={`text-[11.5px] leading-relaxed mt-2.5 font-normal tracking-[-0.005em] ${isDark ? "text-[#9ca3af]" : "text-[#334155]"
                       }`}
                   >
-                    &ldquo;Today our business handled 24 customer calls with an 18.4% conversation rate, qualifying 12 high-intent leads and scheduling 8 appointments directly into your calendar.&rdquo;
+                    &ldquo;Today our business handled 24 customer calls with an 18.4% conversion rate, qualifying 12 high-intent leads and scheduling 8 appointments directly into your calendar.&rdquo;
                   </motion.p>
                 </div>
 
