@@ -72,6 +72,36 @@ float microPoint(vec2 p, vec2 center, float twinkle) {
   return exp(-dist * 280.0) * 1.8 * twinkle;
 }
 
+// 3D rotation around vertical Y-axis (left-to-right 360-degree spin across the front face of the sphere)
+vec3 rotY(vec3 pos, float angle) {
+  float c = cos(angle), s = sin(angle);
+  return vec3(c * pos.x + s * pos.z, pos.y, -s * pos.x + c * pos.z);
+}
+
+// 3D Orbiting Micro-Glitter 4-Point Star (sweeps across front face from left to right, deep shimmer on back)
+float microGlitterStar3D(vec2 screenP, vec3 pos0, float spin, float size, float twinkle) {
+  vec3 gpos = rotY(pos0, spin);
+  float depthFac = smoothstep(-0.25, 0.10, gpos.z);
+  float tw = twinkle * mix(0.18, 1.0, depthFac);
+  float sz = size * mix(0.70, 1.05, depthFac);
+  return microGlitterStar(screenP, gpos.xy, sz, tw);
+}
+
+// 3D Orbiting Micro Point Fleck
+float microPoint3D(vec2 screenP, vec3 pos0, float spin, float twinkle) {
+  vec3 gpos = rotY(pos0, spin);
+  float depthFac = smoothstep(-0.25, 0.10, gpos.z);
+  return microPoint(screenP, gpos.xy, twinkle * mix(0.18, 1.0, depthFac));
+}
+
+// 3D Diffraction Star Glint (flares on front face as facet faces camera)
+float starGlint3D(vec2 screenP, vec3 pos0, float spin, float size, float intensity) {
+  vec3 gpos = rotY(pos0, spin);
+  float depthFac = smoothstep(-0.06, 0.18, gpos.z);
+  if (depthFac <= 0.001) return 0.0;
+  return starGlint(screenP, gpos.xy, size * (0.85 + 0.15 * depthFac), intensity * depthFac);
+}
+
 void main() {
   // Centered normalized coordinates
   vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / min(uResolution.x, uResolution.y);
@@ -80,9 +110,11 @@ void main() {
   vec2 p = uv * 2.15;
   
   float t = uTime * 0.60;
+  // Continuous 360-degree spin around vertical Y-axis (left to right like a spinning 3D ball)
+  float spinAngle = uTime * 0.48;
   
   // =========================================================================
-  // 1. ORGANIC BREATHING & FOUR-LOBED SILHOUETTE
+  // 1. ORGANIC BREATHING & FOUR-LOBED SILHOUETTE (Exact Original Shape Preserved)
   // =========================================================================
   float breath = 1.0 + sin(t * 1.15) * 0.012;
   vec2 bp = p / breath;
@@ -94,42 +126,52 @@ void main() {
   float lobe4 = cos(4.0 * phi);
   float undulate = sin(phi * 4.0 + t * 0.65) * 0.008;
   
-  // Outer crystal boundary radius
+  // Outer crystal boundary radius (Exact original 4-lobed blob shape):
   float R_lobe = 0.540 + 0.088 * lobe4 + undulate;
   
-  // Diagonal weight isolating warm amber to Top-Right (~45°) and Bottom-Left (~225°)
-  float diagWeight = pow(max(cos(phi - 0.785398), 0.0), 1.9) +
-                     pow(max(cos(phi - 0.785398 - 3.14159), 0.0), 1.9);
+  // Crisp perimeter mask: strictly bounds ribbons and glitters INSIDE the 4-lobed blob silhouette
+  float insideBlob = smoothstep(R_lobe + 0.003, R_lobe - 0.018, r);
+  
+  // 3D Glass Dome Geometry across the 4-lobed crystal:
+  float normDist = clamp(r / max(R_lobe, 0.001), 0.0, 1.0);
+  float domeZ = sqrt(max(0.0, 1.0 - normDist * normDist));
+  float Z = domeZ * R_lobe;
+  
+  // 3D spherical horizontal longitude across the dome (spinning left-to-right around vertical axis):
+  float phiY = atan(bp.x, max(Z, 0.001));
+  float spinPhi = phiY - spinAngle;
+  
+  // Diagonal weight isolating warm amber along 3D ribbon rolling left-to-right across the blob
+  float diagAngle = spinPhi - (bp.y / R_lobe) * 1.25 - 0.785398;
+  float diagWeight = pow(max(cos(diagAngle), 0.0), 1.9) +
+                     pow(max(cos(diagAngle - 3.14159), 0.0), 1.9);
   diagWeight = clamp(diagWeight * 1.35, 0.0, 1.0);
   
   // Secondary orthogonal weight for electric cyan lobes
-  float cyanWeight = pow(max(cos(phi * 2.0), 0.0), 1.8);
-  
-  // Crisp perimeter mask: ensures existing ribbons stay strictly INSIDE the blob silhouette
-  float insideBlob = smoothstep(R_lobe + 0.003, R_lobe - 0.018, r);
+  float cyanWeight = pow(max(cos(spinPhi * 2.0), 0.0), 1.8);
   
   // =========================================================================
-  // 2. LAYERED GEM GLASS CAUSTIC RIBBONS (Kept strictly inside blob silhouette)
+  // 2. LAYERED GEM GLASS CAUSTIC RIBBONS (Kept strictly inside 4-lobed blob silhouette)
   // =========================================================================
   
   // Layer A: Outer Glass Shell & Specular Lip (Tucked inside the blob perimeter)
   float distA = abs(r - (R_lobe - 0.012));
   // Glass bevel wall thickness (smooth double refraction lip)
-  float distA_inner = abs(r - (R_lobe - 0.038 + 0.008 * sin(phi * 4.0 - t * 0.55)));
+  float distA_inner = abs(r - (R_lobe - 0.038 + 0.008 * sin(spinPhi * 4.0 - t * 0.55)));
   
-  // Layer B: Sweeping Diagonal Warm Amber Caustic Ribbon (bounded inside lobe)
-  float diagFold = sin(phi * 2.0 - t * 0.65) * 0.030 + cos(phi * 4.0 + t * 0.45) * 0.014;
+  // Layer B: Sweeping Diagonal Warm Amber Caustic Ribbon (rolling in 3D left-to-right)
+  float diagFold = sin(spinPhi * 2.0 - t * 0.65) * 0.030 + cos(spinPhi * 4.0 + t * 0.45) * 0.014;
   float R_diag = min(0.440 + diagFold, R_lobe - 0.025);
   float distB = abs(r - R_diag);
   
   // Layer C: Secondary Translucent Sapphire Silk Veil (Soft diffused inside)
-  float waveC = cos(phi * 4.0 - t * 0.60 + 1.2) * 0.024;
+  float waveC = cos(spinPhi * 4.0 - t * 0.60 + 1.2) * 0.024;
   float distC = abs(r - min(0.380 + waveC, R_lobe - 0.035));
   
   // Layer D & E: Symmetrical Top & Bottom Caustic Glass Folds
-  float topDomeR = R_lobe - 0.052 + 0.010 * sin(phi * 2.0 - 1.5708);
+  float topDomeR = R_lobe - 0.052 + 0.010 * sin(spinPhi * 2.0 - 1.5708);
   float distTopGlass = abs(r - topDomeR);
-  float botDomeR = R_lobe - 0.048 - 0.008 * sin(phi * 2.0 - 1.5708);
+  float botDomeR = R_lobe - 0.048 - 0.008 * sin(spinPhi * 2.0 - 1.5708);
   float distBotGlass = abs(r - botDomeR);
   
   // =========================================================================
@@ -151,18 +193,14 @@ void main() {
   // =========================================================================
   // 4. PHYSICAL 3D GLASS DOME GEOMETRY & VOLUMETRIC OPTICS
   // =========================================================================
-  // Continuous smooth dome normal across the entire volume:
-  float normDist = clamp(r / max(R_lobe, 0.001), 0.0, 1.0);
-  float domeZ = sqrt(max(0.0, 1.0 - normDist * normDist));
-  
-  // 3D Glass Surface Normal (Continuous, no inner ring inversion):
+  // Continuous smooth dome normal across the entire 4-lobed volume:
   vec2 nXY = (bp / max(r, 0.001)) * normDist;
   vec3 N = normalize(vec3(nXY, domeZ * 0.92 + 0.08));
   
-  // Optical Fresnel Reflection (grazing-angle glass luminosity towards outer lobe):
+  // Optical Fresnel Reflection (grazing-angle glass luminosity towards outer lobe boundary):
   float fresnel = pow(1.0 - max(N.z, 0.0), 2.4);
   
-  // Overhead Studio Light Source (light illuminating glass from the top):
+  // Overhead Studio Light Source (Fixed overhead in world space):
   vec3 lightTop = normalize(vec3(0.08, 0.94, 0.34));
   vec3 viewDir = vec3(0.0, 0.0, 1.0);
   vec3 halfTop = normalize(lightTop + viewDir);
@@ -183,8 +221,8 @@ void main() {
   
   // Glass volumetric absorption & smoky tint (richer, deeper optical body)
   vec3 glassBodyColor = mix(cyanDeep * 0.25 + cyanMist * 0.08, goldSmoke * 0.28 + goldAmber * 0.08, diagWeight * 0.65);
-  // Internal caustics wave draped across glass body
-  float internalCausticWave = pow(max(0.0, sin(phi * 2.0 - t * 0.65 + r * 8.0)), 4.0) * 0.10;
+  // Internal caustics wave draped across glass body (rolling in 3D left-to-right)
+  float internalCausticWave = pow(max(0.0, sin(spinPhi * 2.0 - t * 0.65 + r * 8.0)), 4.0) * 0.10;
   glassBodyColor += mix(cyanNeon, goldAmber, diagWeight) * internalCausticWave;
   // Blend with physical Fresnel rim brightening (subtle liquid glass sheen):
   glassBodyColor += mix(cyanNeon, goldAmber, diagWeight) * (fresnel * 0.28);
@@ -208,7 +246,7 @@ void main() {
   float glowA_in = pow(clamp(1.0 - distA_inner * 42.0, 0.0, 1.0), 3.5) * 0.80;
   color += mix(cyanNeon * 0.55, goldAmber * 0.45, diagWeight) * glowA_in * insideBlob;
   
-  // --- Layer B: Diagonal Warm Amber Fold (Molten Gold Filament) ---
+  // --- Layer B: Diagonal Warm Amber Fold (Molten Gold Filament rolling in 3D) ---
   float glowB_diff = exp(-distB * 28.0) * 0.28;
   float glowB_edge = pow(clamp(1.0 - distB * 38.0, 0.0, 1.0), 4.2) * 1.7;
   float bR = pow(clamp(1.0 - abs(r * 1.006 - R_diag) * 38.0, 0.0, 1.0), 4.2);
@@ -247,7 +285,7 @@ void main() {
   color += glassTopGlaze * 0.75;
   
   // Subtle facet shimmer travelling gently along the glass body
-  float shimmer = pow(max(0.0, sin(phi * 2.0 - t * 0.65 + r * 4.0)), 6.0) * 0.18;
+  float shimmer = pow(max(0.0, sin(spinPhi * 2.0 - t * 0.65 + r * 4.0)), 6.0) * 0.18;
   vec3 shimmerCol = mix(cyanNeon, goldAmber, diagWeight);
   color += shimmerCol * shimmer * insideBlob;
   
@@ -271,75 +309,75 @@ void main() {
   vec3 starWarmAmber = vec3(1.00, 0.80, 0.45); // Molten amber crystal
   vec3 starRoseGold  = vec3(1.00, 0.70, 0.50); // Warm bronze fleck
   
-  // TIER 1: 16 RANDOMLY SCATTERED 4-POINT MICRO-GLITTER STARS
-  // 1: Upper-Right outer (~1:30)
-  color += starIceCyan * microGlitterStar(p, vec2(0.19, 0.27) + vec2(sin(t * 0.7 + 0.3), cos(t * 0.8 + 1.1)) * 0.004, 0.018, pow(max(0.0, sin(t * 2.3 + 0.5)), 4.0) * 0.85 + 0.06);
-  // 2: Upper-Left outer (~10:00)
-  color += starDiamond * microGlitterStar(p, vec2(-0.24, 0.19) + vec2(cos(t * 0.8 + 1.5), sin(t * 0.6 + 2.2)) * 0.004, 0.020, pow(max(0.0, sin(t * 1.9 + 2.8)), 4.0) * 0.90 + 0.06);
-  // 3: Top North outer (~12:15)
-  color += starIceCyan * microGlitterStar(p, vec2(-0.08, 0.31) + vec2(sin(t * 0.9 + 3.1), cos(t * 0.7 + 0.4)) * 0.004, 0.017, pow(max(0.0, sin(t * 2.6 + 1.2)), 4.0) * 0.80 + 0.05);
-  // 4: Far East outer fold (~3:15)
-  color += starChampagne * microGlitterStar(p, vec2(0.28, 0.08) + vec2(cos(t * 0.7 + 4.2), sin(t * 0.9 + 3.7)) * 0.004, 0.019, pow(max(0.0, sin(t * 2.1 + 4.0)), 4.0) * 0.85 + 0.06);
+  // TIER 1: 16 RANDOMLY SCATTERED 4-POINT MICRO-GLITTER STARS (Orbiting 3D Sphere Left to Right)
+  // 1: Upper-Right (~1:30)
+  color += starIceCyan * microGlitterStar3D(bp, vec3(0.19, 0.25, 0.25) + vec3(sin(t * 0.7 + 0.3), cos(t * 0.8 + 1.1), sin(t * 0.6 + 1.8)) * 0.003, spinAngle, 0.018, pow(max(0.0, sin(t * 2.3 + 0.5)), 4.0) * 0.85 + 0.06) * insideBlob;
+  // 2: Upper-Left (~10:00)
+  color += starDiamond * microGlitterStar3D(bp, vec3(-0.24, 0.19, 0.20) + vec3(cos(t * 0.8 + 1.5), sin(t * 0.6 + 2.2), cos(t * 0.7 + 0.5)) * 0.003, spinAngle, 0.020, pow(max(0.0, sin(t * 1.9 + 2.8)), 4.0) * 0.90 + 0.06) * insideBlob;
+  // 3: Top North (~12:15)
+  color += starIceCyan * microGlitterStar3D(bp, vec3(-0.08, 0.29, 0.25) + vec3(sin(t * 0.9 + 3.1), cos(t * 0.7 + 0.4), sin(t * 0.8 + 2.1)) * 0.003, spinAngle, 0.017, pow(max(0.0, sin(t * 2.6 + 1.2)), 4.0) * 0.80 + 0.05) * insideBlob;
+  // 4: Far East fold (~3:15)
+  color += starChampagne * microGlitterStar3D(bp, vec3(0.28, 0.08, 0.15) + vec3(cos(t * 0.7 + 4.2), sin(t * 0.9 + 3.7), cos(t * 0.6 + 3.4)) * 0.003, spinAngle, 0.019, pow(max(0.0, sin(t * 2.1 + 4.0)), 4.0) * 0.85 + 0.06) * insideBlob;
   // 5: Lower-Right amber caustic (~4:45)
-  color += starWarmAmber * microGlitterStar(p, vec2(0.14, -0.22) + vec2(sin(t * 0.6 + 2.1), cos(t * 0.8 + 5.2)) * 0.004, 0.021, pow(max(0.0, sin(t * 2.7 + 3.4)), 4.0) * 0.90 + 0.06);
-  // 6: Far West outer fold (~9:00)
-  color += starDiamond * microGlitterStar(p, vec2(-0.29, -0.14) + vec2(cos(t * 0.8 + 0.9), sin(t * 0.7 + 1.8)) * 0.004, 0.018, pow(max(0.0, sin(t * 2.2 + 5.1)), 4.0) * 0.85 + 0.05);
-  // 7: Lower South outer (~6:30)
-  color += starIceCyan * microGlitterStar(p, vec2(-0.11, -0.27) + vec2(sin(t * 0.7 + 3.5), cos(t * 0.9 + 4.1)) * 0.004, 0.017, pow(max(0.0, sin(t * 2.5 + 0.7)), 4.0) * 0.80 + 0.06);
-  // 8: Southeast outer (~5:15)
-  color += starChampagne * microGlitterStar(p, vec2(0.26, -0.17) + vec2(cos(t * 0.6 + 5.0), sin(t * 0.8 + 2.7)) * 0.004, 0.019, pow(max(0.0, sin(t * 2.0 + 2.3)), 4.0) * 0.85 + 0.06);
+  color += starWarmAmber * microGlitterStar3D(bp, vec3(0.14, -0.22, 0.28) + vec3(sin(t * 0.6 + 2.1), cos(t * 0.8 + 5.2), sin(t * 0.7 + 4.1)) * 0.003, spinAngle, 0.021, pow(max(0.0, sin(t * 2.7 + 3.4)), 4.0) * 0.90 + 0.06) * insideBlob;
+  // 6: Far West fold (~9:00)
+  color += starDiamond * microGlitterStar3D(bp, vec3(-0.29, -0.14, 0.15) + vec3(cos(t * 0.8 + 0.9), sin(t * 0.7 + 1.8), cos(t * 0.9 + 0.7)) * 0.003, spinAngle, 0.018, pow(max(0.0, sin(t * 2.2 + 5.1)), 4.0) * 0.85 + 0.05) * insideBlob;
+  // 7: Lower South (~6:30)
+  color += starIceCyan * microGlitterStar3D(bp, vec3(-0.11, -0.27, 0.25) + vec3(sin(t * 0.7 + 3.5), cos(t * 0.9 + 4.1), sin(t * 0.8 + 1.5)) * 0.003, spinAngle, 0.017, pow(max(0.0, sin(t * 2.5 + 0.7)), 4.0) * 0.80 + 0.06) * insideBlob;
+  // 8: Southeast (~5:15)
+  color += starChampagne * microGlitterStar3D(bp, vec3(0.26, -0.17, 0.18) + vec3(cos(t * 0.6 + 5.0), sin(t * 0.8 + 2.7), cos(t * 0.7 + 2.9)) * 0.003, spinAngle, 0.019, pow(max(0.0, sin(t * 2.0 + 2.3)), 4.0) * 0.85 + 0.06) * insideBlob;
   // 9: Mid-Left interior (~8:45)
-  color += starDiamond * microGlitterStar(p, vec2(-0.17, -0.02) + vec2(sin(t * 0.8 + 1.4), cos(t * 0.6 + 3.8)) * 0.003, 0.016, pow(max(0.0, sin(t * 2.8 + 4.6)), 4.0) * 0.75 + 0.05);
+  color += starDiamond * microGlitterStar3D(bp, vec3(-0.17, -0.02, 0.30) + vec3(sin(t * 0.8 + 1.4), cos(t * 0.6 + 3.8), sin(t * 0.9 + 0.4)) * 0.003, spinAngle, 0.016, pow(max(0.0, sin(t * 2.8 + 4.6)), 4.0) * 0.75 + 0.05) * insideBlob;
   // 10: Mid-South interior (~5:45)
-  color += starRoseGold * microGlitterStar(p, vec2(0.05, -0.12) + vec2(cos(t * 0.7 + 3.2), sin(t * 0.9 + 0.6)) * 0.003, 0.017, pow(max(0.0, sin(t * 1.8 + 1.9)), 4.0) * 0.80 + 0.05);
+  color += starRoseGold * microGlitterStar3D(bp, vec3(0.05, -0.12, 0.32) + vec3(cos(t * 0.7 + 3.2), sin(t * 0.9 + 0.6), cos(t * 0.8 + 3.8)) * 0.003, spinAngle, 0.017, pow(max(0.0, sin(t * 1.8 + 1.9)), 4.0) * 0.80 + 0.05) * insideBlob;
   // 11: Mid-North interior (~11:45)
-  color += starIceCyan * microGlitterStar(p, vec2(-0.03, 0.18) + vec2(sin(t * 0.9 + 4.7), cos(t * 0.7 + 2.4)) * 0.003, 0.016, pow(max(0.0, sin(t * 2.4 + 3.9)), 4.0) * 0.75 + 0.05);
+  color += starIceCyan * microGlitterStar3D(bp, vec3(-0.03, 0.18, 0.30) + vec3(sin(t * 0.9 + 4.7), cos(t * 0.7 + 2.4), sin(t * 0.6 + 4.5)) * 0.003, spinAngle, 0.016, pow(max(0.0, sin(t * 2.4 + 3.9)), 4.0) * 0.75 + 0.05) * insideBlob;
   // 12: Mid-East interior (~2:45)
-  color += starChampagne * microGlitterStar(p, vec2(0.12, 0.07) + vec2(cos(t * 0.8 + 2.5), sin(t * 0.6 + 5.3)) * 0.003, 0.017, pow(max(0.0, sin(t * 2.2 + 0.3)), 4.0) * 0.80 + 0.05);
+  color += starChampagne * microGlitterStar3D(bp, vec3(0.12, 0.07, 0.32) + vec3(cos(t * 0.8 + 2.5), sin(t * 0.6 + 5.3), cos(t * 0.9 + 1.2)) * 0.003, spinAngle, 0.017, pow(max(0.0, sin(t * 2.2 + 0.3)), 4.0) * 0.80 + 0.05) * insideBlob;
   // 13: North-East intermediate (~1:00)
-  color += starDiamond * microGlitterStar(p, vec2(0.10, 0.22) + vec2(sin(t * 0.75 + 1.7), cos(t * 0.65 + 3.2)) * 0.004, 0.017, pow(max(0.0, sin(t * 2.4 + 2.1)), 4.0) * 0.82 + 0.06);
+  color += starDiamond * microGlitterStar3D(bp, vec3(0.10, 0.22, 0.28) + vec3(sin(t * 0.75 + 1.7), cos(t * 0.65 + 3.2), sin(t * 0.85 + 2.6)) * 0.003, spinAngle, 0.017, pow(max(0.0, sin(t * 2.4 + 2.1)), 4.0) * 0.82 + 0.06) * insideBlob;
   // 14: North-West high lobe (~11:15)
-  color += starIceCyan * microGlitterStar(p, vec2(-0.18, 0.28) + vec2(cos(t * 0.7 + 4.1), sin(t * 0.8 + 0.9)) * 0.004, 0.018, pow(max(0.0, sin(t * 2.0 + 4.4)), 4.0) * 0.85 + 0.05);
+  color += starIceCyan * microGlitterStar3D(bp, vec3(-0.18, 0.26, 0.20) + vec3(cos(t * 0.7 + 4.1), sin(t * 0.8 + 0.9), cos(t * 0.65 + 5.0)) * 0.003, spinAngle, 0.018, pow(max(0.0, sin(t * 2.0 + 4.4)), 4.0) * 0.85 + 0.05) * insideBlob;
   // 15: South-East low fold (~4:15)
-  color += starWarmAmber * microGlitterStar(p, vec2(0.20, -0.26) + vec2(sin(t * 0.85 + 3.3), cos(t * 0.75 + 1.6)) * 0.004, 0.019, pow(max(0.0, sin(t * 2.5 + 1.7)), 4.0) * 0.88 + 0.06);
+  color += starWarmAmber * microGlitterStar3D(bp, vec3(0.20, -0.24, 0.22) + vec3(sin(t * 0.85 + 3.3), cos(t * 0.75 + 1.6), sin(t * 0.7 + 0.8)) * 0.003, spinAngle, 0.019, pow(max(0.0, sin(t * 2.5 + 1.7)), 4.0) * 0.88 + 0.06) * insideBlob;
   // 16: South-West low fold (~7:45)
-  color += starDiamond * microGlitterStar(p, vec2(-0.21, -0.23) + vec2(cos(t * 0.65 + 2.4), sin(t * 0.85 + 4.5)) * 0.004, 0.018, pow(max(0.0, sin(t * 2.3 + 3.8)), 4.0) * 0.85 + 0.05);
+  color += starDiamond * microGlitterStar3D(bp, vec3(-0.21, -0.21, 0.20) + vec3(cos(t * 0.65 + 2.4), sin(t * 0.85 + 4.5), cos(t * 0.8 + 2.2)) * 0.003, spinAngle, 0.018, pow(max(0.0, sin(t * 2.3 + 3.8)), 4.0) * 0.85 + 0.05) * insideBlob;
   
-  // TIER 2: 12 SUSPENDED MICRO DIAMOND FLECKS (Deep crystalline suspension)
-  color += starIceCyan   * microPoint(p, vec2(-0.13,  0.09) + vec2(sin(t * 0.6 + 0.5), cos(t * 0.7 + 1.9)) * 0.003, pow(max(0.0, sin(t * 2.7 + 0.8)), 3.5) * 0.75 + 0.08);
-  color += starDiamond   * microPoint(p, vec2( 0.21,  0.16) + vec2(cos(t * 0.8 + 2.2), sin(t * 0.6 + 0.4)) * 0.003, pow(max(0.0, sin(t * 2.2 + 2.5)), 3.5) * 0.80 + 0.08);
-  color += starChampagne * microPoint(p, vec2( 0.16, -0.08) + vec2(sin(t * 0.7 + 3.9), cos(t * 0.8 + 2.7)) * 0.003, pow(max(0.0, sin(t * 2.5 + 4.1)), 3.5) * 0.80 + 0.08);
-  color += starIceCyan   * microPoint(p, vec2(-0.22, -0.06) + vec2(cos(t * 0.9 + 1.1), sin(t * 0.7 + 3.5)) * 0.003, pow(max(0.0, sin(t * 2.1 + 1.6)), 3.5) * 0.75 + 0.08);
-  color += starSoftAzure * microPoint(p, vec2(-0.06, -0.20) + vec2(sin(t * 0.8 + 4.8), cos(t * 0.6 + 0.9)) * 0.003, pow(max(0.0, sin(t * 2.6 + 3.2)), 3.5) * 0.70 + 0.06);
-  color += starRoseGold  * microPoint(p, vec2( 0.07, -0.28) + vec2(cos(t * 0.7 + 0.3), sin(t * 0.9 + 4.2)) * 0.003, pow(max(0.0, sin(t * 1.9 + 5.0)), 3.5) * 0.75 + 0.08);
-  color += starDiamond   * microPoint(p, vec2( 0.29, -0.05) + vec2(sin(t * 0.9 + 2.7), cos(t * 0.7 + 5.1)) * 0.003, pow(max(0.0, sin(t * 2.8 + 0.4)), 3.5) * 0.80 + 0.08);
-  color += starIceCyan   * microPoint(p, vec2(-0.26,  0.08) + vec2(cos(t * 0.6 + 3.6), sin(t * 0.8 + 1.8)) * 0.003, pow(max(0.0, sin(t * 2.3 + 2.9)), 3.5) * 0.75 + 0.08);
-  color += starChampagne * microPoint(p, vec2( 0.02,  0.28) + vec2(sin(t * 0.8 + 1.9), cos(t * 0.7 + 4.4)) * 0.003, pow(max(0.0, sin(t * 2.4 + 4.7)), 3.5) * 0.78 + 0.08);
-  color += starWarmAmber * microPoint(p, vec2( 0.23,  0.02) + vec2(cos(t * 0.7 + 5.2), sin(t * 0.8 + 3.1)) * 0.003, pow(max(0.0, sin(t * 2.0 + 1.1)), 3.5) * 0.75 + 0.08);
-  color += starDiamond   * microPoint(p, vec2(-0.09,  0.12) + vec2(sin(t * 0.9 + 0.8), cos(t * 0.6 + 2.3)) * 0.003, pow(max(0.0, sin(t * 2.7 + 3.6)), 3.5) * 0.80 + 0.08);
-  color += starSoftAzure * microPoint(p, vec2(-0.15, -0.18) + vec2(cos(t * 0.8 + 4.3), sin(t * 0.7 + 0.6)) * 0.003, pow(max(0.0, sin(t * 2.2 + 5.4)), 3.5) * 0.70 + 0.06);
+  // TIER 2: 12 SUSPENDED MICRO DIAMOND FLECKS (Deep crystalline suspension in 3D orbit)
+  color += starIceCyan   * microPoint3D(bp, vec3(-0.13,  0.09, 0.30) + vec3(sin(t * 0.6 + 0.5), cos(t * 0.7 + 1.9), sin(t * 0.8 + 1.1)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.7 + 0.8)), 3.5) * 0.75 + 0.08) * insideBlob;
+  color += starDiamond   * microPoint3D(bp, vec3( 0.21,  0.16, 0.24) + vec3(cos(t * 0.8 + 2.2), sin(t * 0.6 + 0.4), cos(t * 0.7 + 3.4)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.2 + 2.5)), 3.5) * 0.80 + 0.08) * insideBlob;
+  color += starChampagne * microPoint3D(bp, vec3( 0.16, -0.08, 0.28) + vec3(sin(t * 0.7 + 3.9), cos(t * 0.8 + 2.7), sin(t * 0.6 + 2.3)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.5 + 4.1)), 3.5) * 0.80 + 0.08) * insideBlob;
+  color += starIceCyan   * microPoint3D(bp, vec3(-0.22, -0.06, 0.22) + vec3(cos(t * 0.9 + 1.1), sin(t * 0.7 + 3.5), cos(t * 0.8 + 0.9)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.1 + 1.6)), 3.5) * 0.75 + 0.08) * insideBlob;
+  color += starSoftAzure * microPoint3D(bp, vec3(-0.06, -0.20, 0.26) + vec3(sin(t * 0.8 + 4.8), cos(t * 0.6 + 0.9), sin(t * 0.7 + 4.5)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.6 + 3.2)), 3.5) * 0.70 + 0.06) * insideBlob;
+  color += starRoseGold  * microPoint3D(bp, vec3( 0.07, -0.28, 0.20) + vec3(cos(t * 0.7 + 0.3), sin(t * 0.9 + 4.2), cos(t * 0.8 + 2.1)) * 0.003, spinAngle, pow(max(0.0, sin(t * 1.9 + 5.0)), 3.5) * 0.75 + 0.08) * insideBlob;
+  color += starDiamond   * microPoint3D(bp, vec3( 0.27, -0.05, 0.18) + vec3(sin(t * 0.9 + 2.7), cos(t * 0.7 + 5.1), sin(t * 0.6 + 3.2)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.8 + 0.4)), 3.5) * 0.80 + 0.08) * insideBlob;
+  color += starIceCyan   * microPoint3D(bp, vec3(-0.26,  0.08, 0.16) + vec3(cos(t * 0.6 + 3.6), sin(t * 0.8 + 1.8), cos(t * 0.9 + 1.4)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.3 + 2.9)), 3.5) * 0.75 + 0.08) * insideBlob;
+  color += starChampagne * microPoint3D(bp, vec3( 0.02,  0.28, 0.22) + vec3(sin(t * 0.8 + 1.9), cos(t * 0.7 + 4.4), sin(t * 0.7 + 5.2)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.4 + 4.7)), 3.5) * 0.78 + 0.08) * insideBlob;
+  color += starWarmAmber * microPoint3D(bp, vec3( 0.23,  0.02, 0.24) + vec3(cos(t * 0.7 + 5.2), sin(t * 0.8 + 3.1), cos(t * 0.8 + 0.3)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.0 + 1.1)), 3.5) * 0.75 + 0.08) * insideBlob;
+  color += starDiamond   * microPoint3D(bp, vec3(-0.09,  0.12, 0.30) + vec3(sin(t * 0.9 + 0.8), cos(t * 0.6 + 2.3), sin(t * 0.7 + 3.7)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.7 + 3.6)), 3.5) * 0.80 + 0.08) * insideBlob;
+  color += starSoftAzure * microPoint3D(bp, vec3(-0.15, -0.18, 0.22) + vec3(cos(t * 0.8 + 4.3), sin(t * 0.7 + 0.6), cos(t * 0.6 + 4.8)) * 0.003, spinAngle, pow(max(0.0, sin(t * 2.2 + 5.4)), 3.5) * 0.70 + 0.06) * insideBlob;
   
   // =========================================================================
-  // 7. DIFFRACTION STAR LENS FLARE GLINTS (Matching Reference Coordinates)
+  // 7. DIFFRACTION STAR LENS FLARE GLINTS (Rotating 3D Crystal Surface Facets)
   // =========================================================================
   
   // Star Glint 1: Prominent 4-point star on the upper-left inner rim (~10:30)
-  vec2 glintPos1 = vec2(-0.215, 0.215) + vec2(sin(t * 0.8) * 0.002, cos(t * 0.7) * 0.002);
-  float glint1 = starGlint(p, glintPos1, 0.068, 1.05 * (0.85 + 0.15 * sin(t * 2.8)));
+  vec3 glintPos1 = vec3(-0.215, 0.215, 0.30) + vec3(sin(t * 0.8) * 0.002, cos(t * 0.7) * 0.002, sin(t * 0.6) * 0.002);
+  float glint1 = starGlint3D(bp, glintPos1, spinAngle, 0.068, 1.05 * (0.85 + 0.15 * sin(t * 2.8)));
   color += mix(vec3(1.0, 0.85, 0.55), vec3(1.0, 0.98, 0.92), 0.65) * glint1 * insideBlob;
   
   // Star Glint 2: Secondary sparkling glint on upper-right warm fold (~2:00)
-  vec2 glintPos2 = vec2(0.245, 0.190) + vec2(cos(t * 0.9) * 0.002, sin(t * 0.8) * 0.002);
-  float glint2 = starGlint(p, glintPos2, 0.050, 0.80 * (0.82 + 0.18 * cos(t * 2.5)));
+  vec3 glintPos2 = vec3(0.245, 0.190, 0.28) + vec3(cos(t * 0.9) * 0.002, sin(t * 0.8) * 0.002, cos(t * 0.7) * 0.002);
+  float glint2 = starGlint3D(bp, glintPos2, spinAngle, 0.050, 0.80 * (0.82 + 0.18 * cos(t * 2.5)));
   color += mix(goldAmber, goldCore, 0.7) * glint2 * insideBlob;
   
   // Star Glint 3: Delicate glint on lower-left warm fold (~7:30)
-  vec2 glintPos3 = vec2(-0.240, -0.155) + vec2(sin(t * 0.7) * 0.002, cos(t * 0.9) * 0.002);
-  float glint3 = starGlint(p, glintPos3, 0.045, 0.65 * (0.85 + 0.15 * sin(t * 2.2 + 1.2)));
+  vec3 glintPos3 = vec3(-0.240, -0.155, 0.30) + vec3(sin(t * 0.7) * 0.002, cos(t * 0.9) * 0.002, sin(t * 0.8) * 0.002);
+  float glint3 = starGlint3D(bp, glintPos3, spinAngle, 0.045, 0.65 * (0.85 + 0.15 * sin(t * 2.2 + 1.2)));
   color += mix(goldAmber, goldCore, 0.6) * glint3 * insideBlob;
   
   // =========================================================================
-  // 8. TIGHT PERIMETER CUTOFF & TRANSPARENCY (Zero Spill Outside Blob)
+  // 8. TIGHT PERIMETER CUTOFF & TRANSPARENCY (Zero Spill Outside 4-Lobed Blob)
   // =========================================================================
   float edgeGlow = exp(-max(0.0, r - R_lobe) * 36.0);
   color *= edgeGlow;
