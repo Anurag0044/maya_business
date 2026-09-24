@@ -60,6 +60,18 @@ input:-webkit-autofill:active {
   background: #374151;
 }
 
+/* Hide scrollbars universally when .no-scrollbar is applied */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
 /* Minimalist luxury light sweep for editorial eyebrow text: ultra-smooth, calm 60fps glide */
 @keyframes luxuryShimmer {
   0% {

@@ -9,6 +9,7 @@ import RightRail from "@/components/RightRail";
 import BackgroundVideo from "@/components/BackgroundVideo";
 import MotionLoader from "@/components/MotionLoader";
 import MayaAgentShowcase from "@/components/MayaAgentShowcase";
+import MayaReceptionist from "@/components/MayaReceptionist";
 import { usePageLoad } from "@/context/PageLoadContext";
 
 export default function Home() {
@@ -58,7 +59,12 @@ export default function Home() {
         </section>
 
         {/* ========================================================================= */}
-        {/* 2. LIGHT MODE PRODUCT SHOWCASE ("MEET MAYA" & LIVE DASHBOARD)             */}
+        {/* 2. MAYA RECEPTIONIST (Interactive Voice Core & Capability Intro)          */}
+        {/* ========================================================================= */}
+        <MayaReceptionist />
+
+        {/* ========================================================================= */}
+        {/* 3. LIGHT MODE PRODUCT SHOWCASE ("MEET MAYA" & LIVE DASHBOARD)             */}
         {/* ========================================================================= */}
         <MayaAgentShowcase />
       </motion.main>
