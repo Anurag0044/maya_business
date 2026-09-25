@@ -148,6 +148,11 @@ class LeadService:
         await self.db.refresh(activity)
         return activity
 
+    async def delete(self, business_id: UUID, lead_id: UUID) -> None:
+        lead = await self.get(business_id, lead_id)
+        await self.db.delete(lead)
+        await self.db.commit()
+
     async def assign(
         self,
         business_id: UUID,

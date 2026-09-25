@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, time
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, Time, UniqueConstraint, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, Time, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,6 +23,7 @@ class BusinessSettings(Base):
     handoff_message: Mapped[str | None] = mapped_column(Text)
     default_language: Mapped[str] = mapped_column(String(20), default="en-IN", nullable=False)
     timezone: Mapped[str] = mapped_column(String(100), default="Asia/Kolkata", nullable=False)
+    conversation_retention_days: Mapped[int] = mapped_column(Integer, default=90, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

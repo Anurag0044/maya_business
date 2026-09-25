@@ -13,6 +13,7 @@ from app.schemas.lead import (
     LeadUpdate,
 )
 from app.services.leads.service import LeadService
+from app.services.conversations.service import ConversationService
 
 router = APIRouter(prefix="/leads", tags=["Leads"])
 
@@ -66,6 +67,25 @@ async def update_lead(
         lead_id,
         **payload.model_dump(exclude_unset=True),
     )
+
+
+@router.delete("/{lead_id}")
+async def delete_lead(
+    lead_id: UUID,
+    current_user: User = Depends(require_roles("OWNER")),
+    db: AsyncSession = Depends(get_database),
+):
+    # Customer-data deletion removes durable lead/customer intelligence and
+    # first purges/anonymizes associated conversation/call content.
+    await ConversationService(db).delete_history_for_lead(
+        current_user.business_id, lead_id
+    )
+    await LeadService(db).delete(current_user.business_id, lead_id)
+    return {
+        "success": True,
+        "data": None,
+        "message": "Customer and lead data permanently deleted",
+    }
 
 
 @router.post("/{lead_id}/activities", response_model=LeadActivityResponse, status_code=201)

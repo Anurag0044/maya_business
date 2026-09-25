@@ -12,6 +12,7 @@ from app.schemas.business import (
     SettingsUpdate,
 )
 from app.services.business.service import BusinessService
+from app.services.conversations.service import ConversationService
 
 router = APIRouter(prefix="/business", tags=["Business"])
 
@@ -50,10 +51,13 @@ async def update_settings(
     current_user: User = Depends(require_roles("OWNER", "ADMIN")),
     db: AsyncSession = Depends(get_database),
 ):
-    return await BusinessService(db).update_settings(
+    result = await BusinessService(db).update_settings(
         current_user.business_id,
         **payload.model_dump(exclude_unset=True),
     )
+    if "conversation_retention_days" in payload.model_dump(exclude_unset=True):
+        await ConversationService(db).apply_retention_to_existing(current_user.business_id)
+    return result
 
 
 @router.get("/hours", response_model=list[BusinessHoursResponse])

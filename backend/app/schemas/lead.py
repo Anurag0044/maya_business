@@ -43,6 +43,8 @@ class LeadResponse(BaseModel):
     priority: int
     assigned_to: UUID | None
     notes: str | None
+    customer_intelligence_summary: str | None
+    customer_intelligence: dict | None
     next_followup_at: datetime | None
 
 

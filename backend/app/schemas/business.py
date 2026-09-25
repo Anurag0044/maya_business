@@ -39,6 +39,7 @@ class SettingsUpdate(BaseModel):
     handoff_message: str | None = None
     default_language: str | None = Field(default=None, max_length=20)
     timezone: str | None = Field(default=None, max_length=100)
+    conversation_retention_days: int | None = Field(default=None, ge=1, le=3650)
 
 
 class SettingsResponse(SettingsUpdate):

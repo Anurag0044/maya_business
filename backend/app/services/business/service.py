@@ -50,6 +50,7 @@ class BusinessService:
             "ai_enabled", "voice_enabled", "auto_lead_creation",
             "auto_followups", "human_handoff", "welcome_message",
             "fallback_message", "handoff_message", "default_language", "timezone",
+            "conversation_retention_days",
         }
         for key, value in fields.items():
             if key in allowed and value is not None:

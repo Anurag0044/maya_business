@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -23,6 +23,8 @@ class Lead(Base):
     priority: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     assigned_to: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
     notes: Mapped[str | None] = mapped_column(Text)
+    customer_intelligence_summary: Mapped[str | None] = mapped_column(Text)
+    customer_intelligence: Mapped[dict | None] = mapped_column(JSONB)
     first_contact_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_contact_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     next_followup_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
