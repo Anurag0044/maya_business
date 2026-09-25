@@ -38,6 +38,7 @@ async def chat(
     decision = await AgentOrchestrator(db).handle_message(
         context,
         message,
+        conversation=conversation,
     )
     customer_turn_number = context.turn_count
     if decision.response:

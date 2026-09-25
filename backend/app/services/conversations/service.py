@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import ARRAY, Text, cast, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppException
@@ -96,21 +96,97 @@ class ConversationService:
         ]
         context.turn_count = recent_messages[-1].turn_number if recent_messages else 0
 
-        chunks = await self.db.scalars(
+        # Historical chunks are loaded lazily after the current customer
+        # message is known. Loading every chunk here defeats the bounded-memory
+        # design for long conversations.
+        context.conversation_chunks = []
+
+    async def load_relevant_chunks(
+        self,
+        conversation: Conversation,
+        context,
+        *,
+        query: str,
+        max_results: int = 2,
+        candidate_limit: int = 12,
+    ) -> list[dict]:
+        """Load only relevant historical chunks from PostgreSQL.
+
+        PostgreSQL first narrows candidates using the JSONB terms array. A
+        small candidate set is then scored deterministically in Python so the
+        final prompt receives at most ``max_results`` chunks. Chunks already
+        created during the current request are preserved.
+        """
+        from app.ai.agent.memory import ConversationMemoryManager
+        from app.ai.agent.context import ConversationContext
+
+        if not isinstance(context, ConversationContext):
+            return []
+
+        memory = ConversationMemoryManager()
+        query_terms = memory.query_terms(query)
+
+        # Preserve a chunk frozen during this request. It is not in Cloud SQL
+        # yet; sync_memory() will persist it after the response is generated.
+        local_chunks = list(context.conversation_chunks)
+        if not query_terms:
+            context.conversation_chunks = local_chunks
+            return local_chunks[:max_results]
+
+        # JSONB array overlap operator (?|) asks PostgreSQL for chunks whose
+        # stored term array contains at least one retrieval term. We fetch a
+        # small candidate set rather than the entire conversation history.
+        term_array = cast(sorted(query_terms), ARRAY(Text))
+        result = await self.db.scalars(
             select(ConversationChunk)
-            .where(ConversationChunk.conversation_id == conversation.id)
-            .order_by(ConversationChunk.chunk_index)
+            .where(
+                ConversationChunk.conversation_id == conversation.id,
+                ConversationChunk.terms.is_not(None),
+                ConversationChunk.terms.op("?|")(term_array),
+            )
+            .order_by(ConversationChunk.chunk_index.desc())
+            .limit(max(candidate_limit, max_results)),
         )
-        context.conversation_chunks = [
-            {
+        candidates = list(result)
+
+        scored: list[tuple[int, int, dict]] = []
+        seen_ids = set()
+        for item in candidates:
+            chunk = {
                 "chunk_id": item.chunk_index,
                 "start_turn": item.start_turn,
                 "end_turn": item.end_turn,
                 "text": item.content,
                 "terms": item.terms or [],
             }
-            for item in chunks
-        ]
+            seen_ids.add(item.chunk_index)
+            overlap = len(query_terms.intersection(set(chunk["terms"])))
+            if overlap:
+                scored.append((overlap, item.chunk_index, chunk))
+
+        # Include a newly created in-memory chunk even though it has not been
+        # flushed to the database yet.
+        for chunk in local_chunks:
+            if chunk["chunk_id"] in seen_ids:
+                continue
+            overlap = len(query_terms.intersection(set(chunk.get("terms", []))))
+            if overlap:
+                scored.append((overlap, chunk["chunk_id"], chunk))
+
+        scored.sort(key=lambda item: (item[0], item[1]), reverse=True)
+        selected = [chunk for _, _, chunk in scored[:max_results]]
+
+        # Keep newly frozen chunks in context even when they are not relevant
+        # to the current query. They must still reach sync_memory() so the
+        # durable chunk is written to Cloud SQL after this turn.
+        merged = list(local_chunks)
+        merged.extend(
+            chunk
+            for chunk in selected
+            if chunk["chunk_id"] not in {c["chunk_id"] for c in local_chunks}
+        )
+        context.conversation_chunks = merged
+        return merged
 
     async def append_turn(
         self,

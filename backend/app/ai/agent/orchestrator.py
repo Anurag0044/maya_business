@@ -8,8 +8,8 @@ from app.ai.agent.action import AgentAction
 from app.ai.agent.appointment_parser import (
     parse_appointment_datetime_from_conversation,
 )
-from app.ai.agent.context import ConversationContext
 from app.ai.agent.memory import ConversationMemoryManager
+from app.ai.agent.context import ConversationContext
 from app.ai.agent.decision import AgentDecision, DecisionType
 from app.ai.agent.greeting_detector import is_greeting
 from app.ai.agent.planner import AgentPlanner
@@ -18,6 +18,7 @@ from app.ai.intent.classifier import IntentClassifier
 from app.ai.intent.schemas import Intent
 from app.ai.retrieval.generator import AnswerGenerator
 from app.ai.retrieval.retriever import KnowledgeRetriever
+from app.services.conversations.service import ConversationService
 from app.ai.tools.appointments import (
     book_appointment,
     check_availability,
@@ -132,6 +133,7 @@ class AgentOrchestrator:
         self,
         context: ConversationContext,
         message: str,
+        conversation=None,
     ) -> AgentDecision:
 
         # =========================================================
@@ -186,6 +188,17 @@ class AgentOrchestrator:
         # summary generation.
         await self.memory.maybe_summarize(context)
         self.memory.sync_structured_state(context)
+
+        if conversation is not None:
+            await ConversationService(self.db).load_relevant_chunks(
+                conversation,
+                context,
+                query=message,
+                max_results=self.memory.config.max_retrieved_chunks,
+            )
+
+        # The in-memory context now contains only the small relevant set needed
+        # for this turn; the full historical chunk table stays in Cloud SQL.
 
         # =========================================================
         # 3. GREETING
