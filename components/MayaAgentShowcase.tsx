@@ -53,7 +53,7 @@ export default function MayaAgentShowcase() {
             {/* Eyebrow: Minimalist Architectural Light Sweep */}
             <div className="mb-2.5 sm:mb-3">
               <span className="text-[9.5px] sm:text-[10px] font-medium uppercase tracking-[0.24em] inline-block animate-luxury-shimmer select-none">
-                MEET MAYA
+                MEET MAYA AGENT
               </span>
             </div>
 

@@ -138,7 +138,7 @@ export default function WorkspaceSidebar({
             <div className="relative z-10 flex flex-col gap-2">
               {/* Eyebrow */}
               <span className="text-[9px] font-semibold uppercase tracking-[0.24em] inline-block animate-luxury-shimmer select-none">
-                MEET MAYA
+                MEET MAYA AGENT
               </span>
 
               {/* Headline */}
