@@ -9,6 +9,7 @@ from app.ai.agent.appointment_parser import (
     parse_appointment_datetime_from_conversation,
 )
 from app.ai.agent.context import ConversationContext
+from app.ai.agent.memory import ConversationMemoryManager
 from app.ai.agent.decision import AgentDecision, DecisionType
 from app.ai.agent.greeting_detector import is_greeting
 from app.ai.agent.planner import AgentPlanner
@@ -71,6 +72,7 @@ class AgentOrchestrator:
         # NATURAL CUSTOMER-FACING RESPONSE GENERATOR
         # ---------------------------------------------------------
         self.response_generator = ResponseGenerator()
+        self.memory = ConversationMemoryManager()
 
     # =============================================================
     # NATURAL RESPONSE
@@ -133,7 +135,14 @@ class AgentOrchestrator:
     ) -> AgentDecision:
 
         # =========================================================
-        # 1. SAVE CUSTOMER MESSAGE
+        # 1. PREPARE MEMORY BEFORE SAVING CUSTOMER MESSAGE
+        # =========================================================
+        # Freeze a completed 8-turn window as a deterministic memory chunk.
+        # Chunk creation uses no LLM and therefore adds no token cost.
+        self.memory.prepare_before_turn(context)
+
+        # =========================================================
+        # 2. SAVE CUSTOMER MESSAGE
         # =========================================================
 
         context.add_turn(
@@ -168,6 +177,15 @@ class AgentOrchestrator:
         context.update_entities(
             classifier_result.entities
         )
+
+        # ---------------------------------------------------------
+        # BOUNDED CONVERSATION MEMORY
+        # ---------------------------------------------------------
+        # Long calls are represented as: structured state + summary +
+        # recent turns. Older turns are compacted only after a successful
+        # summary generation.
+        await self.memory.maybe_summarize(context)
+        self.memory.sync_structured_state(context)
 
         # =========================================================
         # 3. GREETING
@@ -291,10 +309,7 @@ class AgentOrchestrator:
             # recent conversation.
             # -----------------------------------------------------
 
-            recent_conversation = "\n".join(
-                f"{turn['speaker']}: {turn['message']}"
-                for turn in context.history[-6:]
-            )
+            recent_conversation = self.memory.recent_turns_text(context)
 
             appointment_start = (
                 parse_appointment_datetime_from_conversation(
@@ -726,10 +741,7 @@ class AgentOrchestrator:
             for item in results
         )
 
-        history = "\n".join(
-            f"{turn['speaker']}: {turn['message']}"
-            for turn in context.history[-10:]
-        )
+        history = self.memory.build_prompt_context(context, query=message)
 
         # ---------------------------------------------------------
         # Generate grounded answer

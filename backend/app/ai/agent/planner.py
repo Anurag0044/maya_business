@@ -4,6 +4,7 @@ import json
 
 from app.ai.agent.action import ActionPlan, AgentAction
 from app.ai.agent.context import ConversationContext
+from app.ai.agent.memory import ConversationMemoryManager
 from app.ai.providers.llm import get_llm_provider
 
 
@@ -14,6 +15,9 @@ class AgentPlanner:
 
     The planner does NOT execute business operations.
     """
+
+    def __init__(self) -> None:
+        self.memory = ConversationMemoryManager()
 
     async def plan(
         self,
@@ -34,13 +38,10 @@ class AgentPlanner:
             )
 
         # ---------------------------------------------------------
-        # Recent conversation
+        # Bounded conversation memory
         # ---------------------------------------------------------
 
-        history = "\n".join(
-            f"{turn['speaker']}: {turn['message']}"
-            for turn in context.history[-10:]
-        )
+        memory_context = self.memory.build_prompt_context(context, query=message)
 
         # ---------------------------------------------------------
         # Current appointment context
@@ -268,10 +269,7 @@ CURRENT CUSTOMER MESSAGE:
 {message}
 
 
-RECENT CONVERSATION:
-
-{history}
-
+{memory_context}
 
 CURRENT APPOINTMENT CONTEXT:
 

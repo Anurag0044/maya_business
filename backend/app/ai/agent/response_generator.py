@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 
 from app.ai.agent.context import ConversationContext
+from app.ai.agent.memory import ConversationMemoryManager
 from app.ai.providers.llm import get_llm_provider
 
 
@@ -35,13 +36,10 @@ class ResponseGenerator:
             return None
 
         # =========================================================
-        # RECENT CONVERSATION
+        # BOUNDED CONVERSATION MEMORY
         # =========================================================
 
-        history = "\n".join(
-            f"{turn['speaker']}: {turn['message']}"
-            for turn in context.history[-10:]
-        )
+        memory_context = ConversationMemoryManager().build_prompt_context(context, query=customer_message)
 
         # =========================================================
         # CONVERSATION STAGE
@@ -567,8 +565,7 @@ CONVERSATION STAGE:
 CURRENT LOCAL DATE AND TIME:
 {local_time}
 
-RECENT CONVERSATION:
-{history}
+{memory_context}
 
 CURRENT CUSTOMER MESSAGE:
 {customer_message}

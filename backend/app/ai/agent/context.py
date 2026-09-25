@@ -17,6 +17,11 @@ class ConversationContext:
     turn_count: int = 0
     language: str = "en-IN"
     history: list[dict[str, str]] = field(default_factory=list)
+    conversation_summary: str | None = None
+    structured_state: dict[str, Any] = field(default_factory=dict)
+    summary_turn_count: int = 0
+    memory_compactions: int = 0
+    conversation_chunks: list[dict[str, Any]] = field(default_factory=list)
     appointment_start_time: datetime | None = None
     appointment_end_time: datetime | None = None
     pending_action: str | None = None
