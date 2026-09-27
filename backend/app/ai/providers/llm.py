@@ -42,6 +42,17 @@ class OpenAICompatibleLLMProvider:
         user_prompt: str,
         temperature: float = 0.2,
     ) -> str | None:
+
+        print("\n" + "=" * 70)
+        print(f"[LLM REQUEST] model={self.model}")
+        print(f"[PROMPT SIZE] system_chars={len(system_prompt)}")
+        print(f"[PROMPT SIZE] user_chars={len(user_prompt)}")
+        print(f"[PROMPT SIZE] total_chars={len(system_prompt) + len(user_prompt)}")
+        print(f"[PROMPT SIZE] system_words={len(system_prompt.split())}")
+        print(f"[PROMPT SIZE] user_words={len(user_prompt.split())}")
+        print(f"[PROMPT SIZE] total_words={len(system_prompt.split()) + len(user_prompt.split())}")
+        print("=" * 70)
+
         response = await self.client.chat.completions.create(
             model=self.model,
             temperature=temperature,
@@ -50,6 +61,17 @@ class OpenAICompatibleLLMProvider:
                 {"role": "user", "content": user_prompt},
             ],
         )
+
+        usage = getattr(response, "usage", None)
+
+        if usage:
+            print(
+        f"[LLM USAGE] model={self.model} "
+        f"prompt_tokens={usage.prompt_tokens} "
+        f"completion_tokens={usage.completion_tokens} "
+        f"total_tokens={usage.total_tokens}"
+    )
+
         content = response.choices[0].message.content
         return content.strip() if content else None
 

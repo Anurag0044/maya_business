@@ -16,16 +16,35 @@ async def ingest_document(
     document: KnowledgeDocument,
 ) -> int:
     """Chunk and embed a knowledge document for tenant-scoped retrieval."""
+
     if document.business_id != business_id:
         raise ValueError("Document does not belong to business")
 
-    await db.execute(delete(KnowledgeChunk).where(KnowledgeChunk.document_id == document.id))
+    await db.execute(
+        delete(KnowledgeChunk).where(
+            KnowledgeChunk.document_id == document.id
+        )
+    )
 
     chunks = chunk_text(document.content or "")
     provider = get_embedding_provider()
 
     for index, content in enumerate(chunks):
-        embedding = await provider.embed(content) if provider else None
+        embedding = None
+
+        if provider:
+            try:
+                embedding = await provider.embed(content)
+
+            except Exception as exc:
+                print(
+                    "[RAG INGESTION] Embedding unavailable; "
+                    "saving chunk without embedding."
+                )
+                print(
+                    f"[RAG INGESTION] Embedding error: {exc}"
+                )
+
         db.add(
             KnowledgeChunk(
                 document_id=document.id,
@@ -42,5 +61,7 @@ async def ingest_document(
         )
 
     document.status = "READY" if chunks else "EMPTY"
+
     await db.commit()
+
     return len(chunks)

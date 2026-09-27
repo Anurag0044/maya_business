@@ -42,3 +42,5 @@ class ConversationContext:
             self.customer_phone = entities["phone"]
         if entities.get("email"):
             self.customer_email = entities["email"]
+        if entities.get("language"):
+            self.language = entities["language"]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import re
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -125,6 +126,60 @@ class AgentOrchestrator:
 
         return response or fallback
 
+    @staticmethod
+    def _greeting_fallback() -> str:
+        """Deterministic first greeting for every business/user."""
+        return (
+            "Namaste! MAYA Intelligence mein aapka swagat hai. "
+            "Main MAYA hoon. Main aapki kaise help kar sakti hoon?"
+        )
+
+    @staticmethod
+    def _extract_name_from_name_request(
+        context: ConversationContext,
+        message: str,
+    ) -> str | None:
+        """Capture a short bare-name reply after MAYA asks for the name."""
+        if len(context.history) < 2:
+            return None
+
+        previous_assistant = next(
+            (
+                turn["message"]
+                for turn in reversed(context.history[:-1])
+                if turn.get("speaker") == "ASSISTANT"
+            ),
+            "",
+        )
+        if not previous_assistant:
+            return None
+
+        previous_lower = previous_assistant.lower()
+        if "name" not in previous_lower and "नाम" not in previous_assistant:
+            return None
+
+        candidate = " ".join(message.strip().split()).strip(" .,!?:;")
+        words = candidate.split()
+
+        if not 1 <= len(words) <= 3:
+            return None
+
+        if not all(
+            re.fullmatch(r"[A-Za-z][A-Za-z.'-]*", word)
+            for word in words
+        ):
+            return None
+
+        common_non_names = {
+            "yes", "yeah", "yep", "sure", "okay", "ok", "haan", "han",
+            "ji", "no", "nahi", "nahin", "thanks", "thank", "please",
+            "book", "appointment", "schedule", "continue",
+        }
+        if candidate.lower() in common_non_names:
+            return None
+
+        return candidate
+
     # =============================================================
     # MAIN MESSAGE HANDLER
     # =============================================================
@@ -151,6 +206,16 @@ class AgentOrchestrator:
             "CUSTOMER",
             message,
         )
+
+        # If MAYA just asked for the customer's name, accept a short
+        # natural reply such as "Rahul" or "Siddharth Sagar".
+        bare_name = self._extract_name_from_name_request(
+            context,
+            message,
+        )
+        if bare_name:
+            context.customer_name = bare_name
+            context.entities["name"] = bare_name
 
         # =========================================================
         # 2. LEGACY CLASSIFIER
@@ -225,26 +290,14 @@ class AgentOrchestrator:
 
         if is_greeting(message):
 
-            greeting_result = {
-                "success": True,
-                "type": "GREETING",
-                "message": "Customer greeted MAYA.",
-            }
-
-            response = await self._natural_response(
-                context=context,
-                message=message,
-                action="GREETING",
-                result=greeting_result,
-                fallback=(
-                    "Good morning. Welcome to MAYA Intelligence. "
-                    "I'm MAYA. How may I assist you today?"
-                ),
-            )
-
+            # First greeting is deterministic:
+            # - always Latin-script Hinglish
+            # - no LLM call
+            # - no RAG call
+            # - no business-specific hardcoding
             return AgentDecision(
                 decision=DecisionType.ANSWER,
-                response=response,
+                response=self._greeting_fallback(),
                 confidence=1.0,
                 reason="Customer greeting detected.",
             )
@@ -282,6 +335,21 @@ class AgentOrchestrator:
         # =========================================================
 
         if plan.action == AgentAction.ASK_CLARIFICATION:
+
+            # Name collection is a deterministic identity requirement.
+            # Return the planner's language-specific request directly so
+            # the LLM cannot accidentally skip or rewrite the required ask.
+            if (
+                plan.reason
+                == "Customer name is required before starting appointment booking."
+                and plan.response
+            ):
+                return AgentDecision(
+                    decision=DecisionType.CLARIFY,
+                    response=plan.response,
+                    confidence=1.0,
+                    reason=plan.reason,
+                )
 
             response = await self._natural_response(
                 context=context,
@@ -764,6 +832,7 @@ class AgentOrchestrator:
             message,
             context_text,
             history,
+            language=context.language,
         )
 
         response = generated or best["content"]

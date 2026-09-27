@@ -19,11 +19,38 @@ class AgentPlanner:
     def __init__(self) -> None:
         self.memory = ConversationMemoryManager()
 
+    @staticmethod
+    def _name_request_response(language: str | None) -> str:
+        """Ask for the customer's name in their current language."""
+        if language == "hi-IN":
+            return "बिल्कुल। आपका नाम बता सकते हैं?"
+        if language == "hinglish-IN":
+            return "Bilkul. Aapka naam bata sakte hain?"
+        return "Sure. May I have your name, please?"
+
     async def plan(
         self,
         context: ConversationContext,
         message: str,
     ) -> ActionPlan:
+
+        # ---------------------------------------------------------
+        # Required customer identity for appointment booking
+        # ---------------------------------------------------------
+        # A name is collected contextually when the customer first
+        # asks to book an appointment. We do not force name
+        # collection at the beginning of every conversation.
+        # This check is deterministic so the LLM cannot accidentally
+        # skip a required identity field.
+        if (
+            context.intent == "APPOINTMENT_REQUEST"
+            and not context.customer_name
+        ):
+            return ActionPlan(
+                action=AgentAction.ASK_CLARIFICATION,
+                response=self._name_request_response(context.language),
+                reason="Customer name is required before starting appointment booking.",
+            )
 
         provider = get_llm_provider()
 
@@ -95,6 +122,15 @@ CONVERSATIONAL UNDERSTANDING:
 
 Use the conversation history to understand short replies
 and natural conversational language.
+
+LANGUAGE UNDERSTANDING:
+
+Customers may speak in English, Hindi, or Hinglish (Hindi written
+in Latin/English script), and they may switch languages during a
+conversation. Understand the customer's meaning regardless of the
+language or mix used. Do not ask the customer to translate.
+Use the current conversation and the stored language preference
+when interpreting short follow-up messages.
 
 Examples of affirmations include:
 
@@ -284,6 +320,7 @@ CURRENT GENERAL CONTEXT:
         "customer_name": context.customer_name,
         "customer_phone": context.customer_phone,
         "customer_email": context.customer_email,
+        "language": context.language,
         "lead_id": str(context.lead_id)
         if context.lead_id
         else None,
