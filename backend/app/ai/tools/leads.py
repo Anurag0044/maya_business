@@ -35,3 +35,28 @@ async def get_lead(
     lead_id: UUID,
 ):
     return await LeadService(db).get(business_id, lead_id)
+
+
+async def get_lead_by_phone(
+    db: AsyncSession,
+    business_id: UUID,
+    *,
+    phone: str,
+):
+    return await LeadService(db).get_by_phone(
+        business_id,
+        phone,
+    )
+
+
+async def update_lead(
+    db: AsyncSession,
+    business_id: UUID,
+    lead_id: UUID,
+    **fields,
+):
+    return await LeadService(db).update(
+        business_id,
+        lead_id,
+        **fields,
+    )

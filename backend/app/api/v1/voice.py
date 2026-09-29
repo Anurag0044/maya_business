@@ -1,6 +1,7 @@
 from uuid import UUID
+import secrets
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.agent.context import ConversationContext
@@ -9,6 +10,7 @@ from app.api.deps import get_database
 from app.core.exceptions import AppException
 from app.schemas.voice import VoiceMessageRequest, VoiceSessionRequest
 from app.services.calls.service import CallService
+from app.core.config import settings
 
 router = APIRouter(prefix="/voice", tags=["Voice"])
 
@@ -19,10 +21,29 @@ _contexts: dict[str, ConversationContext] = {}
 
 
 
+async def require_voice_gateway(
+    x_maya_voice_key: str | None = Header(default=None),
+) -> None:
+    expected = settings.voice_gateway_api_key
+    if not expected:
+        raise AppException(
+            "Voice gateway authentication is not configured",
+            "VOICE_AUTH_NOT_CONFIGURED",
+            503,
+        )
+    if not x_maya_voice_key or not secrets.compare_digest(x_maya_voice_key, expected):
+        raise AppException(
+            "Invalid voice gateway credentials",
+            "VOICE_UNAUTHORIZED",
+            401,
+        )
+
+
 @router.post("/session")
 async def voice_session(
     payload: VoiceSessionRequest,
     db: AsyncSession = Depends(get_database),
+    _: None = Depends(require_voice_gateway),
 ):
     try:
         business_id = UUID(payload.business_id)
@@ -44,6 +65,7 @@ async def voice_session(
         business_id=business_id,
         customer_phone=payload.caller_number,
         language=payload.language,
+        channel="VOICE",
     )
 
     return {
@@ -61,6 +83,7 @@ async def voice_session(
 async def voice_message(
     payload: VoiceMessageRequest,
     db: AsyncSession = Depends(get_database),
+    _: None = Depends(require_voice_gateway),
 ):
     context = _contexts.get(payload.session_id)
 

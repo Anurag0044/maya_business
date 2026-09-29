@@ -28,6 +28,7 @@ async def chat(
         business_id,
         session_id,
     )
+    context.channel = "CHAT"
 
     conversation_service = ConversationService(db)
     conversation = await conversation_service.get_or_create(

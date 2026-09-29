@@ -19,12 +19,14 @@ def create_context(
     *,
     customer_phone: str | None = None,
     language: str = "en-IN",
+    channel: str = "CHAT",
 ) -> ConversationContext:
     context = ConversationContext(
         session_id=session_id,
         business_id=business_id,
         customer_phone=customer_phone,
         language=language,
+        channel=channel,
     )
 
     _contexts[(business_id, session_id)] = context

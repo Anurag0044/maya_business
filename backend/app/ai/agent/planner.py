@@ -28,6 +28,19 @@ class AgentPlanner:
             return "Bilkul. Aapka naam bata sakte hain?"
         return "Sure. May I have your name, please?"
 
+
+    @staticmethod
+    def _phone_request_response(language: str | None) -> str:
+        """Ask for the customer's phone number in their current language."""
+
+        if language == "hi-IN":
+            return "ज़रूर। कृपया अपना मोबाइल नंबर बता सकते हैं?"
+
+        if language == "hinglish-IN":
+            return "Bilkul. Aap apna mobile number bata sakte hain?"
+
+        return "Sure. May I have your mobile number, please?"
+
     async def plan(
         self,
         context: ConversationContext,
@@ -50,6 +63,53 @@ class AgentPlanner:
                 action=AgentAction.ASK_CLARIFICATION,
                 response=self._name_request_response(context.language),
                 reason="Customer name is required before starting appointment booking.",
+            )
+
+
+        # ---------------------------------------------------------
+        # Required customer phone for lead capture
+        # ---------------------------------------------------------
+        # A lead must have a phone number so MAYA can identify,
+        # contact, and follow up with the customer.
+        #
+        # For inbound voice calls, customer_phone may already come
+        # from caller ID. In that case, do NOT ask the customer
+        # for their phone number again.
+        if (
+            context.intent == "LEAD_CAPTURE"
+            and context.channel == "CHAT"
+            and not context.customer_phone
+        ):
+            return ActionPlan(
+                action=AgentAction.ASK_CLARIFICATION,
+                response=self._phone_request_response(context.language),
+                reason="Customer phone number is required before creating a lead.",
+            )
+
+        
+
+        # Deterministic V1 routing for intents where the backend has a
+        # concrete workflow. This prevents the LLM from turning an explicit
+        # service-interest signal into a fee enquiry or generic FAQ.
+        if context.intent == "LEAD_CAPTURE":
+            return ActionPlan(
+                action=AgentAction.CREATE_LEAD,
+                arguments={
+                    "interest": context.lead_interest,
+                },
+                reason="Current turn is an explicit service/product interest signal.",
+            )
+
+        if context.intent == "APPOINTMENT_CANCEL" or context.pending_action == AgentAction.CANCEL_APPOINTMENT.value:
+            return ActionPlan(
+                action=AgentAction.CANCEL_APPOINTMENT,
+                reason="Current turn requests appointment cancellation or continues a pending cancellation.",
+            )
+
+        if context.intent == "APPOINTMENT_RESCHEDULE" or context.pending_action == AgentAction.RESCHEDULE_APPOINTMENT.value:
+            return ActionPlan(
+                action=AgentAction.RESCHEDULE_APPOINTMENT,
+                reason="Current turn requests appointment rescheduling or continues a pending reschedule.",
             )
 
         provider = get_llm_provider()

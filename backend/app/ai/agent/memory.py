@@ -128,6 +128,13 @@ class ConversationMemoryManager:
             ),
 
             "pending_action": context.pending_action,
+            "channel": context.channel,
+            "lead_interest": context.lead_interest,
+            "appointment_id": (
+                str(context.appointment_id)
+                if context.appointment_id
+                else None
+            ),
 
             "entities": dict(context.entities),
         }

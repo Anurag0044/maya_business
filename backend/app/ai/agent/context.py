@@ -25,6 +25,9 @@ class ConversationContext:
     appointment_start_time: datetime | None = None
     appointment_end_time: datetime | None = None
     pending_action: str | None = None
+    channel: str = "CHAT"
+    lead_interest: str | None = None
+    appointment_id: UUID | None = None
 
     def add_turn(self, speaker: str, message: str) -> None:
         self.history.append({

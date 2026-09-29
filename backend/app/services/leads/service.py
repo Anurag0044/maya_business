@@ -44,6 +44,30 @@ class LeadService:
             raise AppException("Lead not found", "LEAD_NOT_FOUND", 404)
         return lead
 
+    @staticmethod
+    def _normalize_phone(phone: str) -> str:
+        value = (phone or "").strip()
+        if not value:
+            return value
+        prefix = "+" if value.startswith("+") else ""
+        digits = "".join(ch for ch in value if ch.isdigit())
+        return f"{prefix}{digits}"
+
+    async def get_by_phone(
+        self,
+        business_id: UUID,
+        phone: str,
+    ) -> Lead | None:
+        normalized_phone = self._normalize_phone(phone)
+        if not normalized_phone:
+            return None
+        return await self.db.scalar(
+            select(Lead).where(
+                Lead.business_id == business_id,
+                Lead.phone == normalized_phone,
+            )
+        )
+
     async def create_or_update_by_phone(
         self,
         business_id: UUID,
@@ -56,14 +80,21 @@ class LeadService:
         course_id: UUID | None = None,
         notes: str | None = None,
     ) -> Lead:
-        lead = await self.db.scalar(
-            select(Lead).where(
-                Lead.business_id == business_id,
-                Lead.phone == phone,
+        normalized_phone = self._normalize_phone(phone)
+        if not normalized_phone:
+            raise AppException(
+                "A valid phone number is required",
+                "LEAD_PHONE_REQUIRED",
+                400,
             )
+
+        lead = await self.get_by_phone(
+            business_id,
+            normalized_phone,
         )
 
         now = datetime.now(timezone.utc)
+        created = lead is None
 
         if lead:
             if name:
@@ -82,7 +113,7 @@ class LeadService:
         else:
             lead = Lead(
                 business_id=business_id,
-                phone=phone,
+                phone=normalized_phone,
                 name=name,
                 email=email,
                 source=source,
@@ -101,8 +132,12 @@ class LeadService:
             LeadActivity(
                 lead_id=lead.id,
                 business_id=business_id,
-                activity_type="CONTACT",
-                description="Lead created or updated through Front Desk",
+                activity_type="LEAD_CREATED" if created else "LEAD_UPDATED",
+                description=(
+                    "Lead created through MAYA Front Desk"
+                    if created
+                    else "Lead updated through MAYA Front Desk"
+                ),
             )
         )
 
@@ -117,9 +152,43 @@ class LeadService:
             "name", "phone", "email", "source", "interest", "course_id",
             "status", "priority", "assigned_to", "notes", "next_followup_at",
         }
+        changed_fields: list[str] = []
         for key, value in fields.items():
-            if key in allowed and value is not None:
-                setattr(lead, key, value)
+            if key not in allowed or value is None:
+                continue
+
+            if key == "phone":
+                value = self._normalize_phone(value)
+                if not value:
+                    raise AppException(
+                        "A valid phone number is required",
+                        "LEAD_PHONE_REQUIRED",
+                        400,
+                    )
+                duplicate = await self.get_by_phone(business_id, value)
+                if duplicate and duplicate.id != lead.id:
+                    raise AppException(
+                        "Another lead already uses this phone number",
+                        "LEAD_PHONE_EXISTS",
+                        409,
+                    )
+
+            setattr(lead, key, value)
+            changed_fields.append(key)
+
+        if changed_fields:
+            lead.last_contact_at = datetime.now(timezone.utc)
+            self.db.add(
+                LeadActivity(
+                    lead_id=lead.id,
+                    business_id=business_id,
+                    activity_type="LEAD_UPDATED",
+                    description=(
+                        "Lead fields updated through MAYA Front Desk: "
+                        + ", ".join(changed_fields)
+                    ),
+                )
+            )
 
         await self.db.commit()
         await self.db.refresh(lead)

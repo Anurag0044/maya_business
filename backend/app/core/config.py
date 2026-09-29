@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     embedding_dimensions: int = 1536
     chat_model: str = "gpt-4o-mini"
 
+    # Internal Voice Intelligence -> Front Desk gateway credential.
+    # Keep this secret outside source control; rotate it before production.
+    voice_gateway_api_key: str | None = None
+
     model_config = SettingsConfigDict(
         # Absolute path — works from any CWD (IDE, Docker, test runner, CLI).
         env_file=str(_BACKEND_DIR / ".env"),

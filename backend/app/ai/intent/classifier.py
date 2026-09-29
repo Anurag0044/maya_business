@@ -65,6 +65,30 @@ class IntentClassifier:
         #
         # are not interpreted as pricing questions.
         # ---------------------------------------------------------
+        
+        (
+            Intent.LEAD_CAPTURE,
+            (
+        "i'm interested",
+        "i am interested",
+        "interested in your services",
+        "interested in your service",
+        "interested in your course",
+        "interested in your courses",
+        "want to know more",
+        "would like to know more",
+        "want more information",
+        "want information",
+        "need more information",
+        "i want to enquire",
+        "i want to inquire",
+        "make an enquiry",
+        "make an inquiry",
+        "i'd like to enquire",
+        "i'd like to inquire",
+           ),
+        ),
+
         (
             Intent.GENERAL_FAQ,
             (
@@ -86,6 +110,7 @@ class IntentClassifier:
                 "kya offer",
             ),
         ),
+
 
         # ---------------------------------------------------------
         # FEES / PRICING
@@ -301,37 +326,121 @@ class IntentClassifier:
         "me",
         "wala",
         "wali",
-        "provide",
-        "services",
+        
+        
     }
 
     # -------------------------------------------------------------
     # CLASSIFICATION
     # -------------------------------------------------------------
 
-    def classify(self, message: str) -> IntentResult:
-        text = re.sub(
-            r"\s+",
-            " ",
-            message.lower().strip(),
-        )
+    LEAD_INTEREST_PATTERNS = (
+        re.compile(r"\b(?:i am|i'm|im)\s+(?:very\s+)?interested\b", re.I),
+        re.compile(r"\binterested\s+in\s+(?:your|the|maya)?\s*(?:services?|product|solution|front\s*desk|receptionist)\b", re.I),
+        re.compile(r"\b(?:mujhe|hume|humko)\b.{0,90}\b(?:service|services|front\s*desk|product|solution)\b.{0,40}\b(?:interest|interested|chahiye|lena|len|use|karna|chahta|chahti|pasand)\b", re.I),
+        re.compile(r"\b(?:main|mai|hum)\b.{0,70}\b(?:service|services|front\s*desk|product|solution)\b.{0,40}\b(?:interested|interest|lena|len|chahiye|karna|chahta|chahti)\b", re.I),
+        re.compile(r"\b(?:i|we)\s+(?:want|would like|need)\s+(?:to\s+)?(?:get|buy|use|start|take|adopt)\b.{0,80}\b(?:service|services|product|solution|front\s*desk|maya)\b", re.I),
+        re.compile(r"\b(?:i|we)\s+(?:want|would like)\s+(?:more\s+information|to\s+know\s+more)\b.{0,80}\b(?:service|services|product|solution|front\s*desk|maya)\b", re.I),
+        re.compile(r"\b(?:mujhe|hume)\b.{0,80}\b(?:aapki|aapke|maya)\b.{0,60}\b(?:service|services|front\s*desk)\b.{0,40}\b(?:chahiye|lena|len|use|karna)\b", re.I),
+    )
 
-        for intent, phrases in self.PATTERNS:
-            if any(
-                phrase in text
-                for phrase in phrases
-            ):
-                return IntentResult(
-                    intent=intent,
-                    confidence=0.90,
-                    entities=self._extract_entities(message),
-                )
+    FEE_TERMS = re.compile(
+        r"\b(?:fee|fees|price|pricing|cost|charge|charges|rate|rates|subscription)\b|\bper\s+month\b",
+        re.I,
+    )
+
+    @classmethod
+    def _has_lead_interest(cls, text: str) -> bool:
+        return any(pattern.search(text) for pattern in cls.LEAD_INTEREST_PATTERNS)
+
+    @classmethod
+    def _has_fee_term(cls, text: str) -> bool:
+        return bool(cls.FEE_TERMS.search(text))
+
+    @staticmethod
+    def _phrase_matches(text: str, phrase: str) -> bool:
+        escaped = re.escape(phrase).replace(r"\ ", r"\s+")
+        return bool(re.search(rf"(?<!\w){escaped}(?!\w)", text, re.I))
+
+    def classify(self, message: str) -> IntentResult:
+        text = re.sub(r"\s+", " ", message.lower().strip())
+        entities = self._extract_entities(message)
+
+        # Explicit appointment modification intents must beat the generic
+        # "appointment" keyword (e.g. "reschedule my appointment").
+        if any(self._phrase_matches(text, phrase) for phrase in (
+            "reschedule", "change my appointment", "change the appointment",
+        )):
+            return IntentResult(
+                intent=Intent.APPOINTMENT_RESCHEDULE,
+                confidence=0.98,
+                entities=entities,
+                reasoning="Explicit appointment reschedule language detected.",
+            )
+
+        if any(self._phrase_matches(text, phrase) for phrase in (
+            "cancel my appointment", "cancel appointment", "cancel the appointment",
+        )):
+            return IntentResult(
+                intent=Intent.APPOINTMENT_CANCEL,
+                confidence=0.98,
+                entities=entities,
+                reasoning="Explicit appointment cancellation language detected.",
+            )
+
+        # Explicit commercial intent wins over generic interest language.
+        # Example: "I'm interested in pricing" is a fee enquiry, not a lead.
+        if self._has_fee_term(text):
+            return IntentResult(
+                intent=Intent.FEE_ENQUIRY,
+                confidence=0.96,
+                entities=entities,
+                reasoning="Explicit pricing/fee language detected.",
+            )
+
+        # Service/product interest is a lead signal, including Hinglish.
+        if self._has_lead_interest(text):
+            entities["lead_interest"] = self._extract_lead_interest(message)
+            return IntentResult(
+                intent=Intent.LEAD_CAPTURE,
+                confidence=0.96,
+                entities=entities,
+                reasoning="Customer expressed interest in a product/service.",
+            )
+
+        # Score phrase matches rather than using raw substring precedence.
+        # Longer phrases are stronger evidence than one generic word.
+        candidates: list[tuple[int, int, Intent]] = []
+        for pattern_index, (intent, phrases) in enumerate(self.PATTERNS):
+            for phrase in phrases:
+                if self._phrase_matches(text, phrase):
+                    candidates.append((len(phrase), -pattern_index, intent))
+
+        if candidates:
+            candidates.sort(reverse=True)
+            best_len, _, best_intent = candidates[0]
+            confidence = 0.90 if best_len >= 8 else 0.84
+            return IntentResult(
+                intent=best_intent,
+                confidence=confidence,
+                entities=entities,
+                reasoning="Matched a normalized intent phrase.",
+            )
 
         return IntentResult(
             intent=Intent.GENERAL_FAQ,
             confidence=0.45,
-            entities=self._extract_entities(message),
+            entities=entities,
+            reasoning="No explicit deterministic intent matched.",
         )
+
+    @staticmethod
+    def _extract_lead_interest(message: str) -> str:
+        text = " ".join(message.strip().split())
+        # Store a concise deterministic description instead of relying on the
+        # planner to invent CRM data. The original customer wording remains in
+        # conversation history as the source of truth.
+        return text[:500]
 
     # -------------------------------------------------------------
     # ENTITY EXTRACTION
@@ -524,7 +633,7 @@ class IntentClassifier:
             r"हिंदी",
             text,
         ):
-            return "hi-IN"
+            return "hinglish-IN"
 
         # ---------------------------------------------------------
         # EXPLICIT HINGLISH
@@ -546,7 +655,7 @@ class IntentClassifier:
             r"[\u0900-\u097F]",
             text,
         ):
-            return "hi-IN"
+            return "hinglish-IN"
 
         # ---------------------------------------------------------
         # LATIN-SCRIPT HINDI GREETINGS

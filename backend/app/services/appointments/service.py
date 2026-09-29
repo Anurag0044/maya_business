@@ -70,6 +70,24 @@ class AppointmentService:
         existing = await self.db.scalar(query)
         return existing is None
 
+    async def get_latest_upcoming_for_lead(
+        self,
+        business_id: UUID,
+        lead_id: UUID,
+    ) -> Appointment | None:
+        now = datetime.now().astimezone()
+        return await self.db.scalar(
+            select(Appointment)
+            .where(
+                Appointment.business_id == business_id,
+                Appointment.lead_id == lead_id,
+                Appointment.status.in_(["SCHEDULED", "CONFIRMED"]),
+                Appointment.start_time >= now,
+            )
+            .order_by(Appointment.start_time.asc())
+            .limit(1)
+        )
+
     async def create(
         self,
         business_id: UUID,
@@ -161,6 +179,13 @@ class AppointmentService:
         return appointment
 
     async def cancel(self, business_id: UUID, appointment_id: UUID) -> Appointment:
+        appointment = await self.get(business_id, appointment_id)
+        if appointment.status not in {"SCHEDULED", "CONFIRMED"}:
+            raise AppException(
+                "Appointment is not active and cannot be cancelled",
+                "APPOINTMENT_NOT_ACTIVE",
+                409,
+            )
         return await self.update(
             business_id,
             appointment_id,
@@ -187,5 +212,5 @@ class AppointmentService:
             appointment_id,
             start_time=start_time,
             end_time=end_time,
-            status="RESCHEDULED",
+            status="SCHEDULED",
         )

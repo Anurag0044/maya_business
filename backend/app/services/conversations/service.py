@@ -80,6 +80,15 @@ class ConversationService:
         context.intent = state.get("intent")
         context.language = state.get("language") or context.language
         context.pending_action = state.get("pending_action")
+        context.channel = state.get("channel") or conversation.channel or context.channel
+        context.lead_interest = state.get("lead_interest")
+        appointment_id = state.get("appointment_id")
+        if appointment_id:
+            from uuid import UUID as UUIDType
+            try:
+                context.appointment_id = UUIDType(appointment_id)
+            except (ValueError, TypeError):
+                context.appointment_id = None
         if conversation.lead_id:
             context.lead_id = conversation.lead_id
 

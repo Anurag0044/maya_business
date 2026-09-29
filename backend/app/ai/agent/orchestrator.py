@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
+from uuid import UUID
 import re
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai.agent.action import AgentAction
+from app.ai.agent.action import AgentAction, ActionPlan
 from app.ai.agent.appointment_parser import (
     parse_appointment_datetime_from_conversation,
 )
@@ -23,6 +24,15 @@ from app.services.conversations.service import ConversationService
 from app.ai.tools.appointments import (
     book_appointment,
     check_availability,
+    cancel_appointment,
+    reschedule_appointment,
+)
+from app.services.appointments.service import AppointmentService
+from app.ai.tools.leads import (
+    create_or_update_lead,
+    get_lead,
+    get_lead_by_phone,
+    update_lead,
 )
 
 
@@ -180,6 +190,76 @@ class AgentOrchestrator:
 
         return candidate
 
+    @staticmethod
+    def _lead_phone_request(language: str) -> str:
+        if language == "hi-IN":
+            return "ज़रूर। कृपया अपना मोबाइल नंबर बता दीजिए, ताकि मैं आपकी जानकारी सुरक्षित कर सकूँ।"
+        if language == "hinglish-IN":
+            return "Sure. Please apna mobile number bata dijiye, taaki main aapki details save kar sakun."
+        return "Sure. May I have your phone number so I can save your details?"
+
+    @staticmethod
+    def _lead_not_found_response(language: str) -> str:
+        if language == "hi-IN":
+            return "मुझे इस नंबर से कोई मौजूदा रिकॉर्ड नहीं मिल रहा है। क्या आप नया रिकॉर्ड बनवाना चाहेंगे?"
+        if language == "hinglish-IN":
+            return "Mujhe is number se koi existing record nahi mil raha. Kya aap naya record banwana chahenge?"
+        return "I couldn't find an existing record for this phone number. Would you like me to create a new one?"
+
+    @staticmethod
+    def _extract_lead_interest(message: str) -> str | None:
+        text = " ".join(message.strip().split())
+        lowered = text.lower()
+        if any(term in lowered for term in (
+            "pricing", "price", "fee", "fees", "cost", "charge", "charges",
+        )):
+            return None
+        if re.search(
+            r"\b(?:interested|interest|chahiye|lena|len|buy|purchase|use|adopt|start)\b",
+            lowered,
+        ) and re.search(
+            r"\b(?:maya|front\s*desk|service|services|product|solution|receptionist)\b",
+            lowered,
+        ):
+            return text[:500]
+        return None
+
+    @staticmethod
+    def _lead_phone_request(language: str) -> str:
+        if language == "hi-IN":
+            return "ज़रूर। कृपया अपना मोबाइल नंबर बता दीजिए, ताकि मैं आपकी जानकारी सुरक्षित कर सकूँ।"
+        if language == "hinglish-IN":
+            return "Sure. Please apna mobile number bata dijiye, taaki main aapki details save kar sakun."
+        return "Sure. May I have your phone number so I can save your details?"
+
+    async def _resolve_customer_appointment(self, context: ConversationContext):
+        if context.appointment_id:
+            try:
+                return await AppointmentService(self.db).get(
+                    context.business_id, context.appointment_id
+                )
+            except Exception:
+                context.appointment_id = None
+
+        lead_id = context.lead_id
+        if not lead_id and context.customer_phone:
+            lead = await get_lead_by_phone(
+                self.db, context.business_id, phone=context.customer_phone
+            )
+            if lead:
+                context.lead_id = lead.id
+                lead_id = lead.id
+
+        if lead_id:
+            appointment = await AppointmentService(self.db).get_latest_upcoming_for_lead(
+                context.business_id, lead_id
+            )
+            if appointment:
+                context.appointment_id = appointment.id
+            return appointment
+
+        return None
+
     # =============================================================
     # MAIN MESSAGE HANDLER
     # =============================================================
@@ -235,15 +315,25 @@ class AgentOrchestrator:
             message
         )
 
-        if (
-            classifier_result.intent != Intent.GENERAL_FAQ
-            or context.intent is None
-        ):
-            context.intent = classifier_result.intent.value
+        # Current-turn intent is authoritative for routing. Never retain a
+        # stale FEE_ENQUIRY/FAQ intent simply because the new message is
+        # generic. Pending lead capture is the one deliberate continuation
+        # state: a phone number completes the lead workflow.
+        context.intent = classifier_result.intent.value
+        context.update_entities(classifier_result.entities)
 
-        context.update_entities(
-            classifier_result.entities
-        )
+        detected_interest = classifier_result.entities.get("lead_interest")
+        if detected_interest:
+            context.lead_interest = detected_interest
+
+        if (
+            context.pending_action in {
+                AgentAction.CREATE_LEAD.value,
+                AgentAction.UPDATE_LEAD.value,
+            }
+            and context.customer_phone
+        ):
+            context.intent = "LEAD_CAPTURE"
 
         # ---------------------------------------------------------
         # BOUNDED CONVERSATION MEMORY
@@ -290,26 +380,61 @@ class AgentOrchestrator:
 
         if is_greeting(message):
 
-            # First greeting is deterministic:
-            # - always Latin-script Hinglish
-            # - no LLM call
-            # - no RAG call
-            # - no business-specific hardcoding
+            # The FIRST customer greeting is deterministic and always uses
+            # the product's Latin-script Hinglish greeting. Later greetings
+            # follow the customer's current language preference.
+            if context.turn_count == 1:
+                return AgentDecision(
+                    decision=DecisionType.ANSWER,
+                    response=self._greeting_fallback(),
+                    confidence=1.0,
+                    reason="First customer greeting detected.",
+                )
+
+            response = await self._natural_response(
+                context=context,
+                message=message,
+                action="GREETING",
+                result={"first_greeting": False},
+                fallback=(
+                    "Bilkul. Main aapki kaise help kar sakti hoon?"
+                    if context.language == "hinglish-IN"
+                    else "Of course. How can I help you?"
+                ),
+            )
             return AgentDecision(
                 decision=DecisionType.ANSWER,
-                response=self._greeting_fallback(),
+                response=response,
                 confidence=1.0,
-                reason="Customer greeting detected.",
+                reason="Subsequent customer greeting detected.",
             )
 
         # =========================================================
         # 4. LLM ACTION PLANNER
         # =========================================================
 
-        plan = await self.planner.plan(
-            context,
-            message,
-        )
+        pending_lead_action = context.pending_action
+        if (
+            pending_lead_action in {
+                AgentAction.CREATE_LEAD.value,
+                AgentAction.UPDATE_LEAD.value,
+            }
+            and context.customer_phone
+        ):
+            # The previous turn explicitly asked for the contact number.
+            # Once the number arrives, do not ask the LLM to rediscover
+            # the pending CRM action from a short message such as
+            # "9876543210". Execute the already-authorized next step.
+            plan = ActionPlan(
+                action=AgentAction(pending_lead_action),
+                arguments={},
+                reason="Continuing the pending lead action after contact details were provided.",
+            )
+        else:
+            plan = await self.planner.plan(
+                context,
+                message,
+            )
 
         # =========================================================
         # 5. HUMAN HANDOFF
@@ -643,6 +768,8 @@ class AgentOrchestrator:
             # -----------------------------------------------------
 
             context.pending_action = None
+            context.appointment_id = appointment.id
+            self.memory.sync_structured_state(context)
 
             response = await self._natural_response(
                 context=context,
@@ -681,9 +808,9 @@ class AgentOrchestrator:
         # 9. LEAD ACTIONS
         # =========================================================
         #
-        # Deliberately not implemented yet.
-        #
-        # This is the next major development phase.
+        # Lead execution is backend-authoritative. The planner may
+        # select CREATE_LEAD / UPDATE_LEAD, but only values already
+        # captured in deterministic conversation state are written.
         # =========================================================
 
         if plan.action in {
@@ -691,59 +818,332 @@ class AgentOrchestrator:
             AgentAction.UPDATE_LEAD,
         }:
 
+            phone = context.customer_phone
+
+            # A new lead must have a contact identifier. In the future
+            # Voice Intelligence will normally supply this from caller ID.
+            if plan.action == AgentAction.CREATE_LEAD and not phone:
+                context.pending_action = plan.action.value
+                return AgentDecision(
+                    decision=DecisionType.CLARIFY,
+                    response=self._lead_phone_request(context.language),
+                    confidence=1.0,
+                    reason="Phone number is required before creating a lead.",
+                )
+
+            # -----------------------------------------------------
+            # CREATE / UPSERT LEAD
+            # -----------------------------------------------------
+            if plan.action == AgentAction.CREATE_LEAD:
+                arguments = plan.arguments or {}
+                interest = arguments.get("interest") or context.lead_interest
+                notes = arguments.get("notes")
+
+                if not isinstance(interest, str):
+                    interest = None
+                if not isinstance(notes, str):
+                    notes = None
+
+                lead = await create_or_update_lead(
+                    self.db,
+                    context.business_id,
+                    phone=phone,
+                    name=context.customer_name,
+                    email=context.customer_email,
+                    source="AI_FRONTDESK",
+                    interest=interest,
+                    notes=notes,
+                )
+
+                context.lead_id = lead.id
+                context.lead_interest = lead.interest or context.lead_interest
+                context.pending_action = None
+                self.memory.sync_structured_state(context)
+
+                response = await self._natural_response(
+                    context=context,
+                    message=message,
+                    action=AgentAction.CREATE_LEAD,
+                    result={
+                        "success": True,
+                        "created_or_updated": True,
+                        "lead_name": lead.name,
+                        "lead_phone": lead.phone,
+                        "lead_id": str(lead.id),
+                        "status": lead.status,
+                    },
+                    fallback=(
+                        "Thanks. I've saved your details. "
+                        "How else may I help you?"
+                    ),
+                )
+
+                return AgentDecision(
+                    decision=DecisionType.ANSWER,
+                    response=response,
+                    confidence=1.0,
+                    reason="Lead created or updated by the lead backend.",
+                )
+
+            # -----------------------------------------------------
+            # UPDATE EXISTING LEAD
+            # -----------------------------------------------------
+            lead = None
+
+            if context.lead_id:
+                lead = await get_lead_by_phone(
+                    self.db,
+                    context.business_id,
+                    phone=phone,
+                ) if phone else None
+
+                if lead is None:
+                    # Context already has the authoritative lead ID, so
+                    # use the ID-based update path when caller ID is absent.
+                    lead = await get_lead(
+                        self.db,
+                        context.business_id,
+                        context.lead_id,
+                    )
+            elif phone:
+                lead = await get_lead_by_phone(
+                    self.db,
+                    context.business_id,
+                    phone=phone,
+                )
+
+            if lead is None:
+                context.pending_action = AgentAction.CREATE_LEAD.value
+                return AgentDecision(
+                    decision=DecisionType.CLARIFY,
+                    response=self._lead_not_found_response(context.language),
+                    confidence=1.0,
+                    reason="Existing lead was not found for update.",
+                )
+
+            arguments = plan.arguments or {}
+            fields = {}
+
+            # Only customer/contact fields may be changed by the AI.
+            # CRM workflow fields such as status, priority and assignment
+            # remain under the business/admin API.
+            if context.customer_name:
+                fields["name"] = context.customer_name
+            if context.customer_phone:
+                fields["phone"] = context.customer_phone
+            if context.customer_email:
+                fields["email"] = context.customer_email
+
+            for key in ("interest", "notes"):
+                value = arguments.get(key)
+                if isinstance(value, str) and value.strip():
+                    fields[key] = value.strip()
+
+            updated = await update_lead(
+                self.db,
+                context.business_id,
+                lead.id,
+                **fields,
+            )
+
+            context.lead_id = updated.id
+            context.pending_action = None
+            self.memory.sync_structured_state(context)
+
+            response = await self._natural_response(
+                context=context,
+                message=message,
+                action=AgentAction.UPDATE_LEAD,
+                result={
+                    "success": True,
+                    "lead_name": updated.name,
+                    "lead_phone": updated.phone,
+                    "lead_id": str(updated.id),
+                    "updated_fields": list(fields.keys()),
+                },
+                fallback="Done. I've updated your details. How else may I help you?",
+            )
+
             return AgentDecision(
-                decision=DecisionType.HUMAN_HANDOFF,
-                response=(
-                    "I have your request, but that action "
-                    "is not available yet. I'll connect you "
-                    "with the team."
-                ),
-                confidence=0.90,
-                reason=(
-                    "Lead action selected by planner, "
-                    "but lead execution is not connected yet."
-                ),
+                decision=DecisionType.ANSWER,
+                response=response,
+                confidence=1.0,
+                reason="Lead updated by the lead backend.",
             )
 
         # =========================================================
         # 10. CANCEL / RESCHEDULE
         # =========================================================
-        #
-        # Tools already exist, but we will connect them properly
-        # after the basic booking flow is stable.
-        # =========================================================
 
-        if plan.action in {
-            AgentAction.CANCEL_APPOINTMENT,
-            AgentAction.RESCHEDULE_APPOINTMENT,
-        }:
+        if plan.action == AgentAction.CANCEL_APPOINTMENT:
+            if context.channel == "CHAT" and not context.customer_phone and not context.lead_id:
+                context.pending_action = AgentAction.CANCEL_APPOINTMENT.value
+                return AgentDecision(
+                    decision=DecisionType.CLARIFY,
+                    response=self._lead_phone_request(context.language),
+                    confidence=1.0,
+                    reason="Phone number is required to locate the appointment in chat.",
+                )
+
+            appointment = await self._resolve_customer_appointment(context)
+            if not appointment:
+                response = await self._natural_response(
+                    context=context,
+                    message=message,
+                    action=plan.action,
+                    result={"success": False, "needs_appointment_reference": True},
+                    fallback=(
+                        "I can help cancel it. Please share the phone number "
+                        "used for the appointment or the appointment details."
+                    ),
+                )
+                return AgentDecision(
+                    decision=DecisionType.CLARIFY,
+                    response=response,
+                    confidence=0.90,
+                    reason="No active customer appointment could be resolved.",
+                )
+
+            if appointment.status not in {"SCHEDULED", "CONFIRMED"}:
+                return AgentDecision(
+                    decision=DecisionType.CLARIFY,
+                    response=(
+                        "That appointment is no longer active. If you have another "
+                        "appointment, please share its details."
+                    ),
+                    confidence=1.0,
+                    reason="Resolved appointment is not cancellable.",
+                )
+
+            cancelled = await cancel_appointment(
+                self.db, context.business_id, appointment.id
+            )
+            context.appointment_id = cancelled.id
+            context.appointment_start_time = cancelled.start_time
+            context.appointment_end_time = cancelled.end_time
+            context.pending_action = None
+            self.memory.sync_structured_state(context)
 
             response = await self._natural_response(
                 context=context,
                 message=message,
                 action=plan.action,
                 result={
-                    "success": False,
-                    "requires_additional_information": True,
-                    "reason": (
-                        "Appointment modification is not "
-                        "connected yet."
-                    ),
+                    "success": True,
+                    "appointment_id": str(cancelled.id),
+                    "status": cancelled.status,
+                    "start_time": cancelled.start_time,
                 },
-                fallback=(
-                    "I can help with that. I need a few more "
-                    "details to safely update the appointment."
-                ),
+                fallback="Done. Your appointment has been cancelled.",
+            )
+            return AgentDecision(
+                decision=DecisionType.ANSWER,
+                response=response,
+                confidence=1.0,
+                reason="Appointment cancelled by the appointment backend.",
             )
 
+        if plan.action == AgentAction.RESCHEDULE_APPOINTMENT:
+            if context.channel == "CHAT" and not context.customer_phone and not context.lead_id:
+                context.pending_action = AgentAction.RESCHEDULE_APPOINTMENT.value
+                return AgentDecision(
+                    decision=DecisionType.CLARIFY,
+                    response=self._lead_phone_request(context.language),
+                    confidence=1.0,
+                    reason="Phone number is required to locate the appointment in chat.",
+                )
+
+            appointment = await self._resolve_customer_appointment(context)
+            if not appointment:
+                response = await self._natural_response(
+                    context=context,
+                    message=message,
+                    action=plan.action,
+                    result={"success": False, "needs_appointment_reference": True},
+                    fallback=(
+                        "I can reschedule it. Please share the phone number "
+                        "used for the appointment or the appointment details."
+                    ),
+                )
+                return AgentDecision(
+                    decision=DecisionType.CLARIFY,
+                    response=response,
+                    confidence=0.90,
+                    reason="No active customer appointment could be resolved.",
+                )
+
+            # For rescheduling, only a NEW datetime in the current message
+            # may replace the existing appointment time. Do not reuse the old
+            # appointment datetime from conversation memory as the new slot.
+            new_start = parse_appointment_datetime_from_conversation(
+                message, ""
+            )
+            if new_start is None:
+                response = await self._natural_response(
+                    context=context,
+                    message=message,
+                    action=plan.action,
+                    result={"success": False, "needs_datetime": True},
+                    fallback="Sure. What new day and time would you like?",
+                )
+                context.pending_action = AgentAction.RESCHEDULE_APPOINTMENT.value
+                return AgentDecision(
+                    decision=DecisionType.CLARIFY,
+                    response=response,
+                    confidence=0.95,
+                    reason="New appointment datetime is required for rescheduling.",
+                )
+
+            new_end = new_start + timedelta(hours=1)
+            if not await check_availability(
+                self.db, context.business_id, start_time=new_start, end_time=new_end
+            ):
+                response = await self._natural_response(
+                    context=context,
+                    message=message,
+                    action=plan.action,
+                    result={"success": False, "available": False, "start_time": new_start},
+                    fallback="That new time is not available. Please choose another time.",
+                )
+                return AgentDecision(
+                    decision=DecisionType.CLARIFY,
+                    response=response,
+                    confidence=0.95,
+                    reason="Requested reschedule slot is unavailable.",
+                )
+
+            updated = await reschedule_appointment(
+                self.db,
+                context.business_id,
+                appointment.id,
+                start_time=new_start,
+                end_time=new_end,
+            )
+            context.appointment_id = updated.id
+            context.appointment_start_time = updated.start_time
+            context.appointment_end_time = updated.end_time
+            context.pending_action = None
+            self.memory.sync_structured_state(context)
+
+            requested_time = updated.start_time.strftime("%A, %d %B at %I:%M %p")
+            response = await self._natural_response(
+                context=context,
+                message=message,
+                action=plan.action,
+                result={
+                    "success": True,
+                    "appointment_id": str(updated.id),
+                    "status": updated.status,
+                    "start_time": updated.start_time,
+                    "end_time": updated.end_time,
+                },
+                fallback=f"Done. Your appointment has been rescheduled to {requested_time}.",
+            )
             return AgentDecision(
-                decision=DecisionType.CLARIFY,
+                decision=DecisionType.ANSWER,
                 response=response,
-                confidence=0.90,
-                reason=(
-                    "Appointment modification requires "
-                    "additional structured information."
-                ),
+                confidence=1.0,
+                reason="Appointment rescheduled by the appointment backend.",
             )
 
         # =========================================================
