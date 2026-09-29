@@ -34,7 +34,7 @@ from app.ai.tools.leads import (
     get_lead_by_phone,
     update_lead,
 )
-
+from app.ai.tools.followups import create_followup
 
 class AgentOrchestrator:
     """
@@ -859,6 +859,52 @@ class AgentOrchestrator:
                 context.lead_interest = lead.interest or context.lead_interest
                 context.pending_action = None
                 self.memory.sync_structured_state(context)
+
+                # -----------------------------------------------------
+                # AUTONOMOUS FOLLOW-UP
+                # -----------------------------------------------------
+                # Only schedule a follow-up when the customer has shown
+                # genuine service/product interest.
+                #
+                # V1 default:
+                #   interested customer → follow up after 24 hours
+                #
+                # Pricing-only enquiries and ordinary information questions
+                # do not automatically receive a follow-up.
+                # -----------------------------------------------------
+
+                followup_created = False
+                followup_id = None
+
+                followup_interest = (
+                    self._extract_lead_interest(message)
+                )
+
+                if followup_interest and lead.id:
+                    try:
+                        scheduled_at = (
+                            datetime.now(timezone.utc)
+                            + timedelta(hours=24)
+                        )
+
+                        followup = await create_followup(
+                            self.db,
+                            context.business_id,
+                            lead_id=lead.id,
+                            scheduled_at=scheduled_at,
+                            reason="Customer expressed interest in MAYA Front Desk/services.",
+                            followup_type="INTEREST",
+                        )
+
+                        if followup is not None:
+                            followup_created = True
+                            followup_id = followup.id
+
+                    except Exception:
+                        # Follow-up failure must not invalidate a successfully
+                        # created lead.
+                        followup_created = False
+                        followup_id = None
 
                 response = await self._natural_response(
                     context=context,

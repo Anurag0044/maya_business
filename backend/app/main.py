@@ -21,6 +21,7 @@ from app.core.exceptions import AppException
 from app.core.logging import configure_logging
 from app.db.session import close_db, AsyncSessionLocal
 from app.services.conversations.service import ConversationService
+from app.services.followups.worker import followup_worker
 
 
 async def _retention_worker(stop_event: asyncio.Event) -> None:
@@ -45,11 +46,13 @@ async def lifespan(_: FastAPI):
     configure_logging()
     stop_event = asyncio.Event()
     retention_task = asyncio.create_task(_retention_worker(stop_event))
+    followup_task = asyncio.create_task(followup_worker(stop_event))
     try:
         yield
     finally:
         stop_event.set()
         await retention_task
+        await followup_task
         await close_db()
 
 

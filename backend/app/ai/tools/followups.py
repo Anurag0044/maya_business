@@ -15,9 +15,16 @@ async def create_followup(
     reason: str | None = None,
     followup_type: str = "GENERAL",
 ):
-    return await FollowupService(db).create(
+    """
+    Create an autonomous follow-up for an existing lead.
+
+    Business settings, duplicate protection, business hours,
+    and lead validation are enforced by FollowupService.
+    """
+
+    return await FollowupService(db).create_for_lead(
         business_id,
-        lead_id=lead_id,
+        lead_id,
         scheduled_at=scheduled_at,
         reason=reason,
         followup_type=followup_type,
