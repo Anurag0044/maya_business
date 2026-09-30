@@ -48,7 +48,7 @@ async def _process_followup(followup) -> None:
             # connected, so create an internal notification.
             # --------------------------------------------------
 
-            await notification_service.create(
+            notification = await notification_service.create(
                 followup.business_id,
                 title="Follow-up Due",
                 message=(
@@ -60,6 +60,12 @@ async def _process_followup(followup) -> None:
                 related_entity_type="FOLLOWUP",
                 related_entity_id=followup.id,
             )
+
+            if notification.delivery_status not in {"SENT", "DELIVERED"}:
+                raise RuntimeError(
+                    "Follow-up notification delivery failed: "
+                    f"{notification.failure_reason or notification.delivery_status}"
+                )
 
             # --------------------------------------------------
             # Mark attempt successful
