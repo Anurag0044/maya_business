@@ -8,6 +8,7 @@ from app.models.call import Call, CallTranscript, CallEvent
 from app.models.appointment import Appointment
 from app.models.followup import Followup, FollowupAttempt
 from app.models.notification import Notification, NotificationAttempt
+from app.models.handoff import Handoff
 from app.models.conversation import Conversation, ConversationMessage, ConversationChunk
 
 __all__ = [
@@ -15,5 +16,5 @@ __all__ = [
     "KnowledgeDocument", "KnowledgeChunk", "FAQ", "Course",
     "Lead", "LeadActivity", "Call", "CallTranscript", "CallEvent",
     "Appointment", "Followup", "FollowupAttempt", "Notification", "NotificationAttempt",
-    "Conversation", "ConversationMessage", "ConversationChunk",
+    "Conversation", "ConversationMessage", "ConversationChunk", "Handoff",
 ]

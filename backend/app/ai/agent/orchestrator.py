@@ -35,6 +35,7 @@ from app.ai.tools.leads import (
     update_lead,
 )
 from app.ai.tools.followups import create_followup
+from app.services.handoff import HandoffService
 
 class AgentOrchestrator:
     """
@@ -135,6 +136,61 @@ class AgentOrchestrator:
         # ---------------------------------------------------------
 
         return response or fallback
+
+    async def _create_handoff(
+        self,
+        *,
+        context: ConversationContext,
+        conversation,
+        reason: str,
+        response: str | None = None,
+        priority: str = "HIGH",
+    ) -> AgentDecision:
+        """Persist a human escalation before telling the customer it happened."""
+
+        handoff = await HandoffService(self.db).create(
+            context.business_id,
+            conversation_id=getattr(conversation, "id", None),
+            lead_id=context.lead_id,
+            reason=reason,
+            channel=context.channel,
+            priority=priority,
+            customer_name=context.customer_name,
+            customer_phone=context.customer_phone,
+            customer_email=context.customer_email,
+            metadata={
+                "session_id": context.session_id,
+                "intent": context.intent,
+                "language": context.language,
+                "planner_reason": reason,
+            },
+        )
+
+        # A persisted handoff is the source of truth. Only after creation do
+        # we return the customer-facing escalation response.
+        context.pending_action = None
+        self.memory.sync_structured_state(context)
+
+        customer_response = response
+        if not customer_response:
+            customer_response = (
+                "Bilkul. Main aapki request team tak pahucha rahi hoon. "
+                "Hamari team aapki help karegi."
+                if context.language == "hinglish-IN"
+                else (
+                    "ज़रूर। मैंने आपकी request team तक पहुँचा दी है। "
+                    "हमारी team आपकी मदद करेगी।"
+                    if context.language == "hi-IN"
+                    else "Certainly. I've sent your request to the team. A team member will assist you."
+                )
+            )
+
+        return AgentDecision(
+            decision=DecisionType.HUMAN_HANDOFF,
+            response=customer_response,
+            confidence=0.95,
+            reason=f"Human handoff created: {handoff.id}",
+        )
 
     @staticmethod
     def _greeting_fallback() -> str:
@@ -442,17 +498,12 @@ class AgentOrchestrator:
 
         if plan.action == AgentAction.HUMAN_HANDOFF:
 
-            return AgentDecision(
-                decision=DecisionType.HUMAN_HANDOFF,
-                response=(
-                    plan.response
-                    or "Certainly. I'll connect you with a member of the team."
-                ),
-                confidence=0.95,
-                reason=(
-                    plan.reason
-                    or "LLM selected human handoff."
-                ),
+            return await self._create_handoff(
+                context=context,
+                conversation=conversation,
+                reason=(plan.reason or "LLM selected human handoff."),
+                response=plan.response,
+                priority="HIGH",
             )
 
         # =========================================================
@@ -1208,17 +1259,11 @@ class AgentOrchestrator:
 
         if not results:
 
-            return AgentDecision(
-                decision=DecisionType.HUMAN_HANDOFF,
-                response=(
-                    "I don't have enough verified information "
-                    "to answer that accurately. "
-                    "I'll connect you with the team."
-                ),
-                confidence=0.20,
-                reason=(
-                    "No verified business knowledge was found."
-                ),
+            return await self._create_handoff(
+                context=context,
+                conversation=conversation,
+                reason="No verified business knowledge was found.",
+                priority="HIGH",
             )
 
         # ---------------------------------------------------------
