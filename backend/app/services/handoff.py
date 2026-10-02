@@ -352,3 +352,22 @@ class HandoffService:
         await self.db.commit()
         await self.db.refresh(handoff)
         return handoff
+    
+
+    async def get_active_handoff(
+        self,
+        business_id: UUID,
+        conversation_id: UUID,
+    ) -> Handoff | None:
+        result = await self.db.execute(
+            select(Handoff)
+            .where(
+                Handoff.business_id == business_id,
+                Handoff.conversation_id == conversation_id,
+                Handoff.status.in_(ACTIVE_STATUSES),
+            )
+            .order_by(Handoff.created_at.desc())
+            .limit(1)
+        )
+
+        return result.scalar_one_or_none()

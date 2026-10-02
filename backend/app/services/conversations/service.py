@@ -10,6 +10,7 @@ from app.core.exceptions import AppException
 from app.models.call import Call, CallEvent, CallTranscript
 from app.models.conversation import Conversation, ConversationChunk, ConversationMessage
 from app.models.lead import Lead
+from app.models.handoff import Handoff
 from app.models.settings import BusinessSettings
 
 
@@ -28,6 +29,131 @@ class ConversationService:
             select(BusinessSettings).where(BusinessSettings.business_id == business_id)
         )
         return max(1, int(settings.conversation_retention_days if settings else 90))
+
+    async def list(
+        self,
+        business_id: UUID,
+        *,
+        status: str | None = None,
+        channel: str | None = None,
+        lead_id: UUID | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[Conversation]:
+        query = (
+            select(Conversation)
+            .where(Conversation.business_id == business_id)
+            .order_by(Conversation.last_activity_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        if status:
+            query = query.where(Conversation.status == status.upper())
+        if channel:
+            query = query.where(Conversation.channel == channel.upper())
+        if lead_id:
+            query = query.where(Conversation.lead_id == lead_id)
+        result = await self.db.scalars(query)
+        return list(result)
+
+    async def get(self, business_id: UUID, conversation_id: UUID) -> Conversation:
+        conversation = await self.db.scalar(
+            select(Conversation).where(
+                Conversation.id == conversation_id,
+                Conversation.business_id == business_id,
+            )
+        )
+        if not conversation:
+            raise AppException(
+                "Conversation not found",
+                "CONVERSATION_NOT_FOUND",
+                404,
+            )
+        return conversation
+
+    async def list_messages(
+        self,
+        business_id: UUID,
+        conversation_id: UUID,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[ConversationMessage]:
+        # Verify tenant ownership before exposing any message content.
+        await self.get(business_id, conversation_id)
+        result = await self.db.scalars(
+            select(ConversationMessage)
+            .where(ConversationMessage.conversation_id == conversation_id)
+            .order_by(ConversationMessage.turn_number.asc(), ConversationMessage.created_at.asc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return list(result)
+
+    async def get_active_handoff(self, business_id: UUID, conversation_id: UUID) -> Handoff | None:
+        return await self.db.scalar(
+            select(Handoff)
+            .where(
+                Handoff.business_id == business_id,
+                Handoff.conversation_id == conversation_id,
+                Handoff.status.in_({"PENDING", "ASSIGNED", "IN_PROGRESS"}),
+            )
+            .order_by(Handoff.requested_at.desc())
+        )
+
+    async def append_human_message(
+        self,
+        business_id: UUID,
+        conversation_id: UUID,
+        actor_id: UUID,
+        actor_role: str,
+        message: str,
+    ) -> ConversationMessage:
+        conversation = await self.get(business_id, conversation_id)
+        handoff = await self.get_active_handoff(business_id, conversation_id)
+        if not handoff:
+            raise AppException(
+                "No active human handoff exists for this conversation",
+                "NO_ACTIVE_HANDOFF",
+                409,
+            )
+
+        # Human agents must take ownership before sending messages. Owner/Admin
+        # may operate an assigned handoff for supervision.
+        if handoff.status != "IN_PROGRESS":
+            raise AppException(
+                "Start the human handoff before sending a message",
+                "HANDOFF_NOT_IN_PROGRESS",
+                409,
+            )
+        if (
+            handoff.assigned_to
+            and handoff.assigned_to != actor_id
+            and actor_role not in {"OWNER", "ADMIN"}
+        ):
+            raise AppException(
+                "Handoff is assigned to another staff member",
+                "HANDOFF_NOT_ASSIGNED_TO_USER",
+                403,
+            )
+
+        latest_turn = await self.db.scalar(
+            select(ConversationMessage.turn_number)
+            .where(ConversationMessage.conversation_id == conversation_id)
+            .order_by(ConversationMessage.turn_number.desc())
+            .limit(1)
+        )
+        next_turn = (latest_turn or 0) + 1
+        item = await self.append_turn(
+            conversation,
+            speaker="HUMAN",
+            message=message.strip(),
+            turn_number=next_turn,
+        )
+        conversation.status = "HUMAN_ACTIVE"
+        await self.db.commit()
+        await self.db.refresh(item)
+        return item
 
     async def get_or_create(
         self,

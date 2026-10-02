@@ -328,20 +328,40 @@ class AgentOrchestrator:
     ) -> AgentDecision:
 
         # =========================================================
-        # 1. PREPARE MEMORY BEFORE SAVING CUSTOMER MESSAGE
+        # 1. RECORD CUSTOMER TURN IN WORKING MEMORY
         # =========================================================
-        # Freeze a completed 8-turn window as a deterministic memory chunk.
-        # Chunk creation uses no LLM and therefore adds no token cost.
+        # The API layer persists the durable message after orchestration. We
+        # still add the turn here first so the in-memory turn counter advances
+        # correctly even when a human handoff is active.
         self.memory.prepare_before_turn(context)
+        context.add_turn("CUSTOMER", message)
 
         # =========================================================
-        # 2. SAVE CUSTOMER MESSAGE
+        # HUMAN HANDOFF GUARD
         # =========================================================
+        # Once a conversation has an active human handoff, MAYA must not
+        # generate another AI answer. The customer turn remains persisted by
+        # the API layer, while the human agent receives it from the conversation.
+        if conversation is not None:
+            active_handoff = await HandoffService(self.db).get_active_handoff(
+                context.business_id, conversation.id
+            )
+            if active_handoff is not None:
+                return AgentDecision(
+                    decision=DecisionType.HUMAN_HANDOFF,
+                    response=None,
+                    confidence=1.0,
+                    reason=(
+                        "Human handoff is active; customer message routed to "
+                        "the human agent without an AI response."
+                    ),
+                )
 
-        context.add_turn(
-            "CUSTOMER",
-            message,
-        )
+        # =========================================================
+        # 2. PREPARE MEMORY BEFORE SAVING CUSTOMER MESSAGE
+        # =========================================================
+        # The customer turn was already added above so that both normal AI
+        # processing and the human-handoff path use the same turn numbering.
 
         # If MAYA just asked for the customer's name, accept a short
         # natural reply such as "Rahul" or "Siddharth Sagar".
