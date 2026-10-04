@@ -1541,10 +1541,10 @@ export default function WorkspaceAppointmentsView() {
         {/* ================================================================== */}
         {/* 4B. RIGHT RAIL: APPLE-LEVEL MANAGED AGENDA & AI COPILOT */}
         {/* ================================================================== */}
-        <div className="w-full lg:w-[336px] shrink-0 h-full flex flex-col gap-2.5 overflow-hidden select-none">
+        <div className="w-full lg:w-[360px] shrink-0 h-full flex flex-col gap-2.5 overflow-hidden select-none">
           {/* Apple-Grade Segmented Control Switcher */}
           <div
-            className={`p-1 rounded-xl border flex items-center justify-between shrink-0 ${
+            className={`p-1 rounded-xl border grid grid-cols-4 gap-1 shrink-0 ${
               isDark ? "bg-[#090d16] border-white/[0.08]" : "bg-slate-100/80 border-slate-200"
             }`}
           >
@@ -1560,7 +1560,7 @@ export default function WorkspaceAppointmentsView() {
                   key={tab.id}
                   type="button"
                   onClick={() => setRailTab(tab.id as any)}
-                  className={`relative flex-1 py-1.5 px-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer outline-none ${
+                  className={`relative w-full py-1.5 px-1 rounded-lg text-[10px] font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer outline-none select-none ${
                     isActive
                       ? isDark
                         ? "text-black font-semibold"
@@ -1582,10 +1582,10 @@ export default function WorkspaceAppointmentsView() {
                     />
                   )}
                   <tab.icon className="w-3 h-3 relative z-10 shrink-0" />
-                  <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
+                  <span className="relative z-10 whitespace-nowrap tracking-tight">{tab.label}</span>
                   {tab.badge !== undefined && (
                     <span
-                      className={`relative z-10 text-[9px] font-mono px-1.5 py-0.2 rounded-full leading-none shrink-0 ${
+                      className={`relative z-10 text-[8.5px] font-mono px-1 py-0 rounded-full leading-none shrink-0 ${
                         isActive
                           ? isDark
                             ? "bg-black/15 text-black font-semibold"
