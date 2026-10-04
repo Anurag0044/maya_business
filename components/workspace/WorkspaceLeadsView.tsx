@@ -63,8 +63,8 @@ const LEADS_METRICS_DATA: MetricCardProps[] = [
     isPositive: true,
     timeframe: "this week",
     icon: PhoneIncoming,
-    strokeColorDark: "#fbbf24",
-    strokeColorLight: "#d97706",
+    strokeColorDark: "#38bdf8",
+    strokeColorLight: "#0284c7",
     sparklineD: "M 0 26 C 25 27, 45 18, 65 13 C 85 8, 105 6, 120 4",
   },
   {
@@ -75,8 +75,8 @@ const LEADS_METRICS_DATA: MetricCardProps[] = [
     isPositive: true,
     timeframe: "qualified",
     icon: Headphones,
-    strokeColorDark: "#c084fc",
-    strokeColorLight: "#7c3aed",
+    strokeColorDark: "#38bdf8",
+    strokeColorLight: "#0284c7",
     sparklineD: "M 0 23 C 25 25, 45 16, 70 17 C 95 18, 105 10, 120 6",
   },
   {
@@ -520,9 +520,13 @@ export default function WorkspaceLeadsView() {
                 <span
                   className={`font-medium shrink-0 ${
                     card.isPositive
-                      ? isDark
-                        ? "text-[#fbbf24]"
-                        : "text-[#d97706]"
+                      ? card.id === "enrolled"
+                        ? isDark
+                          ? "text-emerald-400"
+                          : "text-emerald-600"
+                        : isDark
+                        ? "text-sky-400"
+                        : "text-sky-600"
                       : isDark
                       ? "text-rose-400"
                       : "text-rose-600"
@@ -602,7 +606,7 @@ export default function WorkspaceLeadsView() {
                     key={tab.id}
                     type="button"
                     onClick={() => setStatusFilter(tab.id)}
-                    className={`relative px-3 py-1 rounded-full text-[11.5px] font-medium transition-colors cursor-pointer outline-none ${
+                    className={`relative px-3 py-1 rounded-full text-[11.5px] font-medium transition-colors cursor-pointer outline-none flex items-center gap-1.5 ${
                       isActive
                         ? isDark
                           ? "text-black font-semibold"
@@ -619,6 +623,25 @@ export default function WorkspaceLeadsView() {
                           isDark ? "bg-white" : "bg-[#0B0F17]"
                         }`}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    {tab.id !== "ALL" && (
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 relative z-10 ${
+                          isActive
+                            ? isDark
+                              ? tab.id === "ENROLLED"
+                                ? "bg-emerald-600"
+                                : tab.id === "LOST"
+                                ? "bg-neutral-600"
+                                : "bg-sky-600"
+                              : tab.id === "ENROLLED"
+                              ? "bg-emerald-500"
+                              : tab.id === "LOST"
+                              ? "bg-neutral-500"
+                              : "bg-sky-500"
+                            : getStatusDotColor(tab.id as LeadStatus, isDark)
+                        }`}
                       />
                     )}
                     <span className="relative z-10">{tab.label}</span>
@@ -957,8 +980,8 @@ export default function WorkspaceLeadsView() {
                                 ? conf.activeBtnDark
                                 : conf.activeBtnLight
                               : isDark
-                              ? "bg-white/[0.02] border-white/10 text-neutral-400 hover:text-white hover:bg-white/[0.05]"
-                              : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                              ? "bg-white/[0.02] border-white/10 text-neutral-400 hover:text-white hover:bg-white/[0.05] hover:border-white/20"
+                              : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 hover:border-slate-300"
                           }`}
                         >
                           <span

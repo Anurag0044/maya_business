@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar as CalendarIcon,
@@ -527,6 +527,20 @@ export default function WorkspaceAppointmentsView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateIndex, setDateIndex] = useState(0); // 0 = 22 Sep 2025
 
+  // Status Dropdown Popover State
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setIsStatusDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // Inspector & Modal State
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -586,6 +600,10 @@ export default function WorkspaceAppointmentsView() {
       return matchesSearch && matchesStaff && matchesStatus && matchesCategory;
     });
   }, [appointments, searchQuery, selectedStaffFilter, selectedStatusFilter, selectedCategoryFilter]);
+
+  // Live status counts for popover
+  const confirmedCount = useMemo(() => appointments.filter((a) => a.status === "Confirmed").length, [appointments]);
+  const pendingCount = useMemo(() => appointments.filter((a) => a.status === "Pending").length, [appointments]);
 
   // Luxury Obsidian Event Card Theming (Structured, Consistent, Unified Base)
   const getEventCardDesign = (category: AppointmentCategory, categoryDetail: string) => {
@@ -1081,20 +1099,95 @@ export default function WorkspaceAppointmentsView() {
 
         {/* Right: View Mode Toggle & Status Filter */}
         <div className="flex items-center gap-2">
-          {/* Status Filter */}
-          <select
-            value={selectedStatusFilter}
-            onChange={(e) => setSelectedStatusFilter(e.target.value)}
-            className={`h-7.5 px-3 rounded-full text-[11px] font-medium border outline-none cursor-pointer transition-colors ${
-              isDark
-                ? "bg-[#090d16] border-white/10 text-neutral-300 hover:border-white/25"
-                : "bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300"
-            }`}
-          >
-            <option value="ALL">All Status</option>
-            <option value="Confirmed">Confirmed</option>
-            <option value="Pending">Pending</option>
-          </select>
+          {/* Luxury Custom Status Filter Popover */}
+          <div className="relative" ref={statusDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
+              className={`h-7.5 px-3 rounded-full text-[11px] font-medium border flex items-center gap-2 cursor-pointer transition-all duration-200 outline-none select-none ${
+                isStatusDropdownOpen
+                  ? isDark
+                    ? "bg-white/[0.08] border-white/30 text-white shadow-xs"
+                    : "bg-slate-100 border-slate-300 text-slate-900 shadow-xs"
+                  : isDark
+                  ? "bg-[#090d16] border-white/10 hover:border-white/25 text-neutral-300 hover:text-white"
+                  : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700"
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                  selectedStatusFilter === "Confirmed"
+                    ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
+                    : selectedStatusFilter === "Pending"
+                    ? "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]"
+                    : "bg-neutral-400"
+                }`}
+              />
+              <span>{selectedStatusFilter === "ALL" ? "All Status" : selectedStatusFilter}</span>
+              <ChevronDown
+                className={`w-3 h-3 text-neutral-400 transition-transform duration-200 ${
+                  isStatusDropdownOpen ? "rotate-180 text-white" : ""
+                }`}
+              />
+            </button>
+
+            {/* Floating Glassmorphic Menu */}
+            <AnimatePresence>
+              {isStatusDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 4, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 4, scale: 0.96 }}
+                  transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                  className={`absolute right-0 top-full mt-1.5 w-44 rounded-2xl border p-1.5 z-50 shadow-2xl backdrop-blur-xl ${
+                    isDark
+                      ? "bg-[#0b101c]/95 border-white/[0.12] text-white shadow-[0_12px_32px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.1)]"
+                      : "bg-white/95 border-slate-200 text-slate-900 shadow-xl"
+                  }`}
+                >
+                  <div className="flex flex-col gap-0.5">
+                    {[
+                      { id: "ALL", label: "All Status", dot: "bg-neutral-400", count: appointments.length },
+                      { id: "Confirmed", label: "Confirmed", dot: "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]", count: confirmedCount },
+                      { id: "Pending", label: "Pending", dot: "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]", count: pendingCount },
+                    ].map((opt) => {
+                      const isSelected = selectedStatusFilter === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedStatusFilter(opt.id);
+                            setIsStatusDropdownOpen(false);
+                          }}
+                          className={`w-full px-2.5 py-1.5 rounded-xl flex items-center justify-between text-[11px] font-medium transition-colors cursor-pointer text-left ${
+                            isSelected
+                              ? isDark
+                                ? "bg-white/10 text-white"
+                                : "bg-slate-100 text-slate-900"
+                              : isDark
+                              ? "text-neutral-300 hover:bg-white/[0.04] hover:text-white"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${opt.dot} shrink-0`} />
+                            <span>{opt.label}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-[10px] font-mono ${isDark ? "text-neutral-400" : "text-slate-400"}`}>
+                              {opt.count}
+                            </span>
+                            {isSelected && <Check className="w-3 h-3 text-sky-400" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* View Mode Toggle */}
           <div
