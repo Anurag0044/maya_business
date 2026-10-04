@@ -16,7 +16,7 @@ import {
 import { useTheme } from "@/context/ThemeContext";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import { LeadItem, ActivityItem, LeadStatus } from "./types";
+import { LeadItem, ActivityItem, LeadStatus, getStatusBadgeStyle, getStatusDotColor } from "./types";
 
 const RECENT_LEADS: LeadItem[] = [
   {
@@ -128,33 +128,6 @@ const RECENT_ACTIVITIES: ActivityItem[] = [
     timeAgo: "4 hours ago",
   },
 ];
-
-function getStatusBadgeStyle(status: LeadStatus, isDark: boolean) {
-  switch (status) {
-    case "NEW":
-      return isDark
-        ? "bg-sky-500/10 text-sky-400 border-sky-500/25"
-        : "bg-sky-50 text-sky-700 border-sky-200";
-    case "CONTACTED":
-      return isDark
-        ? "bg-purple-500/10 text-purple-400 border-purple-500/25"
-        : "bg-purple-50 text-purple-700 border-purple-200";
-    case "INTERESTED":
-      return isDark
-        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
-        : "bg-emerald-50 text-emerald-700 border-emerald-200";
-    case "COUNSELLING":
-      return isDark
-        ? "bg-amber-500/10 text-amber-400 border-amber-500/25"
-        : "bg-amber-50 text-amber-700 border-amber-200";
-    case "VISITED":
-      return isDark
-        ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/25"
-        : "bg-cyan-50 text-cyan-700 border-cyan-200";
-    default:
-      return "bg-white/[0.04] text-white/80 border-white/[0.08]";
-  }
-}
 
 function getActivityIcon(type: ActivityItem["type"]) {
   switch (type) {
@@ -411,12 +384,13 @@ export default function WorkspaceRecentView({
 
                   <div className="col-span-2 flex justify-center">
                     <span
-                      className={`px-1.5 py-0.5 rounded-full text-[8.5px] font-medium tracking-wider border uppercase select-none ${getStatusBadgeStyle(
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8.5px] font-medium tracking-wider border uppercase select-none transition-colors duration-150 ${getStatusBadgeStyle(
                         lead.status,
                         isDark
                       )}`}
                     >
-                      {lead.status}
+                      <span className={`w-1 h-1 rounded-full shrink-0 ${getStatusDotColor(lead.status, isDark)}`} />
+                      <span>{lead.status}</span>
                     </span>
                   </div>
 

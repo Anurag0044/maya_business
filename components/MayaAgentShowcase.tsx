@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Phone,
@@ -83,8 +84,8 @@ export default function MayaAgentShowcase() {
 
             {/* CTA: Explore MAYA Agent with Authentic Brand Wordmark Typography */}
             <div className="flex items-center my-5 sm:my-6">
-              <a
-                href="#get-started"
+              <Link
+                href="/workspace"
                 className={`group inline-flex items-center gap-2 px-5 py-2 sm:px-5.5 sm:py-2.5 rounded-full font-medium text-[12.5px] active:scale-[0.98] transition-all duration-300 shadow-sm ${isDark
                     ? "bg-white text-black hover:bg-neutral-100"
                     : "bg-[#0B0F17] text-white hover:bg-[#1E293B]"
@@ -98,7 +99,7 @@ export default function MayaAgentShowcase() {
                 <span className="text-[12.5px] leading-none transition-transform duration-200 group-hover:translate-x-0.5">
                   →
                 </span>
-              </a>
+              </Link>
             </div>
           </motion.div>
         </div>

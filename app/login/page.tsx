@@ -63,31 +63,26 @@ function AppleIcon({ className = "w-4 h-4" }: { className?: string }) {
 export default function LoginPage() {
   const router = useRouter();
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
+  const [name, setName] = useState("Executive Member");
+  const [email, setEmail] = useState("executive@mayabusiness.ai");
+  const [phone, setPhone] = useState("+1 (555) 234-5678");
+  const [password, setPassword] = useState("••••••••");
   const [showPassword, setShowPassword] = useState(false);
-  const [keepSignedIn, setKeepSignedIn] = useState(false);
+  const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (authMode === "signin") {
-      if (!email.trim() || !password.trim()) return;
-    } else {
-      if (!name.trim() || !email.trim() || !phone.trim() || !password.trim()) return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-    if (password.length < 6) return;
     setIsSubmitting(true);
     
-    // In a real app, you would call apiClient.post("/auth/login") here
-    // For this UI template, we set a mock session cookie
-    await createSession("mock_token_for_template");
+    try {
+      await createSession("mock_token_for_template");
+    } catch {
+      // Offline or fallback handling
+    }
     
-    setIsSubmitting(false);
-    router.push("/workspace");
+    // Jump straight to workspace
+    window.location.href = "/workspace";
   };
 
   return (
@@ -379,7 +374,6 @@ export default function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Work email address"
-                        required
                         autoComplete="email"
                         className="w-full h-10 sm:h-10.5 pl-10 pr-4 rounded-[14px] bg-[#0b0e16]/80 border border-white/[0.08] text-[13px] text-white placeholder:text-[#556070] focus:outline-none focus:border-white/25 focus:bg-[#0e121d] focus:ring-1 focus:ring-white/10 transition-all duration-200"
                       />
@@ -393,7 +387,6 @@ export default function LoginPage() {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="Phone number"
-                        required
                         autoComplete="tel"
                         className="w-full h-10 sm:h-10.5 pl-10 pr-4 rounded-[14px] bg-[#0b0e16]/80 border border-white/[0.08] text-[13px] text-white placeholder:text-[#556070] focus:outline-none focus:border-white/25 focus:bg-[#0e121d] focus:ring-1 focus:ring-white/10 transition-all duration-200"
                       />
@@ -407,7 +400,6 @@ export default function LoginPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Create password"
-                        required
                         autoComplete="new-password"
                         className="w-full h-10 sm:h-10.5 pl-10 pr-10 rounded-[14px] bg-[#0b0e16]/80 border border-white/[0.08] text-[13px] text-white placeholder:text-[#556070] focus:outline-none focus:border-white/25 focus:bg-[#0e121d] focus:ring-1 focus:ring-white/10 transition-all duration-200"
                       />

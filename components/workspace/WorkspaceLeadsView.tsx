@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
@@ -9,25 +9,25 @@ import {
   Headphones,
   CheckCircle,
   Search,
-  Filter,
-  Grid,
-  List,
   Plus,
   X,
-  MoreHorizontal,
   Calendar,
   Mail,
   MessageSquare,
-  Clock,
-  Edit3,
-  ChevronLeft,
-  ChevronRight,
-  Copy,
-  RotateCcw,
   Sparkles,
+  Copy,
+  ChevronRight,
+  Check,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
-import { LeadItem, LeadStatus, LeadPriority } from "./types";
+import {
+  LeadItem,
+  LeadStatus,
+  LeadPriority,
+  LEAD_STATUS_CONFIG,
+  getStatusBadgeStyle,
+  getStatusDotColor,
+} from "./types";
 
 interface MetricCardProps {
   id: string;
@@ -57,11 +57,11 @@ const LEADS_METRICS_DATA: MetricCardProps[] = [
   },
   {
     id: "new-leads",
-    label: "NEW LEADS",
+    label: "NEW PROSPECTS",
     value: 48,
     changePct: 32,
     isPositive: true,
-    timeframe: "vs last month",
+    timeframe: "this week",
     icon: PhoneIncoming,
     strokeColorDark: "#fbbf24",
     strokeColorLight: "#d97706",
@@ -69,11 +69,11 @@ const LEADS_METRICS_DATA: MetricCardProps[] = [
   },
   {
     id: "interested",
-    label: "INTERESTED",
+    label: "HIGH INTENT",
     value: 76,
     changePct: 12,
     isPositive: true,
-    timeframe: "vs last month",
+    timeframe: "qualified",
     icon: Headphones,
     strokeColorDark: "#c084fc",
     strokeColorLight: "#7c3aed",
@@ -81,11 +81,11 @@ const LEADS_METRICS_DATA: MetricCardProps[] = [
   },
   {
     id: "enrolled",
-    label: "ENROLLED",
+    label: "CONVERTED",
     value: 34,
     changePct: 21,
     isPositive: true,
-    timeframe: "vs last month",
+    timeframe: "enrolled",
     icon: CheckCircle,
     strokeColorDark: "#34d399",
     strokeColorLight: "#059669",
@@ -99,162 +99,186 @@ const INITIAL_LEADS: LeadItem[] = [
     initials: "RS",
     name: "Rahul Sharma",
     source: "Website",
-    timeAgo: "2 min ago",
+    timeAgo: "2m ago",
     status: "NEW",
     phone: "+91 98765 43210",
-    email: "rahul@email.com",
-    course: "Data Science",
+    email: "rahul.sharma@example.com",
+    course: "Data Science & AI",
     priority: "High",
     assignedTo: { name: "Amit Kumar", avatarInitials: "AK" },
     lastContact: "2 min ago",
     nextFollowUp: "Today, 5:00 PM",
-    notes: "Interested in weekend batch. Wants to know about fees and placement support.",
+    notes: "Interested in executive weekend batch. Looking for placement guidance and financial support options.",
   },
   {
     id: "lead-2",
     initials: "PM",
     name: "Priya Mehta",
     source: "WhatsApp",
-    timeAgo: "15 min ago",
+    timeAgo: "15m ago",
     status: "CONTACTED",
     phone: "+91 98765 12345",
-    email: "priya@email.com",
-    course: "UI/UX Design",
+    email: "priya.mehta@example.com",
+    course: "UI/UX Architecture",
     priority: "Medium",
     assignedTo: { name: "Neha Sharma", avatarInitials: "NS" },
     lastContact: "15 min ago",
     nextFollowUp: "Tomorrow, 11:00 AM",
-    notes: "Requested complete syllabus and portfolio requirements. Reviewing brochure.",
+    notes: "Requested complete design curriculum and alumni portfolio showcase. Reviewing brochure with team.",
   },
   {
     id: "lead-3",
     initials: "AP",
     name: "Arjun Patel",
     source: "Phone",
-    timeAgo: "32 min ago",
+    timeAgo: "32m ago",
     status: "INTERESTED",
     phone: "+91 91234 56789",
-    email: "arjun@email.com",
-    course: "Full Stack Dev",
+    email: "arjun.patel@example.com",
+    course: "Full Stack Engineering",
     priority: "High",
     assignedTo: { name: "Rohan Varma", avatarInitials: "RV" },
     lastContact: "32 min ago",
     nextFollowUp: "Tomorrow, 2:00 PM",
-    notes: "Wants full-stack curriculum with React & Node. Working professional looking for evening classes.",
+    notes: "Working professional transitioning from legacy software. Evening batches preferred.",
   },
   {
     id: "lead-4",
     initials: "SI",
     name: "Sneha Iyer",
     source: "Walk-in",
-    timeAgo: "1 hour ago",
+    timeAgo: "1h ago",
     status: "COUNSELLING",
     phone: "+91 99887 66554",
-    email: "sneha@email.com",
+    email: "sneha.iyer@example.com",
     course: "Data Analytics",
     priority: "Medium",
     assignedTo: { name: "Neha Sharma", avatarInitials: "NS" },
     lastContact: "1 hour ago",
     nextFollowUp: "25 Sep, 11:00 AM",
-    notes: "Attended on-campus counselling session with parents. Very interested in job assurance.",
+    notes: "Attended on-campus counselling. Deeply interested in capstone enterprise projects.",
   },
   {
     id: "lead-5",
     initials: "KV",
     name: "Karan Verma",
     source: "Website",
-    timeAgo: "2 hours ago",
+    timeAgo: "2h ago",
     status: "VISITED",
     phone: "+91 88776 55443",
-    email: "karan@email.com",
-    course: "Cloud Computing",
+    email: "karan.verma@example.com",
+    course: "Cloud Architecture",
     priority: "Low",
     assignedTo: { name: "Amit Kumar", avatarInitials: "AK" },
     lastContact: "2 hours ago",
     nextFollowUp: "26 Sep, 3:00 PM",
-    notes: "Looking for AWS Certified Solutions Architect and Azure DevOps integration.",
+    notes: "Wants AWS Solutions Architect track and DevOps CI/CD integration.",
   },
   {
     id: "lead-6",
     initials: "RS",
     name: "Riya Singh",
     source: "Instagram",
-    timeAgo: "3 hours ago",
-    status: "INTERESTED",
+    timeAgo: "3h ago",
+    status: "ENROLLED",
     phone: "+91 77665 44332",
-    email: "riya@email.com",
-    course: "Digital Marketing",
+    email: "riya.singh@example.com",
+    course: "Growth & Product Marketing",
     priority: "High",
     assignedTo: { name: "Ishita Roy", avatarInitials: "IR" },
     lastContact: "3 hours ago",
-    nextFollowUp: "Today, 4:00 PM",
-    notes: "Enquired via Instagram campaign. Needs live performance marketing projects.",
+    nextFollowUp: "Orientation on 1st Oct",
+    notes: "Converted & enrolled in executive batch. Welcome kit and LMS credentials active.",
   },
   {
     id: "lead-7",
     initials: "AN",
     name: "Aditya Nair",
     source: "Phone",
-    timeAgo: "5 hours ago",
+    timeAgo: "5h ago",
     status: "LOST",
     phone: "+91 88774 22110",
-    email: "aditya@email.com",
-    course: "Python",
+    email: "aditya.nair@example.com",
+    course: "Python Backend",
     priority: "Low",
     assignedTo: { name: "Rohan Varma", avatarInitials: "RV" },
     lastContact: "5 hours ago",
-    nextFollowUp: "—",
-    notes: "Currently overwhelmed with college exams. Asked to reconnect next quarter.",
+    nextFollowUp: "Next Quarter",
+    notes: "College exams clash. Requested follow-up call at the start of next quarter.",
   },
   {
     id: "lead-8",
     initials: "MJ",
     name: "Meera Joshi",
     source: "Website",
-    timeAgo: "1 day ago",
+    timeAgo: "1d ago",
     status: "NEW",
     phone: "+91 99881 22334",
-    email: "meera@email.com",
-    course: "Product Management",
+    email: "meera.joshi@example.com",
+    course: "AI Product Management",
     priority: "Medium",
     assignedTo: { name: "Neha Sharma", avatarInitials: "NS" },
     lastContact: "1 day ago",
     nextFollowUp: "26 Sep, 11:00 AM",
-    notes: "Product manager with 2 years experience looking for strategic leadership roadmap.",
-  },
-  {
-    id: "lead-9",
-    initials: "VR",
-    name: "Vikram Rao",
-    source: "Referral",
-    timeAgo: "1 day ago",
-    status: "CONTACTED",
-    phone: "+91 91231 33445",
-    email: "vikram@email.com",
-    course: "Cyber Security",
-    priority: "Medium",
-    assignedTo: { name: "Amit Kumar", avatarInitials: "AK" },
-    lastContact: "1 day ago",
-    nextFollowUp: "25 Sep, 5:00 PM",
-    notes: "Alumni referral. Looking for Certified Ethical Hacker training.",
-  },
-  {
-    id: "lead-10",
-    initials: "AG",
-    name: "Ananya Gupta",
-    source: "WhatsApp",
-    timeAgo: "1 day ago",
-    status: "INTERESTED",
-    phone: "+91 88770 99887",
-    email: "ananya@email.com",
-    course: "AI & ML",
-    priority: "High",
-    assignedTo: { name: "Ishita Roy", avatarInitials: "IR" },
-    lastContact: "1 day ago",
-    nextFollowUp: "Tomorrow, 10:00 AM",
-    notes: "Enquired about deep learning & Generative AI LLM fine-tuning tracks.",
+    notes: "Product manager looking for AI transformation and LLM orchestration mastery.",
   },
 ];
+
+const STATUS_FILTERS: { id: "ALL" | LeadStatus; label: string }[] = [
+  { id: "ALL", label: "All Leads" },
+  { id: "NEW", label: "New" },
+  { id: "CONTACTED", label: "Contacted" },
+  { id: "INTERESTED", label: "Interested" },
+  { id: "COUNSELLING", label: "Counselling" },
+  { id: "VISITED", label: "Visited" },
+  { id: "ENROLLED", label: "Enrolled" },
+  { id: "LOST", label: "Lost" },
+];
+
+function AnimatedCounter({
+  value,
+  duration = 0.75,
+  delay = 0,
+}: {
+  value: number;
+  duration?: number;
+  delay?: number;
+}) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTimestamp: number | null = null;
+    let reqId: number;
+    const durationMs = duration * 1000;
+    const delayMs = delay * 1000;
+    let timeoutId: NodeJS.Timeout;
+
+    timeoutId = setTimeout(() => {
+      const step = (timestamp: number) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const elapsed = timestamp - startTimestamp;
+        const progress = Math.min(elapsed / durationMs, 1);
+        const eased = 1 - Math.pow(1 - progress, 4);
+        setCount(Math.round(eased * value));
+
+        if (progress < 1) {
+          reqId = requestAnimationFrame(step);
+        } else {
+          setCount(value);
+        }
+      };
+
+      reqId = requestAnimationFrame(step);
+    }, delayMs);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (reqId) cancelAnimationFrame(reqId);
+    };
+  }, [value, duration, delay]);
+
+  return <span className="tabular-nums">{count}</span>;
+}
 
 export default function WorkspaceLeadsView() {
   const { theme } = useTheme();
@@ -262,147 +286,52 @@ export default function WorkspaceLeadsView() {
 
   // State Management
   const [leads, setLeads] = useState<LeadItem[]>(INITIAL_LEADS);
-  const [selectedLeadId, setSelectedLeadId] = useState<string>("lead-1");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(["lead-1"]));
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [sourceFilter, setSourceFilter] = useState<string>("ALL");
-  const [priorityFilter, setPriorityFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
-  const [drawerActiveTab, setDrawerActiveTab] = useState<"details" | "activity" | "notes" | "appointments">("details");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // New Lead Form State
   const [newLeadName, setNewLeadName] = useState("");
   const [newLeadPhone, setNewLeadPhone] = useState("");
   const [newLeadEmail, setNewLeadEmail] = useState("");
-  const [newLeadCourse, setNewLeadCourse] = useState("Data Science");
-  const [newLeadSource, setNewLeadSource] = useState<LeadItem["source"]>("Website");
+  const [newLeadCourse, setNewLeadCourse] = useState("Data Science & AI");
   const [newLeadPriority, setNewLeadPriority] = useState<LeadPriority>("High");
 
-  // Selected Lead object for Right Drawer
+  // Selected Lead Details
   const activeLead = useMemo(() => {
-    return leads.find((l) => l.id === selectedLeadId) || leads[0];
+    return leads.find((l) => l.id === selectedLeadId) || null;
   }, [leads, selectedLeadId]);
 
   // Toast Helper
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 2500);
   };
 
   // Filtered Leads
   const filteredLeads = useMemo(() => {
     return leads.filter((item) => {
+      const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
-        searchQuery === "" ||
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.phone && item.phone.includes(searchQuery)) ||
-        (item.email && item.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (item.course && item.course.toLowerCase().includes(searchQuery.toLowerCase()));
+        q === "" ||
+        item.name.toLowerCase().includes(q) ||
+        (item.phone && item.phone.includes(q)) ||
+        (item.email && item.email.toLowerCase().includes(q)) ||
+        (item.course && item.course.toLowerCase().includes(q));
 
       const matchesStatus = statusFilter === "ALL" || item.status === statusFilter;
-      const matchesSource = sourceFilter === "ALL" || item.source === sourceFilter;
-      const matchesPriority = priorityFilter === "ALL" || item.priority === priorityFilter;
-
-      return matchesSearch && matchesStatus && matchesSource && matchesPriority;
+      return matchesSearch && matchesStatus;
     });
-  }, [leads, searchQuery, statusFilter, sourceFilter, priorityFilter]);
+  }, [leads, searchQuery, statusFilter]);
 
-  // Multi-select actions
-  const toggleSelectAll = () => {
-    if (selectedIds.size === filteredLeads.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filteredLeads.map((l) => l.id)));
-    }
-  };
-
-  const toggleSelectRow = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const next = new Set(selectedIds);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    setSelectedIds(next);
-  };
-
-  // Status Styling Badge
-  const getStatusBadge = (status: LeadStatus) => {
-    switch (status) {
-      case "NEW":
-        return isDark
-          ? "bg-sky-500/10 text-sky-400 border-sky-500/25"
-          : "bg-sky-50 text-sky-700 border-sky-200";
-      case "CONTACTED":
-        return isDark
-          ? "bg-purple-500/10 text-purple-400 border-purple-500/25"
-          : "bg-purple-50 text-purple-700 border-purple-200";
-      case "INTERESTED":
-        return isDark
-          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
-          : "bg-emerald-50 text-emerald-700 border-emerald-200";
-      case "COUNSELLING":
-        return isDark
-          ? "bg-amber-500/10 text-amber-400 border-amber-500/25"
-          : "bg-amber-50 text-amber-700 border-amber-200";
-      case "VISITED":
-        return isDark
-          ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/25"
-          : "bg-cyan-50 text-cyan-700 border-cyan-200";
-      case "LOST":
-        return isDark
-          ? "bg-rose-500/10 text-rose-400 border-rose-500/25"
-          : "bg-rose-50 text-rose-700 border-rose-200";
-      case "ENROLLED":
-        return isDark
-          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
-          : "bg-emerald-50 text-emerald-700 border-emerald-200";
-      default:
-        return "bg-slate-100 text-slate-700 border-slate-200";
-    }
-  };
-
-  // Priority Styling Badge
-  const getPriorityBadge = (priority?: LeadPriority) => {
-    switch (priority) {
-      case "High":
-        return isDark
-          ? "bg-rose-500/10 text-rose-400 border-rose-500/25"
-          : "bg-rose-50 text-rose-600 border-rose-200";
-      case "Medium":
-        return isDark
-          ? "bg-amber-500/10 text-amber-400 border-amber-500/25"
-          : "bg-amber-50 text-amber-700 border-amber-200";
-      case "Low":
-        return isDark
-          ? "bg-slate-500/10 text-slate-400 border-slate-500/25"
-          : "bg-slate-100 text-slate-600 border-slate-200";
-      default:
-        return "bg-slate-100 text-slate-600 border-slate-200";
-    }
-  };
-
-  // Source Dot Color
-  const getSourceDotColor = (source: string) => {
-    switch (source) {
-      case "Website":
-        return "bg-emerald-400";
-      case "WhatsApp":
-        return "bg-emerald-500";
-      case "Phone":
-        return "bg-sky-400";
-      case "Walk-in":
-        return "bg-slate-400";
-      case "Instagram":
-        return "bg-pink-400";
-      case "Referral":
-        return "bg-purple-400";
-      default:
-        return "bg-slate-400";
-    }
+  // Status Change Handler
+  const handleUpdateStatus = (id: string, newStatus: LeadStatus) => {
+    setLeads((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))
+    );
+    showToast(`Lead updated to ${newStatus}`);
   };
 
   // Add Lead Handler
@@ -421,23 +350,23 @@ export default function WorkspaceLeadsView() {
       id: `lead-${Date.now()}`,
       initials: initials || "NL",
       name: newLeadName.trim(),
-      phone: newLeadPhone || "+91 90000 00000",
-      email: newLeadEmail || `${newLeadName.toLowerCase().replace(/\s+/g, "")}@email.com`,
+      phone: newLeadPhone.trim() || "+91 98000 12345",
+      email: newLeadEmail.trim() || `${newLeadName.toLowerCase().replace(/\s+/g, "")}@example.com`,
       course: newLeadCourse,
-      source: newLeadSource,
+      source: "Website",
       status: "NEW",
       priority: newLeadPriority,
       timeAgo: "Just now",
       lastContact: "Just now",
       nextFollowUp: "Today, 6:00 PM",
       assignedTo: { name: "Amit Kumar", avatarInitials: "AK" },
-      notes: "Newly created lead. Awaiting initial callback.",
+      notes: "Inbound prospect created directly. Auto-scheduled for first call briefing.",
     };
 
     setLeads([createdLead, ...leads]);
     setSelectedLeadId(createdLead.id);
     setIsAddLeadModalOpen(false);
-    showToast(`Lead "${newLeadName}" added successfully.`);
+    showToast(`Lead "${newLeadName}" added successfully`);
 
     // Reset Form
     setNewLeadName("");
@@ -447,13 +376,13 @@ export default function WorkspaceLeadsView() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className="flex-1 min-w-0 h-full flex flex-col justify-between gap-3.5 overflow-hidden min-h-0 select-none"
     >
-      {/* 1. Header Greeting Banner: Exact Dashboard Hierarchy & Spacing */}
+      {/* 1. Header: Minimal Title + Fast Action */}
       <div className="flex items-center justify-between gap-4 select-none shrink-0">
         <div>
           <h1
@@ -461,50 +390,37 @@ export default function WorkspaceLeadsView() {
               isDark ? "text-white" : "text-[#0B0F17]"
             }`}
           >
-            Turn enquiries into opportunities.
+            Leads & Pipeline
           </h1>
           <p
-            className={`text-[12.5px] sm:text-[13px] font-normal leading-normal mt-1 ${
+            className={`text-[12.5px] sm:text-[13px] font-normal leading-normal mt-0.5 ${
               isDark ? "text-[#9ca3af]" : "text-[#64748B]"
             }`}
           >
-            Manage, track, and convert high-intent prospects with MAYA Copilot.
+            High-intent opportunities managed and qualified by MAYA Copilot.
           </p>
         </div>
 
-        {/* Header Right Actions */}
+        {/* Right CTA */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Active Leads Counter Pill */}
-          <div
-            className={`inline-flex items-center gap-2 h-8.5 px-3 rounded-full border text-[11.5px] font-normal tracking-tight shrink-0 transition-all ${
-              isDark
-                ? "bg-white/[0.04] border-white/[0.08] text-neutral-300"
-                : "bg-white border-slate-200 text-slate-700 shadow-2xs"
-            }`}
-          >
-            <Users className={`w-3.5 h-3.5 stroke-[1.8] ${isDark ? "text-neutral-400" : "text-slate-500"}`} />
-            <span>{leads.length} Leads</span>
-          </div>
-
-          {/* Primary Action Button */}
           <motion.button
             type="button"
             onClick={() => setIsAddLeadModalOpen(true)}
             whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={`inline-flex items-center gap-2 h-8.5 px-4 rounded-full text-[12px] font-medium transition-all duration-200 cursor-pointer shadow-sm shrink-0 ${
+            whileTap={{ scale: 0.97 }}
+            className={`inline-flex items-center gap-1.5 h-8.5 px-4 rounded-full text-[12.5px] font-medium transition-all duration-200 cursor-pointer shadow-sm ${
               isDark
                 ? "bg-white text-[#0B0F17] hover:bg-neutral-100"
                 : "bg-[#0B0F17] text-white hover:bg-[#1E293B]"
             }`}
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
-            <span>Add Lead</span>
+            <span>New Lead</span>
           </motion.button>
         </div>
       </div>
 
-      {/* 2. Top 4 Metric KPI Cards: Exact Signature Dashboard Styling & Sparklines */}
+      {/* 2. Sleek KPI Metrics Strip (Dashboard Premium Velvet Texture) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 shrink-0 select-none">
         {LEADS_METRICS_DATA.map((card, idx) => {
           const Icon = card.icon;
@@ -531,55 +447,97 @@ export default function WorkspaceLeadsView() {
               <div className="flex items-center justify-between gap-2 relative z-10">
                 <span
                   className={`text-[9px] sm:text-[9.5px] font-medium uppercase tracking-[0.16em] truncate transition-colors duration-200 ${
-                    isDark ? "text-[#8e95a5] group-hover:text-white" : "text-slate-500 group-hover:text-slate-900"
+                    isDark
+                      ? "text-[#8e95a5] group-hover:text-white"
+                      : "text-slate-500 group-hover:text-slate-900"
                   }`}
                 >
                   {card.label}
                 </span>
-                <Icon className="w-3.5 h-3.5 stroke-[1.8]" />
+
+                <Icon
+                  className={`w-3.5 h-3.5 shrink-0 stroke-[1.4] transition-colors duration-200 ${
+                    isDark
+                      ? "text-[#717682] group-hover:text-white"
+                      : "text-slate-400 group-hover:text-slate-700"
+                  }`}
+                />
               </div>
 
-              {/* Middle Row: Massive Architectural Value & Sparkline Graphic */}
-              <div className="flex items-baseline justify-between gap-2 mt-2 mb-1.5 relative z-10">
+              {/* Middle Row: Large Numeral + Whisper Vector Spline */}
+              <div className="my-2 sm:my-2.5 flex items-baseline justify-between gap-2 relative z-10">
                 <span
-                  className={`text-[26px] sm:text-[29px] font-light tracking-[-0.04em] leading-none transition-colors duration-200 ${
-                    isDark ? "text-white group-hover:text-white" : "text-[#0B0F17] group-hover:text-black"
+                  className={`text-[28px] sm:text-[32px] font-light tracking-[-0.03em] leading-none tabular-nums shrink-0 ${
+                    isDark ? "text-white" : "text-[#0B0F17]"
                   }`}
                 >
-                  {card.value}
+                  <AnimatedCounter value={card.value} delay={idx * 0.08} />
                 </span>
 
-                {/* Delicate Sparkline */}
-                <div className="h-6 w-20 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                  <svg viewBox="0 0 120 30" className="w-full h-full overflow-visible">
-                    <path
+                {/* Minimalist Whisper-Thin Sparkline */}
+                <div className="w-14 sm:w-18 md:w-20 h-6 sm:h-7 relative flex items-center shrink-0 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+                  <svg
+                    viewBox="0 0 120 32"
+                    className="w-full h-full overflow-visible"
+                    fill="none"
+                  >
+                    <defs>
+                      <linearGradient id={`leads-kpi-spark-${card.id}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={strokeColor} stopOpacity={isDark ? "0.18" : "0.12"} />
+                        <stop offset="100%" stopColor={strokeColor} stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Gentle Shaded Area */}
+                    <motion.path
+                      d={`${card.sparklineD} L 120 32 L 0 32 Z`}
+                      fill={`url(#leads-kpi-spark-${card.id})`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.6, delay: 0.15 + idx * 0.05 }}
+                    />
+
+                    {/* Silky Hairline Stroke */}
+                    <motion.path
                       d={card.sparklineD}
-                      fill="none"
                       stroke={strokeColor}
-                      strokeWidth="2"
+                      strokeWidth="1.35"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{
+                        pathLength: { duration: 0.85, delay: 0.12 + idx * 0.05, ease: [0.16, 1, 0.3, 1] },
+                        opacity: { duration: 0.2, delay: 0.12 + idx * 0.05 },
+                      }}
                     />
                   </svg>
                 </div>
               </div>
 
-              {/* Bottom Row: Pill badge with percentage + timeframe */}
-              <div className="flex items-center gap-1.5 relative z-10">
+              {/* Bottom Row: Minimalist Editorial Trend Context with Luxury Gold */}
+              <div className="flex items-center gap-1.5 text-[10.5px] sm:text-[11.5px] tracking-tight relative z-10 truncate">
                 <span
-                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9.5px] font-medium border ${
+                  className={`font-medium shrink-0 ${
                     card.isPositive
                       ? isDark
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        ? "text-[#fbbf24]"
+                        : "text-[#d97706]"
                       : isDark
-                      ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                      : "bg-rose-50 text-rose-700 border-rose-200"
+                      ? "text-rose-400"
+                      : "text-rose-600"
                   }`}
                 >
-                  {card.isPositive ? "↑" : "↓"} {card.changePct}%
+                  {card.isPositive ? "↑" : "↓"} {card.isPositive ? "+" : "-"}{card.changePct}%
                 </span>
-                <span className={`text-[10px] truncate ${isDark ? "text-[#717682]" : "text-slate-400"}`}>
+
+                <span className={`shrink-0 ${isDark ? "text-white/20" : "text-slate-300"}`}>·</span>
+
+                <span
+                  className={`truncate ${
+                    isDark ? "text-[#717682]" : "text-slate-500"
+                  }`}
+                >
                   {card.timeframe}
                 </span>
               </div>
@@ -588,29 +546,29 @@ export default function WorkspaceLeadsView() {
         })}
       </div>
 
-      {/* 3. Main Stage: Table on Left + Slide-Over Drawer on Right */}
-      <div className="flex-1 min-h-0 flex gap-3.5 overflow-hidden">
-        {/* Left Side: Table & Filters */}
+      {/* 3. Main Stage: Clean Breathing Leads View */}
+      <div className="flex-1 min-h-0 flex gap-3.5 overflow-hidden relative">
+        {/* Main Leads Table Surface */}
         <div
-          className={`flex-1 min-w-0 h-full rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden select-none ${
+          className={`flex-1 min-w-0 h-full rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden ${
             isDark
-              ? "bg-gradient-to-b from-[#111724]/95 via-[#0c101a]/95 to-[#080b12]/98 border-white/[0.09] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_8px_24px_-6px_rgba(0,0,0,0.55)]"
-              : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200/90 shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_4px_16px_rgba(15,23,42,0.05)]"
+              ? "bg-gradient-to-b from-[#111724]/95 via-[#0c101a]/95 to-[#080b12]/98 border-white/[0.09] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_8px_30px_rgba(0,0,0,0.55)]"
+              : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200/90 shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_4px_20px_rgba(15,23,42,0.06)]"
           }`}
         >
-          {/* Filter & Search Toolbar */}
+          {/* Executive Minimalist Toolbar: Search + Quick Category Pills */}
           <div
-            className={`p-3 px-4 border-b flex flex-wrap items-center justify-between gap-2.5 shrink-0 ${
-              isDark ? "border-white/[0.08]" : "border-slate-200/80"
+            className={`p-3 px-4 border-b flex flex-wrap items-center justify-between gap-3 shrink-0 ${
+              isDark ? "border-white/[0.06]" : "border-slate-100"
             }`}
           >
-            {/* Search Input: Precision Pill Shape matching Header */}
+            {/* Search Pill */}
             <div className="relative flex-1 min-w-[200px] max-w-sm">
               <div
-                className={`flex items-center h-8.5 px-3.5 rounded-full border transition-all ${
+                className={`flex items-center h-8.5 px-3 rounded-full border transition-all ${
                   isDark
-                    ? "bg-[#0b0e16]/80 border-white/[0.08] focus-within:border-white/25 focus-within:bg-[#0e121d]"
-                    : "bg-white border-slate-200/90 focus-within:border-[#0B0F17] shadow-2xs"
+                    ? "bg-[#0c101a] border-white/[0.08] focus-within:border-white/25 focus-within:bg-[#0e121d]"
+                    : "bg-slate-50 border-slate-200 focus-within:border-[#0B0F17] focus-within:bg-white"
                 }`}
               >
                 <Search className={`w-3.5 h-3.5 shrink-0 ${isDark ? "text-neutral-400" : "text-slate-400"}`} />
@@ -618,896 +576,620 @@ export default function WorkspaceLeadsView() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search leads by name, phone, email..."
+                  placeholder="Search by name, contact, course..."
                   className={`w-full ml-2 text-[12px] bg-transparent outline-none font-normal ${
                     isDark ? "text-white placeholder:text-[#556070]" : "text-[#0F172A] placeholder:text-[#94A3B8]"
                   }`}
                 />
-                <span
-                  className={`text-[9.5px] px-1.5 py-0.5 rounded-full border font-mono shrink-0 select-none ${
-                    isDark ? "bg-white/[0.06] border-white/10 text-neutral-400" : "bg-slate-100 border-slate-200 text-slate-500"
-                  }`}
-                >
-                  Ctrl K
-                </span>
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="text-neutral-400 hover:text-white cursor-pointer ml-1"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Filter Dropdown Pills */}
+            {/* Segmented Filter Pills */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              {/* Status Filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className={`h-8 px-3 rounded-full border text-[11.5px] font-normal outline-none cursor-pointer transition-colors ${
-                  isDark
-                    ? "bg-[#0b0e16]/80 border-white/[0.08] text-white hover:border-white/20"
-                    : "bg-white border-slate-200 text-[#0F172A] hover:border-slate-300 shadow-2xs"
-                }`}
-              >
-                <option value="ALL">Status: All</option>
-                <option value="NEW">New</option>
-                <option value="CONTACTED">Contacted</option>
-                <option value="INTERESTED">Interested</option>
-                <option value="COUNSELLING">Counselling</option>
-                <option value="VISITED">Visited</option>
-                <option value="LOST">Lost</option>
-              </select>
-
-              {/* Source Filter */}
-              <select
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
-                className={`h-8 px-3 rounded-full border text-[11.5px] font-normal outline-none cursor-pointer transition-colors ${
-                  isDark
-                    ? "bg-[#0b0e16]/80 border-white/[0.08] text-white hover:border-white/20"
-                    : "bg-white border-slate-200 text-[#0F172A] hover:border-slate-300 shadow-2xs"
-                }`}
-              >
-                <option value="ALL">Source: All</option>
-                <option value="Website">Website</option>
-                <option value="WhatsApp">WhatsApp</option>
-                <option value="Phone">Phone</option>
-                <option value="Walk-in">Walk-in</option>
-                <option value="Instagram">Instagram</option>
-                <option value="Referral">Referral</option>
-              </select>
-
-              {/* Priority Filter */}
-              <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-                className={`h-8 px-3 rounded-full border text-[11.5px] font-normal outline-none cursor-pointer transition-colors ${
-                  isDark
-                    ? "bg-[#0b0e16]/80 border-white/[0.08] text-white hover:border-white/20"
-                    : "bg-white border-slate-200 text-[#0F172A] hover:border-slate-300 shadow-2xs"
-                }`}
-              >
-                <option value="ALL">Priority: All</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </select>
-
-              {(statusFilter !== "ALL" || sourceFilter !== "ALL" || priorityFilter !== "ALL" || searchQuery) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStatusFilter("ALL");
-                    setSourceFilter("ALL");
-                    setPriorityFilter("ALL");
-                    setSearchQuery("");
-                  }}
-                  className={`h-8 px-2.5 rounded-full text-[11px] border flex items-center gap-1 transition-colors cursor-pointer ${
-                    isDark
-                      ? "text-neutral-400 hover:text-white border-white/[0.08] bg-white/[0.03]"
-                      : "text-slate-600 hover:text-slate-900 border-slate-200 bg-white shadow-2xs"
-                  }`}
-                  title="Reset filters"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  <span>Reset</span>
-                </button>
-              )}
-
-              {/* View Toggle */}
-              <div
-                className={`h-8 flex items-center p-0.5 rounded-full border ml-1 ${
-                  isDark ? "bg-[#0b0e16]/80 border-white/[0.08]" : "bg-slate-100 border-slate-200/90"
-                }`}
-              >
-                <button
-                  type="button"
-                  className={`p-1 rounded-full transition-colors cursor-pointer ${
-                    isDark ? "bg-white/[0.1] text-white" : "bg-white text-slate-900 shadow-2xs"
-                  }`}
-                  title="Table view"
-                >
-                  <List className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  className={`p-1 rounded-full transition-colors cursor-pointer ${
-                    isDark ? "text-neutral-500 hover:text-white" : "text-slate-400 hover:text-slate-900"
-                  }`}
-                  title="Grid view"
-                >
-                  <Grid className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              {STATUS_FILTERS.map((tab) => {
+                const isActive = statusFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setStatusFilter(tab.id)}
+                    className={`relative px-3 py-1 rounded-full text-[11.5px] font-medium transition-colors cursor-pointer outline-none ${
+                      isActive
+                        ? isDark
+                          ? "text-black font-semibold"
+                          : "text-white font-semibold"
+                        : isDark
+                        ? "text-[#8e95a5] hover:text-white"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="active-lead-filter-pill"
+                        className={`absolute inset-0 rounded-full ${
+                          isDark ? "bg-white" : "bg-[#0B0F17]"
+                        }`}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10">{tab.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Table Container */}
-          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto pr-1">
-            <table className="w-full text-left border-collapse min-w-[760px]">
+          {/* Clean, High-Signal Table */}
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[680px]">
               <thead>
                 <tr
-                  className={`border-b text-[9.5px] uppercase tracking-[0.16em] font-medium sticky top-0 z-10 backdrop-blur-md select-none ${
+                  className={`border-b text-[9px] uppercase tracking-[0.18em] font-medium sticky top-0 z-10 backdrop-blur-md select-none ${
                     isDark
-                      ? "bg-[#0c101a]/95 border-white/[0.06] text-[#717682]"
-                      : "bg-[#F8FAFC]/95 border-slate-200 text-[#94A3B8]"
+                      ? "bg-[#090C12]/95 border-white/[0.06] text-[#717682]"
+                      : "bg-white/95 border-slate-100 text-[#94A3B8]"
                   }`}
                 >
-                  <th className="py-2.5 px-3.5 w-8">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.size > 0 && selectedIds.size === filteredLeads.length}
-                      onChange={toggleSelectAll}
-                      className="cursor-pointer accent-blue-600 rounded"
-                    />
-                  </th>
-                  <th className="py-2.5 px-2">Name</th>
-                  <th className="py-2.5 px-2">Contact</th>
-                  <th className="py-2.5 px-2">Course</th>
-                  <th className="py-2.5 px-2">Status</th>
-                  <th className="py-2.5 px-2">Priority</th>
-                  <th className="py-2.5 px-2">Assigned To</th>
-                  <th className="py-2.5 px-2">Last Contact</th>
-                  <th className="py-2.5 px-2">Next Follow-up</th>
-                  <th className="py-2.5 px-3 text-right">Actions</th>
+                  <th className="py-2.5 px-4 font-medium">Lead Profile</th>
+                  <th className="py-2.5 px-3 font-medium">Interest</th>
+                  <th className="py-2.5 px-3 font-medium">Status</th>
+                  <th className="py-2.5 px-3 font-medium">Next Follow-Up</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Quick Connect</th>
                 </tr>
               </thead>
-              <tbody className={`divide-y ${isDark ? "divide-white/[0.04]" : "divide-slate-100"}`}>
-                {filteredLeads.map((lead) => {
-                  const isSelected = selectedLeadId === lead.id;
-                  const isChecked = selectedIds.has(lead.id);
+              <tbody className={`divide-y ${isDark ? "divide-white/[0.035]" : "divide-slate-100"}`}>
+                {filteredLeads.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-[12px] text-neutral-400">
+                      No matching leads found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLeads.map((lead) => {
+                    const isSelected = selectedLeadId === lead.id;
 
-                  return (
-                    <tr
-                      key={lead.id}
-                      onClick={() => setSelectedLeadId(lead.id)}
-                      className={`group transition-all duration-150 cursor-pointer ${
-                        isSelected
-                          ? isDark
-                            ? "bg-white/[0.06] border-l-2 border-l-white"
-                            : "bg-blue-50/70 border-l-2 border-l-blue-600"
-                          : isDark
-                          ? "hover:bg-white/[0.02]"
-                          : "hover:bg-slate-50/80"
-                      }`}
-                    >
-                      {/* Checkbox */}
-                      <td className="py-2 px-3.5">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => toggleSelectRow(lead.id, e as any)}
-                          className="cursor-pointer accent-blue-600 rounded"
-                        />
-                      </td>
-
-                      {/* Name + Initials + Source */}
-                      <td className="py-2 px-2">
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0 border ${
-                              isDark
-                                ? "bg-white/[0.06] text-white border-white/[0.1]"
-                                : "bg-slate-100 text-slate-800 border-slate-200"
-                            }`}
-                          >
-                            {lead.initials}
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <span
-                              className={`text-[12px] font-medium truncate ${
-                                isDark ? "text-white" : "text-[#0F172A]"
+                    return (
+                      <tr
+                        key={lead.id}
+                        onClick={() => setSelectedLeadId(lead.id)}
+                        className={`group transition-all duration-150 cursor-pointer ${
+                          isSelected
+                            ? isDark
+                              ? "bg-white/[0.05]"
+                              : "bg-slate-50"
+                            : isDark
+                            ? "hover:bg-white/[0.025]"
+                            : "hover:bg-slate-50/70"
+                        }`}
+                      >
+                        {/* 1. Lead Profile */}
+                        <td className="py-2.5 px-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-medium shrink-0 border ${
+                                isDark
+                                  ? "bg-white/[0.05] text-white border-white/[0.08]"
+                                  : "bg-slate-100 text-slate-800 border-slate-200"
                               }`}
                             >
-                              {lead.name}
-                            </span>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className={`w-1.5 h-1.5 rounded-full ${getSourceDotColor(lead.source)}`} />
+                              {lead.initials}
+                            </div>
+                            <div className="flex flex-col min-w-0">
                               <span
-                                className={`text-[10px] leading-tight ${
-                                  isDark ? "text-[#8e95a5]" : "text-[#64748B]"
+                                className={`text-[12.5px] font-medium truncate ${
+                                  isDark ? "text-white" : "text-[#0F172A]"
                                 }`}
                               >
-                                {lead.source}
+                                {lead.name}
                               </span>
+                              <div className="flex items-center gap-2 mt-0.5 text-[10.5px]">
+                                <span className={isDark ? "text-[#8e95a5]" : "text-slate-500"}>
+                                  {lead.phone}
+                                </span>
+                                <span className="opacity-30">•</span>
+                                <span className={isDark ? "text-[#717682]" : "text-slate-400"}>
+                                  {lead.source}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Contact */}
-                      <td className="py-2 px-2 text-[11px] leading-tight">
-                        <div className={isDark ? "text-neutral-300" : "text-slate-700"}>{lead.phone}</div>
-                        <div className={`text-[10px] truncate max-w-[130px] ${isDark ? "text-[#717682]" : "text-[#94A3B8]"}`}>
-                          {lead.email}
-                        </div>
-                      </td>
-
-                      {/* Course */}
-                      <td className="py-2 px-2 text-[11.5px]">
-                        <span className={isDark ? "text-neutral-300" : "text-slate-800"}>
-                          {lead.course}
-                        </span>
-                      </td>
-
-                      {/* Status Badge */}
-                      <td className="py-2 px-2">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8.5px] font-medium tracking-wider border uppercase select-none ${getStatusBadge(
-                            lead.status
-                          )}`}
-                        >
-                          {lead.status}
-                        </span>
-                      </td>
-
-                      {/* Priority Badge */}
-                      <td className="py-2 px-2">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8.5px] font-medium border select-none ${getPriorityBadge(
-                            lead.priority
-                          )}`}
-                        >
-                          {lead.priority}
-                        </span>
-                      </td>
-
-                      {/* Assigned Counselor */}
-                      <td className="py-2 px-2 text-[11px]">
-                        <div className="flex items-center gap-1.5">
-                          <div
-                            className={`w-5 h-5 rounded-full flex items-center justify-center text-[8.5px] font-semibold shrink-0 border ${
-                              isDark
-                                ? "bg-white/[0.08] text-white border-white/[0.1]"
-                                : "bg-slate-200 text-slate-700 border-slate-300"
+                        {/* 2. Interest / Course */}
+                        <td className="py-2.5 px-3">
+                          <span
+                            className={`text-[12px] font-normal truncate block max-w-[200px] ${
+                              isDark ? "text-neutral-200" : "text-slate-800"
                             }`}
                           >
-                            {lead.assignedTo?.avatarInitials}
-                          </div>
-                          <span className={isDark ? "text-neutral-300" : "text-slate-700"}>
-                            {lead.assignedTo?.name.split(" ")[0]}
+                            {lead.course}
                           </span>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Last Contact */}
-                      <td className={`py-2 px-2 text-[10.5px] whitespace-nowrap ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"}`}>
-                        {lead.lastContact}
-                      </td>
+                        {/* 3. Status Badge */}
+                        <td className="py-2.5 px-3">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-medium tracking-wide border uppercase select-none transition-colors duration-150 ${getStatusBadgeStyle(
+                              lead.status,
+                              isDark
+                            )}`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusDotColor(
+                                lead.status,
+                                isDark
+                              )}`}
+                            />
+                            <span>{lead.status}</span>
+                          </span>
+                        </td>
 
-                      {/* Next Follow-up */}
-                      <td className={`py-2 px-2 text-[10.5px] whitespace-nowrap ${isDark ? "text-neutral-300" : "text-slate-800"}`}>
-                        {lead.nextFollowUp}
-                      </td>
+                        {/* 4. Follow-Up */}
+                        <td className="py-2.5 px-3">
+                          <div className="flex items-center gap-1.5 text-[11px]">
+                            <Calendar className="w-3 h-3 text-neutral-400 shrink-0" />
+                            <span className={isDark ? "text-neutral-300" : "text-slate-700"}>
+                              {lead.nextFollowUp}
+                            </span>
+                          </div>
+                        </td>
 
-                      {/* Actions */}
-                      <td className="py-2 px-3 text-right">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            showToast(`Actions for ${lead.name}`);
-                          }}
-                          className={`p-1 rounded transition-colors cursor-pointer ${
-                            isDark
-                              ? "text-neutral-400 hover:text-white hover:bg-white/[0.06]"
-                              : "text-slate-400 hover:text-slate-900 hover:bg-slate-100"
-                          }`}
-                        >
-                          <MoreHorizontal className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        {/* 5. Quick Connect Actions */}
+                        <td className="py-2.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                            <motion.button
+                              type="button"
+                              whileHover={{ scale: 1.08 }}
+                              whileTap={{ scale: 0.94 }}
+                              onClick={() => showToast(`Calling ${lead.name} (${lead.phone})...`)}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                isDark
+                                  ? "text-neutral-300 hover:text-white hover:bg-white/[0.08]"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                              }`}
+                              title="Call Lead"
+                            >
+                              <Phone className="w-3.5 h-3.5 text-sky-400" />
+                            </motion.button>
+
+                            <motion.button
+                              type="button"
+                              whileHover={{ scale: 1.08 }}
+                              whileTap={{ scale: 0.94 }}
+                              onClick={() => showToast(`Opening WhatsApp chat with ${lead.name}...`)}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                isDark
+                                  ? "text-neutral-300 hover:text-white hover:bg-white/[0.08]"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                              }`}
+                              title="WhatsApp Chat"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                            </motion.button>
+
+                            <motion.button
+                              type="button"
+                              whileHover={{ scale: 1.08 }}
+                              whileTap={{ scale: 0.94 }}
+                              onClick={() => setSelectedLeadId(lead.id)}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ml-1 ${
+                                isDark
+                                  ? "text-neutral-400 hover:text-white hover:bg-white/[0.08]"
+                                  : "text-slate-400 hover:text-slate-900 hover:bg-slate-100"
+                              }`}
+                              title="View Details"
+                            >
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </motion.button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
 
-          {/* Table Footer / Pagination */}
+          {/* Table Footer */}
           <div
             className={`p-2.5 px-4 border-t flex items-center justify-between text-[11px] shrink-0 select-none ${
-              isDark ? "border-white/[0.08] text-[#8e95a5]" : "border-slate-200/80 text-slate-600"
+              isDark ? "border-white/[0.06] text-[#8e95a5]" : "border-slate-100 text-slate-500"
             }`}
           >
-            <span>Showing 1–{filteredLeads.length} of 248 leads</span>
-
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                className={`p-1 rounded-lg border transition-colors cursor-pointer ${
-                  isDark
-                    ? "bg-white/[0.04] border-white/[0.08] text-neutral-400 hover:text-white"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                type="button"
-                className={`w-6 h-6 rounded-lg text-[11px] font-medium flex items-center justify-center transition-colors cursor-pointer ${
-                  isDark ? "bg-white text-black" : "bg-[#0B0F17] text-white"
-                }`}
-              >
-                1
-              </button>
-              <button
-                type="button"
-                className={`w-6 h-6 rounded-lg text-[11px] flex items-center justify-center transition-colors cursor-pointer ${
-                  isDark ? "text-neutral-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                2
-              </button>
-              <button
-                type="button"
-                className={`w-6 h-6 rounded-lg text-[11px] flex items-center justify-center transition-colors cursor-pointer ${
-                  isDark ? "text-neutral-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                3
-              </button>
-              <span className="text-neutral-500 px-0.5">...</span>
-              <button
-                type="button"
-                className={`w-6 h-6 rounded-lg text-[11px] flex items-center justify-center transition-colors cursor-pointer ${
-                  isDark ? "text-neutral-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                25
-              </button>
-
-              <button
-                type="button"
-                className={`p-1 rounded-lg border transition-colors cursor-pointer ${
-                  isDark
-                    ? "bg-white/[0.04] border-white/[0.08] text-neutral-400 hover:text-white"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            <span>Showing {filteredLeads.length} leads</span>
+            <span className="text-[10.5px]">Click any lead to view full summary</span>
           </div>
         </div>
 
-        {/* Right Side: Lead Detail Drawer (Slide-Over Card with Matching Dashboard Surface) */}
-        {activeLead && (
-          <div
-            className={`w-[340px] shrink-0 h-full rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden select-none ${
-              isDark
-                ? "bg-gradient-to-b from-[#111724]/95 via-[#0c101a]/95 to-[#080b12]/98 border-white/[0.09] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_8px_24px_-6px_rgba(0,0,0,0.55)]"
-                : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200/90 shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_4px_16px_rgba(15,23,42,0.05)]"
-            }`}
-          >
-            {/* Drawer Top Header */}
-            <div
-              className={`p-3.5 px-4 border-b flex items-center justify-between shrink-0 select-none ${
-                isDark ? "border-white/[0.08]" : "border-slate-200/80"
+        {/* 4. Elegant Slide-Over Lead Details Panel (Opens smoothly when requested) */}
+        <AnimatePresence>
+          {activeLead && (
+            <motion.div
+              initial={{ x: 380, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 380, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 350, damping: 32 }}
+              className={`w-[360px] shrink-0 h-full rounded-2xl border flex flex-col justify-between overflow-hidden z-20 ${
+                isDark
+                  ? "bg-gradient-to-b from-[#111724]/98 via-[#0c101a]/98 to-[#080b12]/99 border-white/[0.1] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_12px_40px_rgba(0,0,0,0.7)]"
+                  : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_8px_32px_rgba(15,23,42,0.1)]"
               }`}
             >
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={`w-8.5 h-8.5 rounded-full flex items-center justify-center text-[11px] font-semibold border shrink-0 ${
-                    isDark
-                      ? "bg-white/[0.08] text-white border-white/[0.12]"
-                      : "bg-slate-100 text-slate-800 border-slate-200"
-                  }`}
-                >
-                  {activeLead.initials}
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h3 className={`text-[13px] font-medium leading-tight ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
-                      {activeLead.name}
-                    </h3>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[8px] font-medium border uppercase select-none ${getStatusBadge(
-                        activeLead.status
-                      )}`}
-                    >
-                      {activeLead.status}
+              {/* Header */}
+              <div
+                className={`p-4 border-b flex items-center justify-between shrink-0 select-none ${
+                  isDark ? "border-white/[0.06]" : "border-slate-100"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-medium border shrink-0 ${
+                      isDark
+                        ? "bg-white/[0.08] text-white border-white/[0.1]"
+                        : "bg-slate-100 text-slate-800 border-slate-200"
+                    }`}
+                  >
+                    {activeLead.initials}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className={`text-[13.5px] font-medium leading-tight truncate ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
+                        {activeLead.name}
+                      </h3>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8.5px] font-medium tracking-wide border uppercase select-none transition-colors duration-150 ${getStatusBadgeStyle(
+                          activeLead.status,
+                          isDark
+                        )}`}
+                      >
+                        <span
+                          className={`w-1 h-1 rounded-full shrink-0 ${getStatusDotColor(
+                            activeLead.status,
+                            isDark
+                          )}`}
+                        />
+                        <span>{activeLead.status}</span>
+                      </span>
+                    </div>
+                    <span className={`text-[10.5px] block mt-0.5 ${isDark ? "text-[#8e95a5]" : "text-slate-500"}`}>
+                      {activeLead.source} • {activeLead.timeAgo}
                     </span>
                   </div>
-                  <span className={`text-[10px] block mt-0.5 leading-tight ${isDark ? "text-[#8e95a5]" : "text-[#64748B]"}`}>
-                    {activeLead.source} • {activeLead.timeAgo}
+                </div>
+
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => setSelectedLeadId(null)}
+                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    isDark ? "text-neutral-400 hover:text-white" : "text-slate-400 hover:text-slate-800"
+                  }`}
+                  title="Close inspector"
+                >
+                  <X className="w-4 h-4" />
+                </motion.button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 flex flex-col gap-4 text-[12px]">
+                {/* Fast Action Connect Row */}
+                <div className="grid grid-cols-2 gap-2 shrink-0">
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => showToast(`Initiating call with ${activeLead.name}...`)}
+                    className={`py-2 px-3 rounded-xl font-medium text-[11.5px] flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                      isDark
+                        ? "bg-white/[0.06] border-white/10 text-white hover:bg-white/10"
+                        : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50 shadow-2xs"
+                    }`}
+                  >
+                    <Phone className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Call Now</span>
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => showToast(`Opening WhatsApp chat with ${activeLead.phone}...`)}
+                    className={`py-2 px-3 rounded-xl font-medium text-[11.5px] flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                      isDark
+                        ? "bg-white/[0.06] border-white/10 text-white hover:bg-white/10"
+                        : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50 shadow-2xs"
+                    }`}
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>WhatsApp</span>
+                  </motion.button>
+                </div>
+
+                {/* AI Briefing Card from MAYA */}
+                <div
+                  className={`p-3.5 rounded-xl border relative overflow-hidden ${
+                    isDark
+                      ? "bg-gradient-to-br from-[#121826]/90 to-[#0B0F17]/90 border-white/[0.08]"
+                      : "bg-gradient-to-br from-slate-50 to-white border-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                    <span className="text-[10px] font-semibold tracking-wider uppercase text-sky-400">
+                      MAYA Copilot Insights
+                    </span>
+                  </div>
+                  <p className={`text-[11.5px] leading-relaxed ${isDark ? "text-neutral-300" : "text-slate-700"}`}>
+                    {activeLead.notes}
+                  </p>
+                </div>
+
+                {/* Quick Status Selector */}
+                <div>
+                  <span className={`text-[9.5px] font-medium uppercase tracking-[0.16em] block mb-2 select-none ${
+                    isDark ? "text-[#717682]" : "text-[#94A3B8]"
+                  }`}>
+                    Update Stage
                   </span>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                    {(["NEW", "CONTACTED", "INTERESTED", "COUNSELLING", "VISITED", "ENROLLED", "LOST"] as LeadStatus[]).map((st) => {
+                      const isCurrent = activeLead.status === st;
+                      const conf = LEAD_STATUS_CONFIG[st];
+                      return (
+                        <button
+                          key={st}
+                          type="button"
+                          onClick={() => handleUpdateStatus(activeLead.id, st)}
+                          className={`py-1.5 px-2 rounded-lg text-[9.5px] font-medium border text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                            isCurrent
+                              ? isDark
+                                ? conf.activeBtnDark
+                                : conf.activeBtnLight
+                              : isDark
+                              ? "bg-white/[0.02] border-white/10 text-neutral-400 hover:text-white hover:bg-white/[0.05]"
+                              : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              isCurrent
+                                ? getStatusDotColor(st, isDark)
+                                : isDark
+                                ? "bg-white/20"
+                                : "bg-slate-300"
+                            }`}
+                          />
+                          <span>{st}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Contact Card with 1-click Copy */}
+                <div className={`pt-3 border-t ${isDark ? "border-white/[0.06]" : "border-slate-100"}`}>
+                  <span className={`text-[9.5px] font-medium uppercase tracking-[0.16em] block mb-2 select-none ${
+                    isDark ? "text-[#717682]" : "text-[#94A3B8]"
+                  }`}>
+                    Contact & Lead Info
+                  </span>
+
+                  <div className="flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-3.5 h-3.5 text-neutral-400" />
+                        <span className={isDark ? "text-white" : "text-slate-800"}>{activeLead.phone}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (activeLead.phone) navigator.clipboard.writeText(activeLead.phone);
+                          showToast("Phone number copied");
+                        }}
+                        className="text-neutral-400 hover:text-white cursor-pointer"
+                        title="Copy phone"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-3.5 h-3.5 text-neutral-400" />
+                        <span className={isDark ? "text-white" : "text-slate-800"}>{activeLead.email}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (activeLead.email) navigator.clipboard.writeText(activeLead.email);
+                          showToast("Email address copied");
+                        }}
+                        className="text-neutral-400 hover:text-white cursor-pointer"
+                        title="Copy email"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 text-[11px]">
+                      <span className={isDark ? "text-[#8e95a5]" : "text-slate-500"}>Course Program</span>
+                      <span className={`font-medium ${isDark ? "text-white" : "text-slate-900"}`}>{activeLead.course}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className={isDark ? "text-[#8e95a5]" : "text-slate-500"}>Assigned Officer</span>
+                      <span className={`font-medium ${isDark ? "text-white" : "text-slate-900"}`}>{activeLead.assignedTo?.name}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className={isDark ? "text-[#8e95a5]" : "text-slate-500"}>Next Follow-up</span>
+                      <span className={`font-medium ${isDark ? "text-white" : "text-slate-900"}`}>{activeLead.nextFollowUp}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setSelectedLeadId("")}
-                className={`p-1 rounded-lg transition-colors cursor-pointer ${
-                  isDark ? "text-neutral-400 hover:text-white" : "text-slate-400 hover:text-slate-900"
-                }`}
-                title="Close drawer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {/* Quick Action Buttons */}
-            <div
-              className={`px-4 py-2 border-b flex items-center gap-2 shrink-0 ${
-                isDark ? "border-white/[0.08]" : "border-slate-200/80"
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => showToast(`Initiating call with ${activeLead.name}...`)}
-                className={`flex-1 py-1.5 px-3 rounded-xl text-[11px] font-medium border flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
-                  isDark
-                    ? "bg-white/[0.06] border-white/10 text-white hover:bg-white/10"
-                    : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50 shadow-2xs"
+              {/* Bottom Drawer CTA */}
+              <div
+                className={`p-3 border-t shrink-0 ${
+                  isDark ? "border-white/[0.06]" : "border-slate-100"
                 }`}
               >
-                <Phone className="w-3 h-3 text-blue-500" />
-                <span>Call</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => showToast(`Opening WhatsApp chat with ${activeLead.phone}...`)}
-                className={`flex-1 py-1.5 px-3 rounded-xl text-[11px] font-medium border flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
-                  isDark
-                    ? "bg-white/[0.06] border-white/10 text-white hover:bg-white/10"
-                    : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50 shadow-2xs"
-                }`}
-              >
-                <MessageSquare className="w-3 h-3 text-emerald-500" />
-                <span>WhatsApp</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => showToast("Additional lead options")}
-                className={`p-1.5 rounded-xl border transition-colors cursor-pointer ${
-                  isDark
-                    ? "bg-white/[0.06] border-white/10 text-neutral-400 hover:text-white"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-2xs"
-                }`}
-              >
-                <MoreHorizontal className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {/* Sub-Tabs Bar */}
-            <div
-              className={`px-4 flex items-center gap-4 text-[11.5px] font-medium border-b shrink-0 select-none ${
-                isDark ? "border-white/[0.08]" : "border-slate-200/80"
-              }`}
-            >
-              {(["details", "activity", "notes", "appointments"] as const).map((tab) => (
-                <button
-                  key={tab}
+                <motion.button
                   type="button"
-                  onClick={() => setDrawerActiveTab(tab)}
-                  className={`py-2 relative capitalize transition-colors cursor-pointer ${
-                    drawerActiveTab === tab
-                      ? isDark
-                        ? "text-white"
-                        : "text-[#0B0F17]"
-                      : isDark
-                      ? "text-[#717682] hover:text-white"
-                      : "text-slate-400 hover:text-slate-700"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    showToast(`Follow-up confirmed for ${activeLead.name}`);
+                    setSelectedLeadId(null);
+                  }}
+                  className={`w-full py-2 px-4 rounded-xl text-[12px] font-medium transition-all cursor-pointer shadow-sm ${
+                    isDark
+                      ? "bg-white text-black hover:bg-neutral-100"
+                      : "bg-[#0B0F17] text-white hover:bg-slate-800"
                   }`}
                 >
-                  {tab}
-                  {drawerActiveTab === tab && (
-                    <motion.div
-                      layoutId="drawer-tab-underline"
-                      className={`absolute bottom-0 inset-x-0 h-0.5 rounded-full ${
-                        isDark ? "bg-white" : "bg-[#0B0F17]"
-                      }`}
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Scrollable Drawer Content */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 flex flex-col gap-3.5 text-[11.5px]">
-              {drawerActiveTab === "details" && (
-                <>
-                  {/* Contact Information */}
-                  <div>
-                    <span className={`text-[9.5px] font-medium uppercase tracking-[0.16em] block mb-1.5 select-none ${
-                      isDark ? "text-[#717682]" : "text-[#94A3B8]"
-                    }`}>
-                      Contact Information
-                    </span>
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-3 h-3 text-slate-400" />
-                          <span className={isDark ? "text-neutral-200" : "text-slate-800"}>{activeLead.phone}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(activeLead.phone || "");
-                            showToast("Phone number copied");
-                          }}
-                          className="text-neutral-400 hover:text-white cursor-pointer"
-                        >
-                          <Copy className="w-3 h-3" />
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-3 h-3 text-slate-400" />
-                          <span className={isDark ? "text-neutral-200" : "text-slate-800"}>{activeLead.email}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(activeLead.email || "");
-                            showToast("Email address copied");
-                          }}
-                          className="text-neutral-400 hover:text-white cursor-pointer"
-                        >
-                          <Copy className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Lead Information Key-Values */}
-                  <div className={`pt-3 border-t ${isDark ? "border-white/[0.06]" : "border-slate-100"}`}>
-                    <span className={`text-[9.5px] font-medium uppercase tracking-[0.16em] block mb-2 select-none ${
-                      isDark ? "text-[#717682]" : "text-[#94A3B8]"
-                    }`}>
-                      Lead Information
-                    </span>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <span className={isDark ? "text-[#8e95a5]" : "text-[#64748B]"}>Interested Course</span>
-                        <span className={`font-medium ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
-                          {activeLead.course}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className={isDark ? "text-[#8e95a5]" : "text-[#64748B]"}>Source</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className={`w-1.5 h-1.5 rounded-full ${getSourceDotColor(activeLead.source)}`} />
-                          <span className={isDark ? "text-white" : "text-[#0B0F17]"}>{activeLead.source}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className={isDark ? "text-[#8e95a5]" : "text-[#64748B]"}>Status</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-medium border uppercase ${getStatusBadge(activeLead.status)}`}>
-                          {activeLead.status}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className={isDark ? "text-[#8e95a5]" : "text-[#64748B]"}>Priority</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-medium border ${getPriorityBadge(activeLead.priority)}`}>
-                          {activeLead.priority}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className={isDark ? "text-[#8e95a5]" : "text-[#64748B]"}>Assigned To</span>
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-4 h-4 rounded-full bg-slate-300 text-slate-800 text-[8px] flex items-center justify-center font-bold">
-                            {activeLead.assignedTo?.avatarInitials}
-                          </div>
-                          <span className={isDark ? "text-white" : "text-[#0B0F17]"}>{activeLead.assignedTo?.name}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className={isDark ? "text-[#8e95a5]" : "text-[#64748B]"}>Next Follow-up</span>
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3 h-3 text-slate-400" />
-                          <span className={isDark ? "text-white" : "text-[#0B0F17]"}>{activeLead.nextFollowUp}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Notes Box */}
-                  <div className={`pt-3 border-t ${isDark ? "border-white/[0.06]" : "border-slate-100"}`}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className={`text-[9.5px] font-medium uppercase tracking-[0.16em] select-none ${
-                        isDark ? "text-[#717682]" : "text-[#94A3B8]"
-                      }`}>
-                        Notes
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => showToast("Edit note")}
-                        className="text-neutral-400 hover:text-white cursor-pointer"
-                      >
-                        <Edit3 className="w-3 h-3" />
-                      </button>
-                    </div>
-                    <div
-                      className={`p-2.5 rounded-xl border text-[11px] leading-relaxed ${
-                        isDark
-                          ? "bg-white/[0.03] border-white/[0.06] text-neutral-300"
-                          : "bg-slate-50/80 border-slate-200 text-slate-700"
-                      }`}
-                    >
-                      {activeLead.notes || "No notes added yet."}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {drawerActiveTab === "activity" && (
-                <div className="flex flex-col gap-2.5 py-1">
-                  <div className="flex gap-2.5 items-start">
-                    <div className="w-5 h-5 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 mt-0.5">
-                      <MessageSquare className="w-2.5 h-2.5" />
-                    </div>
-                    <div>
-                      <span className="font-medium block leading-tight">Inquiry received via {activeLead.source}</span>
-                      <span className="text-[10px] text-neutral-400">{activeLead.timeAgo}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2.5 items-start">
-                    <div className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-                      <CheckCircle className="w-2.5 h-2.5" />
-                    </div>
-                    <div>
-                      <span className="font-medium block leading-tight">Lead status assigned to {activeLead.status}</span>
-                      <span className="text-[10px] text-neutral-400">Assigned to {activeLead.assignedTo?.name}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2.5 items-start">
-                    <div className="w-5 h-5 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0 mt-0.5">
-                      <Clock className="w-2.5 h-2.5" />
-                    </div>
-                    <div>
-                      <span className="font-medium block leading-tight">Follow-up scheduled</span>
-                      <span className="text-[10px] text-neutral-400">{activeLead.nextFollowUp}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {drawerActiveTab === "notes" && (
-                <div className="flex flex-col gap-2">
-                  <textarea
-                    rows={4}
-                    placeholder="Add a new note for this lead..."
-                    className={`w-full p-2.5 rounded-xl border text-[11px] outline-none leading-relaxed resize-none ${
-                      isDark
-                        ? "bg-[#0b0e16] border-white/10 text-white focus:border-white/30"
-                        : "bg-white border-slate-200 text-slate-800 focus:border-slate-800 shadow-2xs"
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => showToast("Note saved")}
-                    className={`self-end px-3 py-1.5 rounded-lg text-[10.5px] font-medium transition-colors cursor-pointer ${
-                      isDark ? "bg-white text-black" : "bg-[#0B0F17] text-white"
-                    }`}
-                  >
-                    Save Note
-                  </button>
-                </div>
-              )}
-
-              {drawerActiveTab === "appointments" && (
-                <div className="flex flex-col gap-2 py-1">
-                  <div className={`p-3 rounded-xl border ${isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-slate-200 shadow-2xs"}`}>
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-[11.5px]">Consultation Briefing</span>
-                      <span className="px-1.5 py-0.5 rounded text-[8.5px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
-                        Confirmed
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-neutral-400 block mt-1">
-                      {activeLead.nextFollowUp} with {activeLead.assignedTo?.name}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Sticky Bottom Action Button */}
-            <div
-              className={`p-3 border-t shrink-0 ${
-                isDark ? "border-white/[0.08]" : "border-slate-200/80"
-              }`}
-            >
-              <motion.button
-                type="button"
-                onClick={() => showToast(`Follow-up schedule reminder dispatched for ${activeLead.name}`)}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                className={`w-full py-2 px-4 rounded-xl text-[11.5px] font-medium flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm ${
-                  isDark
-                    ? "bg-white text-[#0B0F17] hover:bg-neutral-100"
-                    : "bg-[#0B0F17] text-white hover:bg-[#1E293B]"
-                }`}
-              >
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Schedule Follow-up</span>
-              </motion.button>
-            </div>
-          </div>
-        )}
+                  Confirm Next Action
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* 4. Add Lead Modal Dialog */}
+      {/* 5. Minimalist "Add Lead" Modal */}
       <AnimatePresence>
         {isAddLeadModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsAddLeadModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className={`w-full max-w-md p-5 rounded-2xl border shadow-2xl overflow-hidden ${
+              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className={`relative w-full max-w-md rounded-2xl border p-6 z-10 shadow-2xl ${
                 isDark
-                  ? "bg-[#0c101a] border-white/15 text-white shadow-black/80"
-                  : "bg-white border-slate-200 text-[#0B0F17] shadow-xl"
+                  ? "bg-gradient-to-b from-[#111724]/98 via-[#0c101a]/98 to-[#080b12]/99 border-white/[0.1] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_20px_50px_rgba(0,0,0,0.8)]"
+                  : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200 text-[#0F172A] shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_12px_40px_rgba(15,23,42,0.12)]"
               }`}
             >
-              <div className="flex items-center justify-between pb-3 border-b border-inherit">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">
-                    <Users className="w-3.5 h-3.5" />
-                  </div>
-                  <h3 className="text-[14px] font-medium">Add New Lead</h3>
-                </div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[17px] font-medium">Add New Lead</h3>
                 <button
                   type="button"
                   onClick={() => setIsAddLeadModalOpen(false)}
-                  className="p-1 rounded text-neutral-400 hover:text-white cursor-pointer"
+                  className="p-1 rounded-lg text-neutral-400 hover:text-white cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <form onSubmit={handleAddLeadSubmit} className="mt-4 flex flex-col gap-3">
+              <form onSubmit={handleAddLeadSubmit} className="flex flex-col gap-3.5">
                 <div>
-                  <label className="block text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-400 mb-1">
-                    Lead Full Name *
+                  <label className="text-[11px] font-medium text-neutral-400 block mb-1">
+                    Lead Full Name
                   </label>
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. Rahul Sharma"
                     value={newLeadName}
                     onChange={(e) => setNewLeadName(e.target.value)}
+                    placeholder="e.g. Aryan Malhotra"
                     autoFocus
-                    className={`w-full px-3 py-2 rounded-xl text-[12.5px] border outline-none ${
+                    className={`w-full h-10 px-3.5 rounded-xl border text-[12.5px] outline-none transition-all ${
                       isDark
-                        ? "bg-white/[0.04] border-white/10 text-white focus:border-white/30"
-                        : "bg-slate-50 border-slate-200 text-[#0B0F17] focus:border-slate-800"
+                        ? "bg-[#0c101a] border-white/10 text-white focus:border-white/30"
+                        : "bg-slate-50 border-slate-200 text-slate-800 focus:border-slate-800"
                     }`}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-400 mb-1">
+                    <label className="text-[11px] font-medium text-neutral-400 block mb-1">
                       Phone Number
                     </label>
                     <input
-                      type="text"
-                      placeholder="+91 98765 00000"
+                      type="tel"
                       value={newLeadPhone}
                       onChange={(e) => setNewLeadPhone(e.target.value)}
-                      className={`w-full px-3 py-2 rounded-xl text-[12px] border outline-none font-mono ${
+                      placeholder="+91 98765 00000"
+                      className={`w-full h-10 px-3.5 rounded-xl border text-[12.5px] outline-none transition-all ${
                         isDark
-                          ? "bg-white/[0.04] border-white/10 text-white focus:border-white/30"
-                          : "bg-slate-50 border-slate-200 text-[#0B0F17] focus:border-slate-800"
+                          ? "bg-[#0c101a] border-white/10 text-white focus:border-white/30"
+                          : "bg-slate-50 border-slate-200 text-slate-800 focus:border-slate-800"
                       }`}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-400 mb-1">
+                    <label className="text-[11px] font-medium text-neutral-400 block mb-1">
                       Email Address
                     </label>
                     <input
                       type="email"
-                      placeholder="rahul@email.com"
                       value={newLeadEmail}
                       onChange={(e) => setNewLeadEmail(e.target.value)}
-                      className={`w-full px-3 py-2 rounded-xl text-[12px] border outline-none ${
+                      placeholder="prospect@domain.com"
+                      className={`w-full h-10 px-3.5 rounded-xl border text-[12.5px] outline-none transition-all ${
                         isDark
-                          ? "bg-white/[0.04] border-white/10 text-white focus:border-white/30"
-                          : "bg-slate-50 border-slate-200 text-[#0B0F17] focus:border-slate-800"
+                          ? "bg-[#0c101a] border-white/10 text-white focus:border-white/30"
+                          : "bg-slate-50 border-slate-200 text-slate-800 focus:border-slate-800"
                       }`}
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-400 mb-1">
-                      Interested Course
-                    </label>
-                    <select
-                      value={newLeadCourse}
-                      onChange={(e) => setNewLeadCourse(e.target.value)}
-                      className={`w-full px-3 py-2 rounded-xl text-[12px] border outline-none cursor-pointer ${
-                        isDark
-                          ? "bg-[#0c101a] border-white/10 text-white focus:border-white/30"
-                          : "bg-slate-50 border-slate-200 text-[#0B0F17] focus:border-slate-800"
-                      }`}
-                    >
-                      <option value="Data Science">Data Science</option>
-                      <option value="UI/UX Design">UI/UX Design</option>
-                      <option value="Full Stack Dev">Full Stack Dev</option>
-                      <option value="Cloud Computing">Cloud Computing</option>
-                      <option value="AI & ML">AI & ML</option>
-                      <option value="Cyber Security">Cyber Security</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-400 mb-1">
-                      Lead Source
-                    </label>
-                    <select
-                      value={newLeadSource}
-                      onChange={(e) => setNewLeadSource(e.target.value as any)}
-                      className={`w-full px-3 py-2 rounded-xl text-[12px] border outline-none cursor-pointer ${
-                        isDark
-                          ? "bg-[#0c101a] border-white/10 text-white focus:border-white/30"
-                          : "bg-slate-50 border-slate-200 text-[#0B0F17] focus:border-slate-800"
-                      }`}
-                    >
-                      <option value="Website">Website</option>
-                      <option value="WhatsApp">WhatsApp</option>
-                      <option value="Phone">Phone</option>
-                      <option value="Walk-in">Walk-in</option>
-                      <option value="Instagram">Instagram</option>
-                      <option value="Referral">Referral</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="text-[11px] font-medium text-neutral-400 block mb-1">
+                    Interested Course / Program
+                  </label>
+                  <input
+                    type="text"
+                    value={newLeadCourse}
+                    onChange={(e) => setNewLeadCourse(e.target.value)}
+                    className={`w-full h-10 px-3.5 rounded-xl border text-[12.5px] outline-none transition-all ${
+                      isDark
+                        ? "bg-[#0c101a] border-white/10 text-white focus:border-white/30"
+                        : "bg-slate-50 border-slate-200 text-slate-800 focus:border-slate-800"
+                    }`}
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-400 mb-1">
+                  <label className="text-[11px] font-medium text-neutral-400 block mb-1.5">
                     Priority Level
                   </label>
                   <div className="grid grid-cols-3 gap-2">
-                    {(["High", "Medium", "Low"] as const).map((lvl) => (
+                    {(["High", "Medium", "Low"] as LeadPriority[]).map((lvl) => (
                       <button
                         key={lvl}
                         type="button"
                         onClick={() => setNewLeadPriority(lvl)}
-                        className={`py-1.5 px-2 rounded-lg text-[11.5px] border text-center transition-colors cursor-pointer ${
+                        className={`py-2 rounded-xl text-[11.5px] font-medium border text-center transition-all cursor-pointer ${
                           newLeadPriority === lvl
                             ? isDark
-                              ? "bg-white text-black font-medium border-white"
-                              : "bg-[#0B0F17] text-white font-medium border-[#0B0F17]"
+                              ? "bg-white text-black border-white"
+                              : "bg-[#0B0F17] text-white border-[#0B0F17]"
                             : isDark
-                            ? "bg-white/[0.02] border-white/10 text-neutral-400 hover:text-white"
+                            ? "bg-white/[0.03] border-white/10 text-neutral-400 hover:text-white"
                             : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
                         }`}
                       >
@@ -1521,21 +1203,23 @@ export default function WorkspaceLeadsView() {
                   <button
                     type="button"
                     onClick={() => setIsAddLeadModalOpen(false)}
-                    className="px-3.5 py-1.5 rounded-xl text-[12px] font-medium text-neutral-400 hover:text-white cursor-pointer"
+                    className="px-4 py-2 rounded-full text-[12px] font-medium text-neutral-400 hover:text-white cursor-pointer"
                   >
                     Cancel
                   </button>
-                  <button
+                  <motion.button
                     type="submit"
-                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[12px] font-medium transition-all duration-200 cursor-pointer shadow-sm ${
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={`inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-[12px] font-medium transition-all duration-200 cursor-pointer shadow-sm ${
                       isDark
                         ? "bg-white text-black hover:bg-neutral-100"
                         : "bg-[#0B0F17] text-white hover:bg-slate-800"
                     }`}
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
                     <span>Create Lead</span>
-                  </button>
+                  </motion.button>
                 </div>
               </form>
             </motion.div>
@@ -1556,7 +1240,7 @@ export default function WorkspaceLeadsView() {
                 : "bg-white/95 border-slate-200 text-[#0F172A]"
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+            <Sparkles className="w-3.5 h-3.5 text-sky-400" />
             <span>{toastMessage}</span>
           </motion.div>
         )}

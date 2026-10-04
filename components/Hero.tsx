@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import Metrics from "./Metrics";
 import { usePageLoad } from "@/context/PageLoadContext";
@@ -68,15 +69,15 @@ export default function Hero() {
         className="flex items-center gap-5 sm:gap-6 my-4.5 sm:my-5 lg:my-6"
       >
         {/* Primary CTA Button */}
-        <a
-          href="#get-started"
+        <Link
+          href="/workspace"
           className="group inline-flex items-center gap-2 px-5 py-2 sm:px-5.5 sm:py-2 rounded-full bg-white text-black font-medium text-[12.5px] hover:bg-neutral-100 active:scale-[0.98] transition-all duration-300 shadow-sm"
         >
           <span>Get started</span>
           <span className="text-[12.5px] leading-none transition-transform duration-200 group-hover:translate-x-0.5">
             →
           </span>
-        </a>
+        </Link>
 
         {/* Secondary Video CTA */}
         <button
