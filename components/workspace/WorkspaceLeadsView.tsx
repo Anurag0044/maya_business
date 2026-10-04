@@ -383,7 +383,7 @@ export default function WorkspaceLeadsView() {
       className="flex-1 min-w-0 h-full flex flex-col justify-between gap-3.5 overflow-hidden min-h-0 select-none"
     >
       {/* 1. Header: Minimal Title + Fast Action */}
-      <div className="flex items-center justify-between gap-4 select-none shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none shrink-0">
         <div>
           <h1
             className={`text-[23px] sm:text-[25px] font-light tracking-[-0.03em] leading-tight ${isDark ? "text-white" : "text-[#0B0F17]"
@@ -392,7 +392,7 @@ export default function WorkspaceLeadsView() {
             Leads & Pipeline
           </h1>
           <p
-            className={`text-[12.5px] sm:text-[13px] font-normal leading-normal mt-0.5 ${isDark ? "text-[#9ca3af]" : "text-[#64748B]"
+            className={`text-[12.5px] sm:text-[13px] font-normal leading-normal mt-1 ${isDark ? "text-[#9ca3af]" : "text-[#64748B]"
               }`}
           >
             High-intent opportunities managed and qualified by MAYA Copilot.
@@ -406,9 +406,9 @@ export default function WorkspaceLeadsView() {
             onClick={() => setIsAddLeadModalOpen(true)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
-            className={`inline-flex items-center gap-1.5 h-8.5 px-4 rounded-full text-[12.5px] font-medium transition-all duration-200 cursor-pointer shadow-sm ${isDark
-                ? "bg-white text-[#0B0F17] hover:bg-neutral-100"
-                : "bg-[#0B0F17] text-white hover:bg-[#1E293B]"
+            className={`inline-flex items-center gap-1.5 h-8.5 px-4 rounded-full text-[12px] font-medium transition-all duration-200 cursor-pointer shadow-sm ${isDark
+                ? "bg-white text-black hover:bg-neutral-100 font-semibold"
+                : "bg-[#0B0F17] text-white hover:bg-slate-800 font-semibold"
               }`}
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
@@ -565,7 +565,7 @@ export default function WorkspaceLeadsView() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by name, contact, course..."
-                  className={`w-full ml-2 text-[12px] bg-transparent outline-none font-normal ${isDark ? "text-white placeholder:text-[#556070]" : "text-[#0F172A] placeholder:text-[#94A3B8]"
+                  className={`w-full ml-2 text-[11.5px] bg-transparent outline-none font-normal ${isDark ? "text-white placeholder:text-[#556070]" : "text-[#0F172A] placeholder:text-[#94A3B8]"
                     }`}
                 />
                 {searchQuery && (
@@ -618,7 +618,7 @@ export default function WorkspaceLeadsView() {
             <table className="w-full text-left border-collapse min-w-[680px]">
               <thead>
                 <tr
-                  className={`border-b text-[9px] uppercase tracking-[0.18em] font-medium sticky top-0 z-10 backdrop-blur-md select-none ${isDark
+                  className={`border-b text-[9px] sm:text-[9.5px] uppercase tracking-[0.16em] font-medium sticky top-0 z-10 backdrop-blur-md select-none ${isDark
                       ? "bg-[#090C12]/95 border-white/[0.06] text-[#717682]"
                       : "bg-white/95 border-slate-100 text-[#94A3B8]"
                     }`}
@@ -667,13 +667,13 @@ export default function WorkspaceLeadsView() {
                             </div>
                             <div className="flex flex-col min-w-0">
                               <span
-                                className={`text-[12.5px] font-medium truncate ${isDark ? "text-white" : "text-[#0F172A]"
+                                className={`text-[12px] font-semibold truncate ${isDark ? "text-white" : "text-[#0B0F17]"
                                   }`}
                               >
                                 {lead.name}
                               </span>
                               <div className="flex items-center gap-2 mt-0.5 text-[10.5px]">
-                                <span className={isDark ? "text-[#8e95a5]" : "text-slate-500"}>
+                                <span className={`font-mono ${isDark ? "text-[#8e95a5]" : "text-slate-500"}`}>
                                   {lead.phone}
                                 </span>
                                 <span className="opacity-30">•</span>
@@ -688,7 +688,7 @@ export default function WorkspaceLeadsView() {
                         {/* 2. Interest / Course */}
                         <td className="py-2.5 px-3">
                           <span
-                            className={`text-[12px] font-normal truncate block max-w-[200px] ${isDark ? "text-neutral-200" : "text-slate-800"
+                            className={`text-[12px] font-medium truncate block max-w-[200px] ${isDark ? "text-neutral-200" : "text-slate-800"
                               }`}
                           >
                             {lead.course}
@@ -698,7 +698,7 @@ export default function WorkspaceLeadsView() {
                         {/* 3. Status Badge */}
                         <td className="py-2.5 px-3">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-medium tracking-wide border uppercase select-none transition-colors duration-150 ${getStatusBadgeStyle(
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-medium tracking-wider border uppercase select-none transition-colors duration-150 ${getStatusBadgeStyle(
                               lead.status,
                               isDark
                             )}`}
@@ -715,7 +715,7 @@ export default function WorkspaceLeadsView() {
 
                         {/* 4. Follow-Up */}
                         <td className="py-2.5 px-3">
-                          <div className="flex items-center gap-1.5 text-[11px]">
+                          <div className="flex items-center gap-1.5 text-[11px] font-mono">
                             <Calendar className="w-3 h-3 text-neutral-400 shrink-0" />
                             <span className={isDark ? "text-neutral-300" : "text-slate-700"}>
                               {lead.nextFollowUp}
@@ -816,11 +816,11 @@ export default function WorkspaceLeadsView() {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className={`text-[13.5px] font-medium leading-tight truncate ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
+                      <h3 className={`text-[13px] font-semibold leading-tight truncate ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
                         {activeLead.name}
                       </h3>
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8.5px] font-medium tracking-wide border uppercase select-none transition-colors duration-150 ${getStatusBadgeStyle(
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8.5px] font-mono font-medium tracking-wider border uppercase select-none transition-colors duration-150 ${getStatusBadgeStyle(
                           activeLead.status,
                           isDark
                         )}`}
@@ -895,7 +895,7 @@ export default function WorkspaceLeadsView() {
                 >
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                    <span className="text-[10px] font-semibold tracking-wider uppercase text-sky-400">
+                    <span className="text-[9.5px] font-semibold tracking-[0.14em] uppercase text-sky-400">
                       MAYA Copilot Insights
                     </span>
                   </div>
@@ -906,7 +906,7 @@ export default function WorkspaceLeadsView() {
 
                 {/* Quick Status Selector */}
                 <div>
-                  <span className={`text-[9.5px] font-medium uppercase tracking-[0.16em] block mb-2 select-none ${isDark ? "text-[#717682]" : "text-[#94A3B8]"
+                  <span className={`text-[9.5px] font-medium uppercase tracking-[0.14em] block mb-2 select-none ${isDark ? "text-[#717682]" : "text-[#94A3B8]"
                     }`}>
                     Update Stage
                   </span>
@@ -919,7 +919,7 @@ export default function WorkspaceLeadsView() {
                           key={st}
                           type="button"
                           onClick={() => handleUpdateStatus(activeLead.id, st)}
-                          className={`py-1.5 px-2 rounded-lg text-[9.5px] font-medium border text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${isCurrent
+                          className={`py-1.5 px-2 rounded-lg text-[9.5px] font-mono font-medium border text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${isCurrent
                               ? isDark
                                 ? conf.activeBtnDark
                                 : conf.activeBtnLight
@@ -945,7 +945,7 @@ export default function WorkspaceLeadsView() {
 
                 {/* Contact Card with 1-click Copy */}
                 <div className={`pt-3 border-t ${isDark ? "border-white/[0.06]" : "border-slate-100"}`}>
-                  <span className={`text-[9.5px] font-medium uppercase tracking-[0.16em] block mb-2 select-none ${isDark ? "text-[#717682]" : "text-[#94A3B8]"
+                  <span className={`text-[9.5px] font-medium uppercase tracking-[0.14em] block mb-2 select-none ${isDark ? "text-[#717682]" : "text-[#94A3B8]"
                     }`}>
                     Contact & Lead Info
                   </span>
@@ -954,7 +954,7 @@ export default function WorkspaceLeadsView() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Phone className="w-3.5 h-3.5 text-neutral-400" />
-                        <span className={isDark ? "text-white" : "text-slate-800"}>{activeLead.phone}</span>
+                        <span className={`font-mono text-[11.5px] ${isDark ? "text-white" : "text-slate-800"}`}>{activeLead.phone}</span>
                       </div>
                       <button
                         type="button"
@@ -972,7 +972,7 @@ export default function WorkspaceLeadsView() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Mail className="w-3.5 h-3.5 text-neutral-400" />
-                        <span className={isDark ? "text-white" : "text-slate-800"}>{activeLead.email}</span>
+                        <span className={`font-mono text-[11.5px] ${isDark ? "text-white" : "text-slate-800"}`}>{activeLead.email}</span>
                       </div>
                       <button
                         type="button"
@@ -999,7 +999,7 @@ export default function WorkspaceLeadsView() {
 
                     <div className="flex items-center justify-between text-[11px]">
                       <span className={isDark ? "text-[#8e95a5]" : "text-slate-500"}>Next Follow-up</span>
-                      <span className={`font-medium ${isDark ? "text-white" : "text-slate-900"}`}>{activeLead.nextFollowUp}</span>
+                      <span className={`font-mono font-medium ${isDark ? "text-white" : "text-slate-900"}`}>{activeLead.nextFollowUp}</span>
                     </div>
                   </div>
                 </div>

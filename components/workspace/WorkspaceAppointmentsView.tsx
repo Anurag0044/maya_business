@@ -861,16 +861,16 @@ export default function WorkspaceAppointmentsView() {
       {/* ==================================================================== */}
       <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <h1
-              className={`text-[21px] sm:text-[23px] font-semibold tracking-[-0.03em] leading-tight ${
+              className={`text-[23px] sm:text-[25px] font-light tracking-[-0.03em] leading-tight ${
                 isDark ? "text-white" : "text-[#0B0F17]"
               }`}
             >
               Appointments
             </h1>
             <span
-              className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium border ${
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
                 isDark
                   ? "bg-sky-500/10 text-sky-400 border-sky-400/25"
                   : "bg-sky-50 text-sky-700 border-sky-200"
@@ -880,8 +880,8 @@ export default function WorkspaceAppointmentsView() {
             </span>
           </div>
           <p
-            className={`text-[12px] font-normal mt-0.5 ${
-              isDark ? "text-[#8e95a5]" : "text-slate-500"
+            className={`text-[12.5px] sm:text-[13px] font-normal leading-normal mt-1 ${
+              isDark ? "text-[#9ca3af]" : "text-[#64748B]"
             }`}
           >
             Multi-counsellor dispatch, room timetable & automated scheduling copilot.
@@ -967,47 +967,49 @@ export default function WorkspaceAppointmentsView() {
       {/* ==================================================================== */}
       {/* 2. STREAMLINED 4-CARD EXECUTIVE KPI STRIP */}
       {/* ==================================================================== */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 shrink-0 select-none">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 shrink-0 select-none">
         {EXECUTIVE_KPIS.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
             <motion.div
               key={kpi.id}
-              initial={{ opacity: 0, y: 6 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: idx * 0.04, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ y: -1, transition: { duration: 0.18 } }}
-              className={`p-3 sm:p-3.5 rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-default group ${
+              transition={{ duration: 0.45, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -2, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } }}
+              className={`relative p-3.5 sm:p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-default select-none ${
                 isDark
-                  ? "bg-gradient-to-b from-[#111724]/95 via-[#0c101a]/95 to-[#080b12]/98 border-white/[0.08] hover:border-white/[0.18] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_6px_18px_-4px_rgba(0,0,0,0.5)]"
-                  : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200/90 hover:border-slate-300 shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_4px_12px_rgba(15,23,42,0.04)]"
+                  ? "bg-gradient-to-b from-[#111724]/95 via-[#0c101a]/95 to-[#080b12]/98 border-white/[0.09] hover:border-white/[0.2] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_8px_24px_-6px_rgba(0,0,0,0.55)]"
+                  : "bg-gradient-to-b from-white via-white to-[#F8FAFC] border-slate-200/90 hover:border-slate-300 shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_4px_16px_rgba(15,23,42,0.05)]"
               }`}
             >
               {/* Eyebrow Label + Delicate Icon */}
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 relative z-10">
                 <span
-                  className={`text-[9.5px] font-medium uppercase tracking-[0.14em] truncate ${
+                  className={`text-[9px] sm:text-[9.5px] font-medium uppercase tracking-[0.16em] truncate transition-colors duration-200 ${
                     isDark ? "text-[#8e95a5] group-hover:text-white" : "text-slate-500 group-hover:text-slate-900"
                   }`}
                 >
                   {kpi.label}
                 </span>
-                <Icon className={`w-3.5 h-3.5 shrink-0 stroke-[1.4] ${kpi.accentColor}`} />
+                <Icon className={`w-3.5 h-3.5 shrink-0 stroke-[1.4] transition-colors duration-200 ${isDark ? "text-[#717682] group-hover:text-white" : "text-slate-400 group-hover:text-slate-700"}`} />
               </div>
 
               {/* Big Clean Numeral */}
-              <div className="my-1 flex items-baseline justify-between gap-1">
+              <div className="my-2 sm:my-2.5 flex items-baseline justify-between gap-2 relative z-10">
                 <span
-                  className={`text-[25px] sm:text-[28px] font-light tracking-[-0.03em] leading-none tabular-nums ${
+                  className={`text-[28px] sm:text-[32px] font-light tracking-[-0.03em] leading-none tabular-nums shrink-0 ${
                     isDark ? "text-white" : "text-[#0B0F17]"
                   }`}
                 >
                   <AnimatedCounter value={kpi.value} delay={idx * 0.05} />
                 </span>
+              </div>
 
-                {/* Trend Badge */}
+              {/* Bottom Row: Minimalist Editorial Trend Context with Luxury Gold */}
+              <div className="flex items-center gap-1.5 text-[10.5px] sm:text-[11.5px] tracking-tight relative z-10 truncate">
                 <span
-                  className={`text-[11px] font-medium tracking-tight ${
+                  className={`font-medium shrink-0 ${
                     kpi.isPositive
                       ? isDark
                         ? "text-[#fbbf24]"
@@ -1019,15 +1021,16 @@ export default function WorkspaceAppointmentsView() {
                 >
                   {kpi.isPositive ? "↑" : "↓"} {kpi.changePct}%
                 </span>
-              </div>
 
-              {/* Sub-context */}
-              <div
-                className={`text-[10px] truncate ${
-                  isDark ? "text-[#717682]" : "text-slate-500"
-                }`}
-              >
-                {kpi.timeframe}
+                <span className={`shrink-0 ${isDark ? "text-white/20" : "text-slate-300"}`}>·</span>
+
+                <span
+                  className={`truncate ${
+                    isDark ? "text-[#717682]" : "text-slate-500"
+                  }`}
+                >
+                  {kpi.timeframe}
+                </span>
               </div>
             </motion.div>
           );
@@ -1543,14 +1546,14 @@ export default function WorkspaceAppointmentsView() {
                   key={tab.id}
                   type="button"
                   onClick={() => setRailTab(tab.id as any)}
-                  className={`relative flex-1 py-1 px-1.5 rounded-lg text-[10.5px] font-medium flex items-center justify-center gap-1 transition-all cursor-pointer outline-none ${
+                  className={`relative flex-1 py-1.5 px-2 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer outline-none ${
                     isActive
                       ? isDark
-                        ? "text-white font-semibold"
-                        : "text-slate-900 font-semibold"
+                        ? "text-black font-semibold"
+                        : "text-white font-semibold"
                       : isDark
                       ? "text-neutral-400 hover:text-white"
-                      : "text-slate-500 hover:text-slate-900"
+                      : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
                   {isActive && (
@@ -1558,8 +1561,8 @@ export default function WorkspaceAppointmentsView() {
                       layoutId="active-right-rail-tab"
                       className={`absolute inset-0 rounded-lg ${
                         isDark
-                          ? "bg-white/[0.12] border border-white/20 shadow-xs"
-                          : "bg-white border border-slate-300 shadow-2xs"
+                          ? "bg-white shadow-xs"
+                          : "bg-[#0B0F17] shadow-xs"
                       }`}
                       transition={{ type: "spring", stiffness: 450, damping: 32 }}
                     />
@@ -1568,11 +1571,11 @@ export default function WorkspaceAppointmentsView() {
                   <span className="relative z-10 truncate">{tab.label}</span>
                   {tab.badge !== undefined && (
                     <span
-                      className={`relative z-10 text-[9px] font-mono px-1 py-0.2 rounded-full leading-none shrink-0 ${
+                      className={`relative z-10 text-[9px] font-mono px-1.5 py-0.2 rounded-full leading-none shrink-0 ${
                         isActive
                           ? isDark
-                            ? "bg-white/20 text-white"
-                            : "bg-slate-200 text-slate-800"
+                            ? "bg-black/15 text-black font-semibold"
+                            : "bg-white/20 text-white font-semibold"
                           : isDark
                           ? "bg-white/[0.06] text-neutral-400"
                           : "bg-slate-200/70 text-slate-600"
@@ -1604,7 +1607,7 @@ export default function WorkspaceAppointmentsView() {
                   <div className="flex items-center justify-between pb-1.5 border-b border-inherit">
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-neutral-400" />
-                      <span className={`text-[12px] font-semibold tracking-tight ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
+                      <span className={`text-[13.5px] font-medium tracking-tight ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
                         Upcoming Next
                       </span>
                       <span className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded-full border ${
@@ -1673,29 +1676,35 @@ export default function WorkspaceAppointmentsView() {
                   </div>
                 </div>
 
-                {/* 2. MAYA COPILOT (Apple Intelligence Minimalist Widget) */}
+                {/* 2. MAYA COPILOT (Apple-Grade Minimalist Widget) */}
                 <div
                   className={`p-3 rounded-2xl border transition-all flex flex-col gap-2 shrink-0 ${
                     isDark
-                      ? "bg-gradient-to-b from-[#0c1424] via-[#090e1a] to-[#070b14] border-sky-500/20 shadow-[inset_0_1px_0_0_rgba(56,189,248,0.12),0_4px_16px_rgba(0,0,0,0.4)]"
-                      : "bg-gradient-to-b from-sky-50/70 via-white to-sky-50/30 border-sky-200 shadow-2xs"
+                      ? "bg-[#090d16] border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_4px_16px_rgba(0,0,0,0.4)]"
+                      : "bg-white border-slate-200/90 shadow-2xs"
                   }`}
                 >
-                  <div className="flex items-center justify-between pb-1.5 border-b border-sky-500/15">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-inherit">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-md bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
+                      <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
+                        isDark ? "bg-white/[0.06] text-white" : "bg-slate-100 text-slate-900"
+                      }`}>
                         <Sparkles className="w-3 h-3" />
                       </div>
-                      <span className={`text-[12px] font-semibold tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+                      <span className={`text-[13.5px] font-medium tracking-tight ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
                         MAYA Copilot
                       </span>
                     </div>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-medium border ${
                       openSlotsCount > 0
-                        ? "bg-emerald-500/10 text-emerald-300 border-emerald-400/25"
-                        : "bg-white/[0.04] text-neutral-400 border-white/[0.08]"
+                        ? isDark
+                          ? "bg-white/[0.06] text-white border-white/10"
+                          : "bg-slate-100 text-slate-900 border-slate-200"
+                        : isDark
+                        ? "bg-white/[0.03] text-neutral-400 border-white/[0.06]"
+                        : "bg-slate-50 text-slate-500 border-slate-200"
                     }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${openSlotsCount > 0 ? "bg-emerald-400 animate-pulse" : "bg-neutral-500"}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${openSlotsCount > 0 ? "bg-emerald-400" : "bg-neutral-500"}`} />
                       <span>{openSlotsCount > 0 ? `${openSlotsCount} Open Slots` : "Optimized"}</span>
                     </span>
                   </div>
@@ -1708,7 +1717,7 @@ export default function WorkspaceAppointmentsView() {
                           isDark ? "bg-white/[0.02] border-white/[0.06]" : "bg-white border-slate-200"
                         }`}>
                           <span className={`truncate font-medium ${isDark ? "text-neutral-300" : "text-slate-700"}`}>Neha S.</span>
-                          <span className="font-mono text-sky-400 shrink-0 ml-1">2:30 PM</span>
+                          <span className={`font-mono shrink-0 ml-1 ${isDark ? "text-neutral-400" : "text-slate-500"}`}>2:30 PM</span>
                         </div>
                       )}
                       {slot2Open && (
@@ -1716,7 +1725,7 @@ export default function WorkspaceAppointmentsView() {
                           isDark ? "bg-white/[0.02] border-white/[0.06]" : "bg-white border-slate-200"
                         }`}>
                           <span className={`truncate font-medium ${isDark ? "text-neutral-300" : "text-slate-700"}`}>Rohan V.</span>
-                          <span className="font-mono text-sky-400 shrink-0 ml-1">3:30 PM</span>
+                          <span className={`font-mono shrink-0 ml-1 ${isDark ? "text-neutral-400" : "text-slate-500"}`}>3:30 PM</span>
                         </div>
                       )}
                     </div>
@@ -1737,14 +1746,14 @@ export default function WorkspaceAppointmentsView() {
                     className={`w-full py-1.5 px-3 rounded-xl text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs ${
                       openSlotsCount > 0
                         ? isDark
-                          ? "bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 text-sky-200 font-semibold"
-                          : "bg-sky-500 text-white hover:bg-sky-600 border border-sky-600 font-semibold"
+                          ? "bg-white text-black hover:bg-neutral-100 font-semibold"
+                          : "bg-[#0B0F17] text-white hover:bg-slate-800 font-semibold"
                         : isDark
                         ? "bg-white/[0.04] text-neutral-500 border border-white/[0.06] cursor-not-allowed"
                         : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
                     }`}
                   >
-                    <Zap className="w-3 h-3 text-sky-400" />
+                    <Zap className={`w-3 h-3 ${openSlotsCount > 0 ? (isDark ? "text-black fill-black" : "text-white fill-white") : "text-neutral-500"}`} />
                     <span>{openSlotsCount > 0 ? `Auto-Dispatch ${openSlotsCount} Slots` : "Slots Fully Allocated"}</span>
                   </motion.button>
                 </div>
@@ -1760,7 +1769,7 @@ export default function WorkspaceAppointmentsView() {
                   <div className="flex items-center justify-between pb-1.5 border-b border-inherit">
                     <div className="flex items-center gap-1.5">
                       <FileText className="w-3.5 h-3.5 text-neutral-400" />
-                      <span className={`text-[12px] font-semibold tracking-tight ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
+                      <span className={`text-[13.5px] font-medium tracking-tight ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
                         Consultant Mix
                       </span>
                     </div>
@@ -1807,18 +1816,28 @@ export default function WorkspaceAppointmentsView() {
                           className={`p-1.5 px-2 rounded-lg flex items-center justify-between text-[10.5px] transition-all cursor-pointer border text-left ${
                             isActive
                               ? isDark
-                                ? "bg-white/10 text-white font-medium border-white/20 shadow-2xs"
-                                : "bg-slate-100 text-slate-900 font-medium border-slate-300 shadow-2xs"
+                                ? "bg-white text-black font-semibold border-white shadow-xs"
+                                : "bg-[#0B0F17] text-white font-semibold border-[#0B0F17] shadow-xs"
                               : isDark
-                              ? "bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.05] text-neutral-300"
-                              : "bg-slate-50 border-slate-200/60 hover:bg-slate-100 text-slate-700"
+                              ? "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] text-neutral-300"
+                              : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700"
                           }`}
                         >
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <span className={`w-1.5 h-1.5 rounded-full ${cat.dot} shrink-0`} />
+                            <span className={`w-1.5 h-1.5 rounded-full ${isActive ? (isDark ? "bg-black" : "bg-white") : cat.dot} shrink-0`} />
                             <span className="truncate">{cat.label}</span>
                           </div>
-                          <span className="font-mono text-[9.5px] text-neutral-400 shrink-0 ml-1">{cat.pct}</span>
+                          <span className={`font-mono text-[9.5px] shrink-0 ml-1 ${
+                            isActive
+                              ? isDark
+                                ? "text-black/70 font-semibold"
+                                : "text-white/70 font-semibold"
+                              : isDark
+                              ? "text-neutral-400"
+                              : "text-slate-500"
+                          }`}>
+                            {cat.pct}
+                          </span>
                         </button>
                       );
                     })}
@@ -1914,30 +1933,36 @@ export default function WorkspaceAppointmentsView() {
               <div
                 className={`p-3.5 rounded-2xl border transition-all flex flex-col gap-3 ${
                   isDark
-                    ? "bg-gradient-to-b from-[#0c1424] via-[#090e1a] to-[#070b14] border-sky-500/25 shadow-[inset_0_1px_0_0_rgba(56,189,248,0.15),0_8px_24px_rgba(0,0,0,0.6)]"
-                    : "bg-gradient-to-b from-sky-50/80 via-white to-sky-50/40 border-sky-200 shadow-sm"
+                    ? "bg-[#090d16] border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.5)]"
+                    : "bg-white border-slate-200 shadow-sm"
                 }`}
               >
-                <div className="flex items-center justify-between pb-2 border-b border-sky-500/20">
+                <div className="flex items-center justify-between pb-2 border-b border-inherit">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0">
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                      isDark ? "bg-white/[0.06] text-white" : "bg-slate-100 text-slate-900"
+                    }`}>
                       <Sparkles className="w-3.5 h-3.5" />
                     </div>
                     <div>
                       <h4 className={`text-[12.5px] font-semibold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
                         MAYA Dispatch Copilot
                       </h4>
-                      <span className="text-[10px] text-sky-400 font-mono">
+                      <span className={`text-[10px] font-mono ${isDark ? "text-neutral-400" : "text-slate-500"}`}>
                         Autonomous Allocation Engine
                       </span>
                     </div>
                   </div>
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-medium border ${
                     openSlotsCount > 0
-                      ? "bg-emerald-500/10 text-emerald-300 border-emerald-400/25"
-                      : "bg-white/[0.04] text-neutral-400 border-white/[0.08]"
+                      ? isDark
+                        ? "bg-white/[0.06] text-white border-white/10"
+                        : "bg-slate-100 text-slate-900 border-slate-200"
+                      : isDark
+                      ? "bg-white/[0.03] text-neutral-400 border-white/[0.06]"
+                      : "bg-slate-50 text-slate-500 border-slate-200"
                   }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${openSlotsCount > 0 ? "bg-emerald-400 animate-pulse" : "bg-neutral-500"}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${openSlotsCount > 0 ? "bg-emerald-400" : "bg-neutral-500"}`} />
                     <span>{openSlotsCount} Slots</span>
                   </span>
                 </div>
@@ -1959,7 +1984,7 @@ export default function WorkspaceAppointmentsView() {
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-neutral-400">
                         <span>Admission Discussion</span>
-                        <span className="font-mono text-sky-400">Neha S. · 2:30 PM</span>
+                        <span className={`font-mono ${isDark ? "text-neutral-300" : "text-slate-600"}`}>Neha S. · 2:30 PM</span>
                       </div>
                     </div>
                   )}
@@ -1976,7 +2001,7 @@ export default function WorkspaceAppointmentsView() {
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-neutral-400">
                         <span>Course Enquiry</span>
-                        <span className="font-mono text-sky-400">Rohan V. · 3:30 PM</span>
+                        <span className={`font-mono ${isDark ? "text-neutral-300" : "text-slate-600"}`}>Rohan V. · 3:30 PM</span>
                       </div>
                     </div>
                   )}
@@ -1986,7 +2011,7 @@ export default function WorkspaceAppointmentsView() {
                       isDark ? "bg-white/[0.02] border-white/[0.06] text-neutral-400" : "bg-slate-50 border-slate-200 text-slate-600"
                     }`}>
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1.5" />
-                      <p className="text-[12px] font-medium text-white">Full Capacity Reached</p>
+                      <p className={`text-[12px] font-medium ${isDark ? "text-white" : "text-slate-900"}`}>Full Capacity Reached</p>
                       <p className="text-[10.5px] text-neutral-400 mt-0.5">All afternoon slots are successfully matched.</p>
                     </div>
                   )}
@@ -2011,17 +2036,17 @@ export default function WorkspaceAppointmentsView() {
                   whileTap={{ scale: 0.98 }}
                   onClick={handleAutoFillSlots}
                   disabled={openSlotsCount === 0}
-                  className={`w-full py-2.5 px-3 rounded-xl text-[12px] font-medium flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm ${
+                  className={`w-full py-2.5 px-3 rounded-xl text-[12px] font-medium flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs ${
                     openSlotsCount > 0
                       ? isDark
-                        ? "bg-gradient-to-r from-sky-500/25 via-sky-400/20 to-indigo-500/25 hover:from-sky-500/35 hover:to-indigo-500/35 border border-sky-400/35 text-sky-200 font-semibold"
-                        : "bg-sky-500 text-white hover:bg-sky-600 border border-sky-600 font-semibold"
+                        ? "bg-white text-black hover:bg-neutral-100 font-semibold"
+                        : "bg-[#0B0F17] text-white hover:bg-slate-800 font-semibold"
                       : isDark
                       ? "bg-white/[0.04] text-neutral-500 border border-white/[0.06] cursor-not-allowed"
                       : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
                   }`}
                 >
-                  <Zap className="w-3.5 h-3.5 text-sky-400" />
+                  <Zap className={`w-3.5 h-3.5 ${openSlotsCount > 0 ? (isDark ? "text-black fill-black" : "text-white fill-white") : "text-neutral-500"}`} />
                   <span>{openSlotsCount > 0 ? `Auto-Dispatch ${openSlotsCount} Priority Slots` : "All Slots Optimized"}</span>
                 </motion.button>
               </div>
