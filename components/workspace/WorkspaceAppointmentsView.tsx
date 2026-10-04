@@ -1124,8 +1124,45 @@ export default function WorkspaceAppointmentsView() {
           })}
         </div>
 
-        {/* Right: View Mode Toggle & Status Filter */}
+        {/* Right: View Mode Toggle, Status Filter & Quick Consultancy Button */}
         <div className="flex items-center gap-2">
+          {/* Prominent Consultancy Filter Button */}
+          <button
+            type="button"
+            onClick={() => setSelectedCategoryFilter((prev) => (prev === "Counselling" ? "ALL" : "Counselling"))}
+            className={`h-7.5 px-3 rounded-full text-[11px] font-medium border flex items-center gap-1.5 cursor-pointer transition-all duration-200 outline-none select-none ${
+              selectedCategoryFilter === "Counselling"
+                ? isDark
+                  ? "bg-violet-500/25 border-violet-400/50 text-white shadow-[0_0_12px_rgba(167,139,250,0.35)] font-semibold"
+                  : "bg-violet-600 border-violet-600 text-white font-semibold shadow-xs"
+                : isDark
+                ? "bg-[#090d16] border-white/10 hover:border-violet-400/40 text-neutral-300 hover:text-white"
+                : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900"
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                selectedCategoryFilter === "Counselling"
+                  ? isDark ? "bg-violet-300 shadow-[0_0_6px_rgba(167,139,250,0.8)]" : "bg-white"
+                  : "bg-violet-400"
+              }`}
+            />
+            <span>Consultancy</span>
+            <span
+              className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded-full leading-none shrink-0 ${
+                selectedCategoryFilter === "Counselling"
+                  ? isDark
+                    ? "bg-violet-400/30 text-violet-200 font-bold"
+                    : "bg-white/25 text-white font-bold"
+                  : isDark
+                  ? "bg-white/[0.06] text-neutral-400"
+                  : "bg-slate-200 text-slate-600"
+              }`}
+            >
+              {appointments.filter((a) => a.category === "Counselling").length}
+            </span>
+          </button>
+
           {/* Luxury Custom Status Filter Popover */}
           <div className="relative" ref={statusDropdownRef}>
             <button
@@ -1504,7 +1541,7 @@ export default function WorkspaceAppointmentsView() {
         {/* ================================================================== */}
         {/* 4B. RIGHT RAIL: APPLE-LEVEL MANAGED AGENDA & AI COPILOT */}
         {/* ================================================================== */}
-        <div className="w-full lg:w-[320px] shrink-0 h-full flex flex-col gap-2.5 overflow-hidden select-none">
+        <div className="w-full lg:w-[336px] shrink-0 h-full flex flex-col gap-2.5 overflow-hidden select-none">
           {/* Apple-Grade Segmented Control Switcher */}
           <div
             className={`p-1 rounded-xl border flex items-center justify-between shrink-0 ${
@@ -1515,7 +1552,7 @@ export default function WorkspaceAppointmentsView() {
               { id: "ALL", label: "Overview", icon: LayoutGrid },
               { id: "UPCOMING", label: "Next Up", icon: Clock, badge: nextUpConsultations.length },
               { id: "COPILOT", label: "Copilot", icon: Sparkles, badge: openSlotsCount > 0 ? openSlotsCount : undefined },
-              { id: "CONSULTANTS", label: "Mix", icon: Users },
+              { id: "CONSULTANTS", label: "Consultancy", icon: Users },
             ].map((tab) => {
               const isActive = railTab === tab.id;
               return (
@@ -1523,7 +1560,7 @@ export default function WorkspaceAppointmentsView() {
                   key={tab.id}
                   type="button"
                   onClick={() => setRailTab(tab.id as any)}
-                  className={`relative flex-1 py-1.5 px-2 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer outline-none ${
+                  className={`relative flex-1 py-1.5 px-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer outline-none ${
                     isActive
                       ? isDark
                         ? "text-black font-semibold"
@@ -1545,7 +1582,7 @@ export default function WorkspaceAppointmentsView() {
                     />
                   )}
                   <tab.icon className="w-3 h-3 relative z-10 shrink-0" />
-                  <span className="relative z-10 truncate">{tab.label}</span>
+                  <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
                   {tab.badge !== undefined && (
                     <span
                       className={`relative z-10 text-[9px] font-mono px-1.5 py-0.2 rounded-full leading-none shrink-0 ${
@@ -1735,7 +1772,7 @@ export default function WorkspaceAppointmentsView() {
                   </motion.button>
                 </div>
 
-                {/* 3. CONSULTANT MIX (Refined Disciplined Analytics) */}
+                {/* 3. CONSULTANCY MIX (Refined Disciplined Analytics) */}
                 <div
                   className={`p-3 rounded-2xl border transition-all flex flex-col gap-2 shrink-0 ${
                     isDark
@@ -1745,26 +1782,30 @@ export default function WorkspaceAppointmentsView() {
                 >
                   <div className="flex items-center justify-between pb-1.5 border-b border-inherit">
                     <div className="flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-neutral-400" />
+                      <Users className="w-3.5 h-3.5 text-neutral-400" />
                       <span className={`text-[13.5px] font-medium tracking-tight ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
-                        Consultant Mix
+                        Consultancy Mix
                       </span>
                     </div>
-                    {selectedCategoryFilter !== "ALL" ? (
+                    <div className="flex items-center gap-2">
+                      {selectedCategoryFilter !== "ALL" ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCategoryFilter("ALL")}
+                          className="text-[9.5px] text-sky-400 hover:text-white font-mono cursor-pointer"
+                        >
+                          Reset ✕
+                        </button>
+                      ) : null}
                       <button
                         type="button"
-                        onClick={() => setSelectedCategoryFilter("ALL")}
-                        className="text-[9.5px] text-sky-400 hover:text-white font-mono cursor-pointer"
+                        onClick={() => setRailTab("CONSULTANTS")}
+                        className="text-[10.5px] text-sky-400 hover:text-sky-300 font-medium cursor-pointer flex items-center gap-0.5 group"
                       >
-                        Reset filter ✕
+                        <span>Consultancy</span>
+                        <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                       </button>
-                    ) : (
-                      <span className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded-full border ${
-                        isDark ? "bg-white/[0.04] border-white/[0.08] text-neutral-400" : "bg-slate-100 border-slate-200 text-slate-600"
-                      }`}>
-                        {filteredAppointments.length} Today
-                      </span>
-                    )}
+                    </div>
                   </div>
 
                   {/* Unified Disciplined Spectrum Bar */}
@@ -1779,7 +1820,7 @@ export default function WorkspaceAppointmentsView() {
                   {/* Compact 2x2 Clean Grid */}
                   <div className="grid grid-cols-2 gap-1.5">
                     {[
-                      { label: "Counselling", count: "10", pct: "42%", dot: "bg-[#818cf8]", cat: "Counselling" },
+                      { label: "Consultancy", count: "10", pct: "42%", dot: "bg-[#818cf8]", cat: "Counselling" },
                       { label: "Admission", count: "6", pct: "24%", dot: "bg-[#38bdf8]", cat: "Admission" },
                       { label: "Follow-up", count: "4", pct: "16%", dot: "bg-[#fbbf24]", cat: "Follow-up" },
                       { label: "Course Enquiry", count: "3", pct: "12%", dot: "bg-[#34d399]", cat: "Course Enquiry" },
@@ -1796,8 +1837,8 @@ export default function WorkspaceAppointmentsView() {
                                 ? "bg-white text-black font-semibold border-white shadow-xs"
                                 : "bg-[#0B0F17] text-white font-semibold border-[#0B0F17] shadow-xs"
                               : isDark
-                              ? "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] text-neutral-300"
-                              : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700"
+                              ? "bg-white/[0.03] border-white/[0.08] hover:border-violet-400/40 text-neutral-300 hover:text-white"
+                              : "bg-slate-50 border-slate-200 hover:border-violet-300 text-slate-700"
                           }`}
                         >
                           <div className="flex items-center gap-1.5 min-w-0">
@@ -2044,7 +2085,7 @@ export default function WorkspaceAppointmentsView() {
                   <div className="flex items-center gap-2">
                     <Users className="w-3.5 h-3.5 text-sky-400" />
                     <span className={`text-[13px] font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
-                      Consultant Capacity
+                      Consultancy & Capacity
                     </span>
                   </div>
                   <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
@@ -2120,7 +2161,7 @@ export default function WorkspaceAppointmentsView() {
 
                   <div className="flex flex-col gap-1">
                     {[
-                      { label: "Career Counselling", count: "10", pct: "42%", dot: "bg-[#818cf8]", cat: "Counselling" },
+                      { label: "Consultancy", count: "10", pct: "42%", dot: "bg-[#818cf8]", cat: "Counselling" },
                       { label: "Admission Discussion", count: "6", pct: "24%", dot: "bg-[#38bdf8]", cat: "Admission" },
                       { label: "Follow-up Brief", count: "4", pct: "16%", dot: "bg-[#fbbf24]", cat: "Follow-up" },
                       { label: "Course Enquiry", count: "3", pct: "12%", dot: "bg-[#34d399]", cat: "Course Enquiry" },
