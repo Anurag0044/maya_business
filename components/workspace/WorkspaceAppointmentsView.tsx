@@ -146,11 +146,11 @@ const INITIAL_APPOINTMENTS: AppointmentSlotItem[] = [
     staffId: "siddharth",
     staffName: "Siddharth Malhotra",
     startTime: "10:00",
-    endTime: "10:30",
-    timeDisplay: "10:00 - 10:30",
+    endTime: "11:00",
+    timeDisplay: "10:00 - 11:00",
     startHour: 10,
     startMinutes: 0,
-    durationMinutes: 30,
+    durationMinutes: 60,
     status: "Confirmed",
     isVideoCall: false,
     notes: "Executive weekend AI track inquiry. Reviewing syllabus and placement stats.",
@@ -162,15 +162,15 @@ const INITIAL_APPOINTMENTS: AppointmentSlotItem[] = [
     clientPhone: "+91 99887 66554",
     clientEmail: "sneha.iyer@example.com",
     category: "Follow-up",
-    categoryDetail: "Follow-up",
+    categoryDetail: "Scholarship Review",
     staffId: "siddharth",
     staffName: "Siddharth Malhotra",
-    startTime: "11:30",
+    startTime: "11:00",
     endTime: "12:00",
-    timeDisplay: "11:30 - 12:00",
+    timeDisplay: "11:00 - 12:00",
     startHour: 11,
-    startMinutes: 30,
-    durationMinutes: 30,
+    startMinutes: 0,
+    durationMinutes: 60,
     status: "Pending",
     isVideoCall: false,
     notes: "Reviewing scholarship options. Requested financial counselor callback.",
@@ -186,11 +186,11 @@ const INITIAL_APPOINTMENTS: AppointmentSlotItem[] = [
     staffId: "siddharth",
     staffName: "Siddharth Malhotra",
     startTime: "13:00",
-    endTime: "13:30",
-    timeDisplay: "1:00 - 1:30",
+    endTime: "14:00",
+    timeDisplay: "1:00 - 2:00",
     startHour: 13,
     startMinutes: 0,
-    durationMinutes: 30,
+    durationMinutes: 60,
     status: "Confirmed",
     isVideoCall: false,
     notes: "Final fee verification and payment gateway approval.",
@@ -207,12 +207,12 @@ const INITIAL_APPOINTMENTS: AppointmentSlotItem[] = [
     categoryDetail: "Admission Discussion",
     staffId: "neha",
     staffName: "Neha Sharma",
-    startTime: "10:30",
+    startTime: "10:00",
     endTime: "11:00",
-    timeDisplay: "10:30 - 11:00",
+    timeDisplay: "10:00 - 11:00",
     startHour: 10,
-    startMinutes: 30,
-    durationMinutes: 30,
+    startMinutes: 0,
+    durationMinutes: 60,
     status: "Pending",
     isVideoCall: true,
     videoLink: "https://meet.google.com/may-crm-pm",
@@ -229,11 +229,11 @@ const INITIAL_APPOINTMENTS: AppointmentSlotItem[] = [
     staffId: "neha",
     staffName: "Neha Sharma",
     startTime: "14:00",
-    endTime: "14:30",
-    timeDisplay: "2:00 - 2:30",
+    endTime: "15:00",
+    timeDisplay: "2:00 - 3:00",
     startHour: 14,
     startMinutes: 0,
-    durationMinutes: 30,
+    durationMinutes: 60,
     status: "Confirmed",
     isVideoCall: false,
     notes: "Product Manager looking for AI transformation and LLM orchestration mastery.",
@@ -249,11 +249,11 @@ const INITIAL_APPOINTMENTS: AppointmentSlotItem[] = [
     staffId: "neha",
     staffName: "Neha Sharma",
     startTime: "17:00",
-    endTime: "17:30",
-    timeDisplay: "5:00 - 5:30",
+    endTime: "18:00",
+    timeDisplay: "5:00 - 6:00",
     startHour: 17,
     startMinutes: 0,
-    durationMinutes: 30,
+    durationMinutes: 60,
     status: "Confirmed",
     isVideoCall: false,
     notes: "Daily outbound sync with pending inquiries from weekend marketing campaign.",
@@ -290,11 +290,11 @@ const INITIAL_APPOINTMENTS: AppointmentSlotItem[] = [
     categoryDetail: "Career Counselling",
     staffId: "amit",
     staffName: "Amit Kumar",
-    startTime: "12:30",
-    endTime: "13:30",
-    timeDisplay: "12:30 - 1:30",
+    startTime: "12:00",
+    endTime: "13:00",
+    timeDisplay: "12:00 - 1:00",
     startHour: 12,
-    startMinutes: 30,
+    startMinutes: 0,
     durationMinutes: 60,
     status: "Confirmed",
     isVideoCall: false,
@@ -311,11 +311,11 @@ const INITIAL_APPOINTMENTS: AppointmentSlotItem[] = [
     staffId: "amit",
     staffName: "Amit Kumar",
     startTime: "15:00",
-    endTime: "15:30",
-    timeDisplay: "3:00 - 3:30",
+    endTime: "16:00",
+    timeDisplay: "3:00 - 4:00",
     startHour: 15,
     startMinutes: 0,
-    durationMinutes: 30,
+    durationMinutes: 60,
     status: "Pending",
     isVideoCall: false,
     notes: "Corporate sponsorship seat booking. Company approval letter provided.",
@@ -331,11 +331,11 @@ const INITIAL_APPOINTMENTS: AppointmentSlotItem[] = [
     staffId: "amit",
     staffName: "Amit Kumar",
     startTime: "16:00",
-    endTime: "16:30",
-    timeDisplay: "4:00 - 4:30",
+    endTime: "17:00",
+    timeDisplay: "4:00 - 5:00",
     startHour: 16,
     startMinutes: 0,
-    durationMinutes: 30,
+    durationMinutes: 60,
     status: "Confirmed",
     isVideoCall: true,
     videoLink: "https://meet.google.com/may-scholarship-ag",
@@ -354,11 +354,11 @@ const INITIAL_APPOINTMENTS: AppointmentSlotItem[] = [
     staffId: "rohan",
     staffName: "Rohan Verma",
     startTime: "11:00",
-    endTime: "11:30",
-    timeDisplay: "11:00 - 11:30",
+    endTime: "12:00",
+    timeDisplay: "11:00 - 12:00",
     startHour: 11,
     startMinutes: 0,
-    durationMinutes: 30,
+    durationMinutes: 60,
     status: "Confirmed",
     isVideoCall: false,
     notes: "Cloud DevOps certification curriculum inquiry. AWS and Docker lab access.",
@@ -557,7 +557,7 @@ export default function WorkspaceAppointmentsView() {
   const [formCategory, setFormCategory] = useState<AppointmentCategory>("Course Enquiry");
   const [formStaffId, setFormStaffId] = useState<"siddharth" | "neha" | "amit" | "rohan">("siddharth");
   const [formTimeSlot, setFormTimeSlot] = useState("10:00");
-  const [formDuration, setFormDuration] = useState(30);
+  const [formDuration, setFormDuration] = useState(60);
   const [formIsVideo, setFormIsVideo] = useState(false);
   const [formNotes, setFormNotes] = useState("");
 
@@ -609,9 +609,9 @@ export default function WorkspaceAppointmentsView() {
   const confirmedCount = useMemo(() => appointments.filter((a) => a.status === "Confirmed").length, [appointments]);
   const pendingCount = useMemo(() => appointments.filter((a) => a.status === "Pending").length, [appointments]);
 
-  // Open slots check for MAYA Copilot
-  const slot1Open = !appointments.some((a) => a.startTime === "14:30" && a.staffId === "neha");
-  const slot2Open = !appointments.some((a) => a.startTime === "15:30" && a.staffId === "rohan");
+  // Open slots check for MAYA Copilot (Full hour blocks)
+  const slot1Open = !appointments.some((a) => a.startTime === "15:00" && a.staffId === "neha");
+  const slot2Open = !appointments.some((a) => a.startTime === "14:00" && a.staffId === "rohan");
   const openSlotsCount = (slot1Open ? 1 : 0) + (slot2Open ? 1 : 0);
 
   // Consultant workload capacity calculation
@@ -791,10 +791,10 @@ export default function WorkspaceAppointmentsView() {
     return filteredAppointments.slice(0, 4);
   }, [filteredAppointments]);
 
-  // MAYA Copilot Smart Auto-Dispatch Handler
+  // MAYA Copilot Smart Auto-Dispatch Handler (Standard 1-Hour Consultation Blocks)
   const handleAutoFillSlots = () => {
-    const slot1Exists = appointments.some((a) => a.startTime === "14:30" && a.staffId === "neha");
-    const slot2Exists = appointments.some((a) => a.startTime === "15:30" && a.staffId === "rohan");
+    const slot1Exists = appointments.some((a) => a.startTime === "15:00" && a.staffId === "neha");
+    const slot2Exists = appointments.some((a) => a.startTime === "14:00" && a.staffId === "rohan");
 
     if (slot1Exists && slot2Exists) {
       showToast("MAYA Copilot: All open afternoon slots are fully optimized.");
@@ -814,12 +814,12 @@ export default function WorkspaceAppointmentsView() {
         categoryDetail: "Admission Discussion",
         staffId: "neha",
         staffName: "Neha Sharma",
-        startTime: "14:30",
-        endTime: "15:00",
-        timeDisplay: "2:30 - 3:00",
-        startHour: 14,
-        startMinutes: 30,
-        durationMinutes: 30,
+        startTime: "15:00",
+        endTime: "16:00",
+        timeDisplay: "3:00 - 4:00",
+        startHour: 15,
+        startMinutes: 0,
+        durationMinutes: 60,
         status: "Confirmed",
         isVideoCall: true,
         videoLink: "https://meet.google.com/may-ks-admission",
@@ -838,12 +838,12 @@ export default function WorkspaceAppointmentsView() {
         categoryDetail: "Course Enquiry",
         staffId: "rohan",
         staffName: "Rohan Verma",
-        startTime: "15:30",
-        endTime: "16:00",
-        timeDisplay: "3:30 - 4:00",
-        startHour: 15,
-        startMinutes: 30,
-        durationMinutes: 30,
+        startTime: "14:00",
+        endTime: "15:00",
+        timeDisplay: "2:00 - 3:00",
+        startHour: 14,
+        startMinutes: 0,
+        durationMinutes: 60,
         status: "Confirmed",
         isVideoCall: false,
         notes: "Auto-dispatched by MAYA Copilot. Enterprise AI certification track inquiry.",
@@ -1339,11 +1339,8 @@ export default function WorkspaceAppointmentsView() {
                               : "border-slate-200/60 hover:bg-slate-50/70"
                           }`}
                         >
-                          {/* Faint 30-minute midpoint guide line */}
-                          <div className="absolute top-[40px] left-0 right-0 border-b border-dashed border-white/[0.02] pointer-events-none" />
-
                           {/* Minimal hover trigger badge */}
-                          <div className="absolute inset-1 rounded-lg border border-transparent group-hover:border-dashed group-hover:border-white/10 group-hover:bg-white/[0.02] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
+                          <div className="absolute inset-1.5 rounded-xl border border-transparent group-hover:border-dashed group-hover:border-white/10 group-hover:bg-white/[0.02] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
                             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-neutral-300">
                               + Schedule
                             </span>
@@ -1354,15 +1351,15 @@ export default function WorkspaceAppointmentsView() {
                   ))}
 
 
-                  {/* Refined Event Cards (Responsive Single-Line / Multi-Line with Left Accent) */}
+                  {/* Disciplined Whole-Box Event Cards (Uniform Apple-Level Layout) */}
                   {filteredAppointments.map((apt) => {
                     const colIndex = displayedStaff.findIndex((s) => s.id === apt.staffId);
                     if (colIndex === -1) return null;
 
-                    const minutesFrom9AM = (apt.startHour - 9) * 60 + apt.startMinutes;
-                    const topPx = (minutesFrom9AM / 60) * HOUR_ROW_HEIGHT;
-                    const isShort = apt.durationMinutes <= 30;
-                    const heightPx = isShort ? 36 : Math.max((apt.durationMinutes / 60) * HOUR_ROW_HEIGHT - 6, 72);
+                    // Each slot belongs to startHour, occupying the full hour box
+                    const topPx = (apt.startHour - 9) * HOUR_ROW_HEIGHT + 3;
+                    const spanHours = Math.max(1, Math.round((apt.durationMinutes || 60) / 60));
+                    const heightPx = spanHours * HOUR_ROW_HEIGHT - 6;
 
                     const colWidthPct = 100 / displayedStaff.length;
                     const leftPct = colIndex * colWidthPct;
@@ -1372,7 +1369,7 @@ export default function WorkspaceAppointmentsView() {
                     return (
                       <motion.div
                         key={apt.id}
-                        initial={{ opacity: 0, scale: 0.97 }}
+                        initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         whileHover={{ y: -1, zIndex: 30 }}
                         onClick={(e) => {
@@ -1380,58 +1377,38 @@ export default function WorkspaceAppointmentsView() {
                           setSelectedAppointmentId(apt.id);
                         }}
                         style={{
-                          top: `${topPx + 2}px`,
+                          top: `${topPx}px`,
                           height: `${heightPx}px`,
                           left: `calc(56px + ${leftPct}% + 4px)`,
                           width: `calc(${colWidthPct}% - 8px)`,
                         }}
                         className={`absolute rounded-xl border border-l-[3.5px] overflow-hidden cursor-pointer transition-all duration-150 select-none z-20 shadow-md ${design.bg} ${design.accentBorder}`}
                       >
-                        {isShort ? (
-                          /* Compact 30-min view: Single clean line, zero vertical collision */
-                          <div className="flex items-center justify-between gap-1.5 px-2.5 h-full">
-                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                              <span className={`text-[10px] font-mono font-medium shrink-0 ${design.timeColor}`}>
-                                {apt.startTime}
-                              </span>
-                              <span className="text-[10px] opacity-35 shrink-0">•</span>
-                              <span className={`text-[11.5px] font-semibold truncate ${design.textPrimary}`}>
-                                {apt.clientName}
-                              </span>
-                            </div>
+                        {/* Whole Box Layout: Structured, Balanced, No Small Slivers */}
+                        <div className="h-full flex flex-col justify-between p-2.5">
+                          <div className="flex items-center justify-between gap-1.5">
+                            <span className={`text-[10.5px] font-mono font-medium tracking-tight ${design.timeColor}`}>
+                              {apt.timeDisplay}
+                            </span>
                             <div className="shrink-0 flex items-center gap-1">
                               {apt.isVideoCall ? (
-                                <Video className={`w-3 h-3 ${design.iconColor}`} />
+                                <Video className={`w-3.5 h-3.5 ${design.iconColor}`} />
+                              ) : apt.status === "Confirmed" ? (
+                                <Check className={`w-3.5 h-3.5 ${design.iconColor}`} />
                               ) : (
-                                <Check className={`w-3 h-3 ${design.iconColor}`} />
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                               )}
                             </div>
                           </div>
-                        ) : (
-                          /* Spacious 60-min view: Time on top, Client + Category on bottom */
-                          <div className="h-full flex flex-col justify-between p-2.5">
-                            <div className="flex items-center justify-between gap-1">
-                              <span className={`text-[10.5px] font-mono font-medium ${design.timeColor}`}>
-                                {apt.timeDisplay}
-                              </span>
-                              <div className="shrink-0">
-                                {apt.isVideoCall ? (
-                                  <Video className={`w-3.5 h-3.5 ${design.iconColor}`} />
-                                ) : (
-                                  <Check className={`w-3.5 h-3.5 ${design.iconColor}`} />
-                                )}
-                              </div>
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className={`text-[12px] font-semibold leading-tight truncate ${design.textPrimary}`}>
-                                {apt.clientName}
-                              </h4>
-                              <span className={`text-[10.5px] block truncate mt-0.5 ${design.textSecondary}`}>
-                                {apt.categoryDetail}
-                              </span>
-                            </div>
+                          <div className="min-w-0">
+                            <h4 className={`text-[12px] font-semibold leading-tight truncate ${design.textPrimary}`}>
+                              {apt.clientName}
+                            </h4>
+                            <span className={`text-[10.5px] block truncate mt-0.5 font-normal ${design.textSecondary}`}>
+                              {apt.categoryDetail}
+                            </span>
                           </div>
-                        )}
+                        </div>
                       </motion.div>
                     );
                   })}
@@ -1717,7 +1694,7 @@ export default function WorkspaceAppointmentsView() {
                           isDark ? "bg-white/[0.02] border-white/[0.06]" : "bg-white border-slate-200"
                         }`}>
                           <span className={`truncate font-medium ${isDark ? "text-neutral-300" : "text-slate-700"}`}>Neha S.</span>
-                          <span className={`font-mono shrink-0 ml-1 ${isDark ? "text-neutral-400" : "text-slate-500"}`}>2:30 PM</span>
+                          <span className={`font-mono shrink-0 ml-1 ${isDark ? "text-neutral-400" : "text-slate-500"}`}>3:00 PM</span>
                         </div>
                       )}
                       {slot2Open && (
@@ -1725,7 +1702,7 @@ export default function WorkspaceAppointmentsView() {
                           isDark ? "bg-white/[0.02] border-white/[0.06]" : "bg-white border-slate-200"
                         }`}>
                           <span className={`truncate font-medium ${isDark ? "text-neutral-300" : "text-slate-700"}`}>Rohan V.</span>
-                          <span className={`font-mono shrink-0 ml-1 ${isDark ? "text-neutral-400" : "text-slate-500"}`}>3:30 PM</span>
+                          <span className={`font-mono shrink-0 ml-1 ${isDark ? "text-neutral-400" : "text-slate-500"}`}>2:00 PM</span>
                         </div>
                       )}
                     </div>
@@ -1984,7 +1961,7 @@ export default function WorkspaceAppointmentsView() {
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-neutral-400">
                         <span>Admission Discussion</span>
-                        <span className={`font-mono ${isDark ? "text-neutral-300" : "text-slate-600"}`}>Neha S. · 2:30 PM</span>
+                        <span className={`font-mono ${isDark ? "text-neutral-300" : "text-slate-600"}`}>Neha S. · 3:00 PM</span>
                       </div>
                     </div>
                   )}
@@ -1995,13 +1972,13 @@ export default function WorkspaceAppointmentsView() {
                     }`}>
                       <div className="flex items-center justify-between">
                         <span className={`text-[11.5px] font-medium ${isDark ? "text-white" : "text-slate-900"}`}>
-                          Rohan Verma (Walk-in)
+                          Dev Sharma (Walk-in)
                         </span>
                         <span className="text-[10px] font-mono text-emerald-400 font-medium">94% Match</span>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-neutral-400">
                         <span>Course Enquiry</span>
-                        <span className={`font-mono ${isDark ? "text-neutral-300" : "text-slate-600"}`}>Rohan V. · 3:30 PM</span>
+                        <span className={`font-mono ${isDark ? "text-neutral-300" : "text-slate-600"}`}>Rohan V. · 2:00 PM</span>
                       </div>
                     </div>
                   )}
