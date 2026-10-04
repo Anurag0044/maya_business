@@ -33,6 +33,7 @@ import {
   Send,
   Zap,
   TrendingUp,
+  LayoutGrid,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -541,6 +542,9 @@ export default function WorkspaceAppointmentsView() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Right Rail Executive Managed Tab State
+  const [railTab, setRailTab] = useState<"ALL" | "UPCOMING" | "COPILOT" | "CONSULTANTS">("ALL");
+
   // Inspector & Modal State
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -604,6 +608,26 @@ export default function WorkspaceAppointmentsView() {
   // Live status counts for popover
   const confirmedCount = useMemo(() => appointments.filter((a) => a.status === "Confirmed").length, [appointments]);
   const pendingCount = useMemo(() => appointments.filter((a) => a.status === "Pending").length, [appointments]);
+
+  // Open slots check for MAYA Copilot
+  const slot1Open = !appointments.some((a) => a.startTime === "14:30" && a.staffId === "neha");
+  const slot2Open = !appointments.some((a) => a.startTime === "15:30" && a.staffId === "rohan");
+  const openSlotsCount = (slot1Open ? 1 : 0) + (slot2Open ? 1 : 0);
+
+  // Consultant workload capacity calculation
+  const staffWorkload = useMemo(() => {
+    return STAFF_MEMBERS.map((staff) => {
+      const staffApts = appointments.filter((a) => a.staffId === staff.id);
+      const capacity = 5;
+      const pct = Math.min(Math.round((staffApts.length / capacity) * 100), 100);
+      return {
+        staff,
+        count: staffApts.length,
+        capacity,
+        pct,
+      };
+    });
+  }, [appointments]);
 
   // Luxury Obsidian Event Card Theming (Structured, Consistent, Unified Base)
   const getEventCardDesign = (category: AppointmentCategory, categoryDetail: string) => {
@@ -1497,259 +1521,639 @@ export default function WorkspaceAppointmentsView() {
         </div>
 
         {/* ================================================================== */}
-        {/* 4B. RIGHT RAIL: DISCIPLINED EXECUTIVE AGENDA & AI COPILOT */}
         {/* ================================================================== */}
-        <div className="w-full lg:w-[316px] shrink-0 h-full flex flex-col gap-3 overflow-y-auto pr-0.5 select-none">
-          {/* 1. UPCOMING QUEUE (Linear-tier Micro Cards) */}
+        {/* 4B. RIGHT RAIL: APPLE-LEVEL MANAGED AGENDA & AI COPILOT */}
+        {/* ================================================================== */}
+        <div className="w-full lg:w-[320px] shrink-0 h-full flex flex-col gap-2.5 overflow-hidden select-none">
+          {/* Apple-Grade Segmented Control Switcher */}
           <div
-            className={`p-3.5 rounded-2xl border transition-all flex flex-col gap-2.5 overflow-hidden shrink-0 ${
-              isDark
-                ? "bg-[#090d16] border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.5)]"
-                : "bg-white border-slate-200/90 shadow-2xs"
+            className={`p-1 rounded-xl border flex items-center justify-between shrink-0 ${
+              isDark ? "bg-[#090d16] border-white/[0.08]" : "bg-slate-100/80 border-slate-200"
             }`}
           >
-            <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
-              <div className="flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5 text-neutral-400" />
-                <span className={`text-[12px] font-semibold ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
-                  Upcoming Next
-                </span>
-                <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full border ${
-                  isDark ? "bg-white/[0.05] border-white/[0.08] text-neutral-400" : "bg-slate-100 border-slate-200 text-slate-600"
-                }`}>
-                  {nextUpConsultations.length}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setViewMode("Agenda")}
-                className="text-[11px] text-sky-400 hover:text-sky-300 font-medium cursor-pointer flex items-center gap-1 group"
-              >
-                <span>Agenda</span>
-                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
+            {[
+              { id: "ALL", label: "Overview", icon: LayoutGrid },
+              { id: "UPCOMING", label: "Next Up", icon: Clock, badge: nextUpConsultations.length },
+              { id: "COPILOT", label: "Copilot", icon: Sparkles, badge: openSlotsCount > 0 ? openSlotsCount : undefined },
+              { id: "CONSULTANTS", label: "Mix", icon: Users },
+            ].map((tab) => {
+              const isActive = railTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setRailTab(tab.id as any)}
+                  className={`relative flex-1 py-1 px-1.5 rounded-lg text-[10.5px] font-medium flex items-center justify-center gap-1 transition-all cursor-pointer outline-none ${
+                    isActive
+                      ? isDark
+                        ? "text-white font-semibold"
+                        : "text-slate-900 font-semibold"
+                      : isDark
+                      ? "text-neutral-400 hover:text-white"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-right-rail-tab"
+                      className={`absolute inset-0 rounded-lg ${
+                        isDark
+                          ? "bg-white/[0.12] border border-white/20 shadow-xs"
+                          : "bg-white border border-slate-300 shadow-2xs"
+                      }`}
+                      transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                    />
+                  )}
+                  <tab.icon className="w-3 h-3 relative z-10 shrink-0" />
+                  <span className="relative z-10 truncate">{tab.label}</span>
+                  {tab.badge !== undefined && (
+                    <span
+                      className={`relative z-10 text-[9px] font-mono px-1 py-0.2 rounded-full leading-none shrink-0 ${
+                        isActive
+                          ? isDark
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-200 text-slate-800"
+                          : isDark
+                          ? "bg-white/[0.06] text-neutral-400"
+                          : "bg-slate-200/70 text-slate-600"
+                      }`}
+                    >
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-            <div className="flex flex-col gap-2">
-              {nextUpConsultations.map((item) => {
-                const staffObj = STAFF_MEMBERS.find((s) => s.id === item.staffId);
-                const isSelected = selectedAppointmentId === item.id;
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => setSelectedAppointmentId(item.id)}
-                    className={`p-2.5 rounded-xl border transition-all cursor-pointer group flex flex-col gap-1.5 ${
-                      isSelected
-                        ? isDark
-                          ? "bg-white/[0.06] border-white/20 shadow-xs"
-                          : "bg-slate-100 border-slate-300 shadow-xs"
-                        : isDark
-                        ? "bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.05] hover:border-white/15"
-                        : "bg-slate-50 border-slate-200/60 hover:bg-slate-100/70"
-                    }`}
-                  >
-                    {/* Header Row: Time badge + Status Pill */}
-                    <div className="flex items-center justify-between">
-                      <span className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border ${
-                        isDark ? "bg-white/[0.04] border-white/[0.06] text-neutral-300" : "bg-white border-slate-200 text-slate-700"
-                      }`}>
-                        {item.startTime} - {item.endTime}
+          {/* Scrollable / Scaled Tab Content Enclosure */}
+          <div className="flex-1 min-h-0 overflow-y-auto pr-0.5 flex flex-col gap-2.5">
+            {/* ------------------------------------------------------------- */}
+            {/* TAB 1: OVERVIEW (All 3 in Apple-level Minimalist Harmony)     */}
+            {/* ------------------------------------------------------------- */}
+            {railTab === "ALL" && (
+              <div className="flex flex-col gap-2.5">
+                {/* 1. UPCOMING NEXT (Clean Apple List Row Style) */}
+                <div
+                  className={`p-3 rounded-2xl border transition-all flex flex-col gap-2 shrink-0 ${
+                    isDark
+                      ? "bg-[#090d16] border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_4px_16px_rgba(0,0,0,0.4)]"
+                      : "bg-white border-slate-200/90 shadow-2xs"
+                  }`}
+                >
+                  <div className="flex items-center justify-between pb-1.5 border-b border-inherit">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-neutral-400" />
+                      <span className={`text-[12px] font-semibold tracking-tight ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
+                        Upcoming Next
                       </span>
-                      <div className="flex items-center gap-1.5">
-                        {item.isVideoCall && (
-                          <Video className="w-3 h-3 text-sky-400 opacity-80" />
-                        )}
-                        {renderStatusPill(item.status)}
-                      </div>
+                      <span className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded-full border ${
+                        isDark ? "bg-white/[0.04] border-white/[0.08] text-neutral-400" : "bg-slate-100 border-slate-200 text-slate-600"
+                      }`}>
+                        {nextUpConsultations.length}
+                      </span>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setRailTab("UPCOMING")}
+                      className="text-[10.5px] text-sky-400 hover:text-sky-300 font-medium cursor-pointer flex items-center gap-0.5 group"
+                    >
+                      <span>Agenda</span>
+                      <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  </div>
 
-                    {/* Body Row: Client name & Staff attribution */}
-                    <div className="flex items-center justify-between gap-2 min-w-0">
-                      <div className="min-w-0 flex-1">
-                        <h4 className={`text-[12px] font-medium transition-colors truncate ${
-                          isDark ? "text-white group-hover:text-sky-300" : "text-slate-900 group-hover:text-sky-700"
-                        }`}>
-                          {item.clientName}
-                        </h4>
-                        <span className={`text-[10px] block truncate ${isDark ? "text-neutral-400" : "text-slate-500"}`}>
-                          {item.categoryDetail}
-                        </span>
+                  <div className={`divide-y ${isDark ? "divide-white/[0.04]" : "divide-slate-100"}`}>
+                    {nextUpConsultations.slice(0, 3).map((item) => {
+                      const staffObj = STAFF_MEMBERS.find((s) => s.id === item.staffId);
+                      const isSelected = selectedAppointmentId === item.id;
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => setSelectedAppointmentId(item.id)}
+                          className={`py-2 px-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-2.5 group ${
+                            isSelected
+                              ? isDark ? "bg-white/[0.06]" : "bg-slate-100"
+                              : isDark ? "hover:bg-white/[0.03]" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          {/* Apple-style Vertical Status Indicator */}
+                          <span
+                            className={`w-1 h-7 rounded-full shrink-0 ${
+                              item.status === "Confirmed"
+                                ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
+                                : "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]"
+                            }`}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className={`text-[12px] font-medium truncate ${
+                                isDark ? "text-white group-hover:text-sky-300" : "text-slate-900 group-hover:text-sky-700"
+                              }`}>
+                                {item.clientName}
+                              </span>
+                              <span className={`text-[10px] font-mono shrink-0 ${isDark ? "text-neutral-400" : "text-slate-500"}`}>
+                                {item.startTime}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] mt-0.5">
+                              <span className={`truncate ${isDark ? "text-neutral-400" : "text-slate-500"}`}>
+                                {item.categoryDetail}
+                              </span>
+                              {staffObj && (
+                                <span className={`shrink-0 ml-1 font-medium ${isDark ? "text-neutral-400" : "text-slate-600"}`}>
+                                  {staffObj.shortName}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. MAYA COPILOT (Apple Intelligence Minimalist Widget) */}
+                <div
+                  className={`p-3 rounded-2xl border transition-all flex flex-col gap-2 shrink-0 ${
+                    isDark
+                      ? "bg-gradient-to-b from-[#0c1424] via-[#090e1a] to-[#070b14] border-sky-500/20 shadow-[inset_0_1px_0_0_rgba(56,189,248,0.12),0_4px_16px_rgba(0,0,0,0.4)]"
+                      : "bg-gradient-to-b from-sky-50/70 via-white to-sky-50/30 border-sky-200 shadow-2xs"
+                  }`}
+                >
+                  <div className="flex items-center justify-between pb-1.5 border-b border-sky-500/15">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-md bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
+                        <Sparkles className="w-3 h-3" />
                       </div>
-                      {staffObj && (
-                        <div className={`flex items-center gap-1.5 shrink-0 pl-2 border-l ${isDark ? "border-white/[0.06]" : "border-slate-200"}`}>
-                          <StaffAvatar staff={staffObj} size="xs" showStatusDot={false} />
-                          <span className={`text-[10px] font-medium ${isDark ? "text-neutral-400" : "text-slate-600"}`}>
-                            {staffObj.shortName}
-                          </span>
+                      <span className={`text-[12px] font-semibold tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+                        MAYA Copilot
+                      </span>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-medium border ${
+                      openSlotsCount > 0
+                        ? "bg-emerald-500/10 text-emerald-300 border-emerald-400/25"
+                        : "bg-white/[0.04] text-neutral-400 border-white/[0.08]"
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${openSlotsCount > 0 ? "bg-emerald-400 animate-pulse" : "bg-neutral-500"}`} />
+                      <span>{openSlotsCount > 0 ? `${openSlotsCount} Open Slots` : "Optimized"}</span>
+                    </span>
+                  </div>
+
+                  {/* Inline Compact Slot Chips */}
+                  {openSlotsCount > 0 ? (
+                    <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                      {slot1Open && (
+                        <div className={`p-1.5 px-2 rounded-lg border flex items-center justify-between ${
+                          isDark ? "bg-white/[0.02] border-white/[0.06]" : "bg-white border-slate-200"
+                        }`}>
+                          <span className={`truncate font-medium ${isDark ? "text-neutral-300" : "text-slate-700"}`}>Neha S.</span>
+                          <span className="font-mono text-sky-400 shrink-0 ml-1">2:30 PM</span>
+                        </div>
+                      )}
+                      {slot2Open && (
+                        <div className={`p-1.5 px-2 rounded-lg border flex items-center justify-between ${
+                          isDark ? "bg-white/[0.02] border-white/[0.06]" : "bg-white border-slate-200"
+                        }`}>
+                          <span className={`truncate font-medium ${isDark ? "text-neutral-300" : "text-slate-700"}`}>Rohan V.</span>
+                          <span className="font-mono text-sky-400 shrink-0 ml-1">3:30 PM</span>
                         </div>
                       )}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                  ) : (
+                    <div className={`py-1.5 px-2 rounded-lg text-[10px] text-center ${
+                      isDark ? "bg-white/[0.02] text-neutral-400" : "bg-slate-50 text-slate-500"
+                    }`}>
+                      All afternoon consultation slots optimized.
+                    </div>
+                  )}
 
-          {/* 2. MAYA AI SCHEDULING COPILOT (Executive AI Dispatcher) */}
-          <div
-            className={`p-3.5 rounded-2xl border transition-all flex flex-col gap-3 overflow-hidden shrink-0 ${
-              isDark
-                ? "bg-gradient-to-b from-[#0c1424] via-[#090e1a] to-[#070b14] border-sky-500/20 shadow-[inset_0_1px_0_0_rgba(56,189,248,0.12),0_8px_24px_rgba(0,0,0,0.55)]"
-                : "bg-gradient-to-b from-sky-50/70 via-white to-sky-50/30 border-sky-200 shadow-2xs"
-            }`}
-          >
-            <div className="flex items-center justify-between pb-2 border-b border-sky-500/15">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
-                  <Sparkles className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <span className={`text-[12px] font-semibold tracking-tight block leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-                    MAYA Copilot
-                  </span>
-                  <span className="text-[9.5px] text-sky-400 font-mono block">
-                    Autonomous Dispatcher
-                  </span>
-                </div>
-              </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-400/25">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                2 Open Slots
-              </span>
-            </div>
-
-            {/* Structured Opportunities Preview */}
-            <div className="flex flex-col gap-1.5">
-              <div className={`p-2 rounded-xl border flex items-center justify-between ${
-                isDark ? "bg-white/[0.02] border-white/[0.05]" : "bg-white border-slate-200"
-              }`}>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-purple-400" />
-                  <span className={`text-[11px] font-medium ${isDark ? "text-white" : "text-slate-800"}`}>
-                    Neha Sharma
-                  </span>
-                </div>
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
-                  isDark ? "bg-white/5 text-neutral-300" : "bg-slate-100 text-slate-700"
-                }`}>
-                  2:30 PM (30m)
-                </span>
-              </div>
-
-              <div className={`p-2 rounded-xl border flex items-center justify-between ${
-                isDark ? "bg-white/[0.02] border-white/[0.05]" : "bg-white border-slate-200"
-              }`}>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span className={`text-[11px] font-medium ${isDark ? "text-white" : "text-slate-800"}`}>
-                    Rohan Verma
-                  </span>
-                </div>
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
-                  isDark ? "bg-white/5 text-neutral-300" : "bg-slate-100 text-slate-700"
-                }`}>
-                  3:30 PM (30m)
-                </span>
-              </div>
-            </div>
-
-            <p className={`text-[10.5px] leading-normal ${isDark ? "text-neutral-400" : "text-slate-600"}`}>
-              3 priority qualified prospects in waitlist ready for automatic consultation assignment.
-            </p>
-
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.015 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleAutoFillSlots}
-              className={`w-full py-2 px-3 rounded-xl text-[11.5px] font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm font-semibold ${
-                isDark
-                  ? "bg-gradient-to-r from-sky-500/20 via-sky-400/15 to-indigo-500/20 hover:from-sky-500/30 hover:to-indigo-500/30 border border-sky-400/30 text-sky-200"
-                  : "bg-sky-500 text-white hover:bg-sky-600 border border-sky-600"
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5 text-sky-400" />
-              <span>Auto-Dispatch 2 Open Slots</span>
-            </motion.button>
-          </div>
-
-          {/* 3. CONSULTATION MIX (Ratio Spectrum & Interactive Filter) */}
-          <div
-            className={`p-3.5 rounded-2xl border transition-all flex flex-col gap-3 overflow-hidden shrink-0 ${
-              isDark
-                ? "bg-[#090d16] border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.5)]"
-                : "bg-white border-slate-200/90 shadow-2xs"
-            }`}
-          >
-            <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
-              <div className="flex items-center gap-2">
-                <FileText className="w-3.5 h-3.5 text-neutral-400" />
-                <span className={`text-[12px] font-semibold ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
-                  Consultation Mix
-                </span>
-              </div>
-              {selectedCategoryFilter !== "ALL" ? (
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategoryFilter("ALL")}
-                  className="text-[10px] text-sky-400 hover:text-white font-mono cursor-pointer"
-                >
-                  Clear filter ✕
-                </button>
-              ) : (
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
-                  isDark ? "bg-white/[0.05] border-white/[0.08] text-neutral-400" : "bg-slate-100 border-slate-200 text-slate-600"
-                }`}>
-                  {filteredAppointments.length} Today
-                </span>
-              )}
-            </div>
-
-            {/* Segmented Spectrum Ratio Bar */}
-            <div className="w-full h-2 rounded-full bg-white/[0.05] p-0.5 flex gap-1 overflow-hidden">
-              <div className="h-full rounded-full bg-[#818cf8]" style={{ width: "42%" }} title="Career Counselling (42%)" />
-              <div className="h-full rounded-full bg-[#38bdf8]" style={{ width: "24%" }} title="Admission Discussion (24%)" />
-              <div className="h-full rounded-full bg-[#fbbf24]" style={{ width: "16%" }} title="Follow-up Brief (16%)" />
-              <div className="h-full rounded-full bg-[#34d399]" style={{ width: "12%" }} title="Course Enquiry (12%)" />
-              <div className="h-full rounded-full bg-slate-400" style={{ width: "6%" }} title="Other (6%)" />
-            </div>
-
-            {/* Interactive Category Filter Rows */}
-            <div className="flex flex-col gap-1">
-              {[
-                { label: "Career Counselling", count: "10", pct: "42%", dot: "bg-[#818cf8]", cat: "Counselling" },
-                { label: "Admission Discussion", count: "6", pct: "24%", dot: "bg-[#38bdf8]", cat: "Admission" },
-                { label: "Follow-up Brief", count: "4", pct: "16%", dot: "bg-[#fbbf24]", cat: "Follow-up" },
-                { label: "Course Enquiry", count: "3", pct: "12%", dot: "bg-[#34d399]", cat: "Course Enquiry" },
-              ].map((cat) => {
-                const isActive = selectedCategoryFilter === cat.cat;
-                return (
-                  <div
-                    key={cat.label}
-                    onClick={() => setSelectedCategoryFilter((prev) => (prev === cat.cat ? "ALL" : cat.cat))}
-                    className={`px-2.5 py-1.5 rounded-xl flex items-center justify-between text-[11px] transition-all cursor-pointer ${
-                      isActive
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleAutoFillSlots}
+                    disabled={openSlotsCount === 0}
+                    className={`w-full py-1.5 px-3 rounded-xl text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs ${
+                      openSlotsCount > 0
                         ? isDark
-                          ? "bg-white/10 text-white font-medium border border-white/15 shadow-xs"
-                          : "bg-slate-100 text-slate-900 font-medium border border-slate-300 shadow-xs"
+                          ? "bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 text-sky-200 font-semibold"
+                          : "bg-sky-500 text-white hover:bg-sky-600 border border-sky-600 font-semibold"
                         : isDark
-                        ? "hover:bg-white/[0.03] text-neutral-300"
-                        : "hover:bg-slate-50 text-slate-700"
+                        ? "bg-white/[0.04] text-neutral-500 border border-white/[0.06] cursor-not-allowed"
+                        : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
                     }`}
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={`w-2 h-2 rounded-full ${cat.dot} shrink-0`} />
-                      <span className="truncate">{cat.label}</span>
+                    <Zap className="w-3 h-3 text-sky-400" />
+                    <span>{openSlotsCount > 0 ? `Auto-Dispatch ${openSlotsCount} Slots` : "Slots Fully Allocated"}</span>
+                  </motion.button>
+                </div>
+
+                {/* 3. CONSULTANT MIX (Refined Disciplined Analytics) */}
+                <div
+                  className={`p-3 rounded-2xl border transition-all flex flex-col gap-2 shrink-0 ${
+                    isDark
+                      ? "bg-[#090d16] border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_4px_16px_rgba(0,0,0,0.4)]"
+                      : "bg-white border-slate-200/90 shadow-2xs"
+                  }`}
+                >
+                  <div className="flex items-center justify-between pb-1.5 border-b border-inherit">
+                    <div className="flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-neutral-400" />
+                      <span className={`text-[12px] font-semibold tracking-tight ${isDark ? "text-white" : "text-[#0B0F17]"}`}>
+                        Consultant Mix
+                      </span>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0 font-mono text-[10px] text-neutral-400">
-                      <span>{cat.count}</span>
-                      <span className="opacity-40">•</span>
-                      <span className={isDark ? "text-white/80" : "text-slate-800"}>{cat.pct}</span>
+                    {selectedCategoryFilter !== "ALL" ? (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategoryFilter("ALL")}
+                        className="text-[9.5px] text-sky-400 hover:text-white font-mono cursor-pointer"
+                      >
+                        Reset filter ✕
+                      </button>
+                    ) : (
+                      <span className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded-full border ${
+                        isDark ? "bg-white/[0.04] border-white/[0.08] text-neutral-400" : "bg-slate-100 border-slate-200 text-slate-600"
+                      }`}>
+                        {filteredAppointments.length} Today
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Unified Disciplined Spectrum Bar */}
+                  <div className="w-full h-1.5 rounded-full bg-white/[0.05] flex gap-0.5 overflow-hidden">
+                    <div className="h-full rounded-full bg-[#818cf8]" style={{ width: "42%" }} title="Career Counselling (42%)" />
+                    <div className="h-full rounded-full bg-[#38bdf8]" style={{ width: "24%" }} title="Admission Discussion (24%)" />
+                    <div className="h-full rounded-full bg-[#fbbf24]" style={{ width: "16%" }} title="Follow-up Brief (16%)" />
+                    <div className="h-full rounded-full bg-[#34d399]" style={{ width: "12%" }} title="Course Enquiry (12%)" />
+                    <div className="h-full rounded-full bg-slate-500" style={{ width: "6%" }} title="Other (6%)" />
+                  </div>
+
+                  {/* Compact 2x2 Clean Grid */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { label: "Counselling", count: "10", pct: "42%", dot: "bg-[#818cf8]", cat: "Counselling" },
+                      { label: "Admission", count: "6", pct: "24%", dot: "bg-[#38bdf8]", cat: "Admission" },
+                      { label: "Follow-up", count: "4", pct: "16%", dot: "bg-[#fbbf24]", cat: "Follow-up" },
+                      { label: "Course Enquiry", count: "3", pct: "12%", dot: "bg-[#34d399]", cat: "Course Enquiry" },
+                    ].map((cat) => {
+                      const isActive = selectedCategoryFilter === cat.cat;
+                      return (
+                        <button
+                          key={cat.label}
+                          type="button"
+                          onClick={() => setSelectedCategoryFilter((prev) => (prev === cat.cat ? "ALL" : cat.cat))}
+                          className={`p-1.5 px-2 rounded-lg flex items-center justify-between text-[10.5px] transition-all cursor-pointer border text-left ${
+                            isActive
+                              ? isDark
+                                ? "bg-white/10 text-white font-medium border-white/20 shadow-2xs"
+                                : "bg-slate-100 text-slate-900 font-medium border-slate-300 shadow-2xs"
+                              : isDark
+                              ? "bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.05] text-neutral-300"
+                              : "bg-slate-50 border-slate-200/60 hover:bg-slate-100 text-slate-700"
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className={`w-1.5 h-1.5 rounded-full ${cat.dot} shrink-0`} />
+                            <span className="truncate">{cat.label}</span>
+                          </div>
+                          <span className="font-mono text-[9.5px] text-neutral-400 shrink-0 ml-1">{cat.pct}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ------------------------------------------------------------- */}
+            {/* TAB 2: NEXT UP (Full-Featured Apple Agenda Queue)             */}
+            {/* ------------------------------------------------------------- */}
+            {railTab === "UPCOMING" && (
+              <div
+                className={`p-3.5 rounded-2xl border transition-all flex flex-col gap-3 ${
+                  isDark
+                    ? "bg-[#090d16] border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.5)]"
+                    : "bg-white border-slate-200 shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-inherit">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-sky-400" />
+                    <span className={`text-[13px] font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
+                      All Today Agenda
+                    </span>
+                  </div>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+                    isDark ? "bg-white/5 border-white/10 text-neutral-300" : "bg-slate-100 border-slate-200 text-slate-700"
+                  }`}>
+                    {filteredAppointments.length} Total
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {filteredAppointments.map((item) => {
+                    const staffObj = STAFF_MEMBERS.find((s) => s.id === item.staffId);
+                    const isSelected = selectedAppointmentId === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => setSelectedAppointmentId(item.id)}
+                        className={`p-2.5 rounded-xl border transition-all cursor-pointer flex flex-col gap-2 group ${
+                          isSelected
+                            ? isDark
+                              ? "bg-white/[0.08] border-white/25 shadow-sm"
+                              : "bg-slate-100 border-slate-300 shadow-sm"
+                            : isDark
+                            ? "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05]"
+                            : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={`text-[10.5px] font-mono font-medium px-2 py-0.5 rounded border ${
+                            isDark ? "bg-white/[0.04] border-white/[0.08] text-neutral-300" : "bg-white border-slate-200 text-slate-800"
+                          }`}>
+                            {item.startTime} - {item.endTime}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            {item.isVideoCall && <Video className="w-3 h-3 text-sky-400" />}
+                            {renderStatusPill(item.status)}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 min-w-0">
+                          <div className="min-w-0 flex-1">
+                            <h4 className={`text-[12.5px] font-medium truncate ${isDark ? "text-white" : "text-slate-900"}`}>
+                              {item.clientName}
+                            </h4>
+                            <span className={`text-[10.5px] block truncate ${isDark ? "text-neutral-400" : "text-slate-500"}`}>
+                              {item.categoryDetail}
+                            </span>
+                          </div>
+                          {staffObj && (
+                            <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                              <StaffAvatar staff={staffObj} size="xs" showStatusDot={false} />
+                              <span className={`text-[10.5px] font-medium ${isDark ? "text-neutral-300" : "text-slate-700"}`}>
+                                {staffObj.shortName}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ------------------------------------------------------------- */}
+            {/* TAB 3: MAYA COPILOT (Autonomous Dispatch Studio)              */}
+            {/* ------------------------------------------------------------- */}
+            {railTab === "COPILOT" && (
+              <div
+                className={`p-3.5 rounded-2xl border transition-all flex flex-col gap-3 ${
+                  isDark
+                    ? "bg-gradient-to-b from-[#0c1424] via-[#090e1a] to-[#070b14] border-sky-500/25 shadow-[inset_0_1px_0_0_rgba(56,189,248,0.15),0_8px_24px_rgba(0,0,0,0.6)]"
+                    : "bg-gradient-to-b from-sky-50/80 via-white to-sky-50/40 border-sky-200 shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-sky-500/20">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h4 className={`text-[12.5px] font-semibold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+                        MAYA Dispatch Copilot
+                      </h4>
+                      <span className="text-[10px] text-sky-400 font-mono">
+                        Autonomous Allocation Engine
+                      </span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-medium border ${
+                    openSlotsCount > 0
+                      ? "bg-emerald-500/10 text-emerald-300 border-emerald-400/25"
+                      : "bg-white/[0.04] text-neutral-400 border-white/[0.08]"
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${openSlotsCount > 0 ? "bg-emerald-400 animate-pulse" : "bg-neutral-500"}`} />
+                    <span>{openSlotsCount} Slots</span>
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">
+                    Live Recommendations
+                  </span>
+
+                  {slot1Open && (
+                    <div className={`p-2.5 rounded-xl border flex flex-col gap-1.5 ${
+                      isDark ? "bg-white/[0.02] border-white/[0.06]" : "bg-white border-slate-200"
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[11.5px] font-medium ${isDark ? "text-white" : "text-slate-900"}`}>
+                          Kavita Sen (Lead #804)
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-400 font-medium">98% Match</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-neutral-400">
+                        <span>Admission Discussion</span>
+                        <span className="font-mono text-sky-400">Neha S. · 2:30 PM</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {slot2Open && (
+                    <div className={`p-2.5 rounded-xl border flex flex-col gap-1.5 ${
+                      isDark ? "bg-white/[0.02] border-white/[0.06]" : "bg-white border-slate-200"
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[11.5px] font-medium ${isDark ? "text-white" : "text-slate-900"}`}>
+                          Rohan Verma (Walk-in)
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-400 font-medium">94% Match</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-neutral-400">
+                        <span>Course Enquiry</span>
+                        <span className="font-mono text-sky-400">Rohan V. · 3:30 PM</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {!slot1Open && !slot2Open && (
+                    <div className={`py-6 text-center rounded-xl border ${
+                      isDark ? "bg-white/[0.02] border-white/[0.06] text-neutral-400" : "bg-slate-50 border-slate-200 text-slate-600"
+                    }`}>
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1.5" />
+                      <p className="text-[12px] font-medium text-white">Full Capacity Reached</p>
+                      <p className="text-[10.5px] text-neutral-400 mt-0.5">All afternoon slots are successfully matched.</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className={`p-2.5 rounded-xl border text-[11px] flex flex-col gap-1.5 ${
+                  isDark ? "bg-white/[0.02] border-white/[0.05]" : "bg-slate-50 border-slate-200"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-neutral-400">Staff Load Balancing</span>
+                    <span className="text-emerald-400 font-medium">Optimal</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-neutral-400">Schedule Conflicts</span>
+                    <span className="text-sky-400 font-medium">0 Detected</span>
+                  </div>
+                </div>
+
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.015 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleAutoFillSlots}
+                  disabled={openSlotsCount === 0}
+                  className={`w-full py-2.5 px-3 rounded-xl text-[12px] font-medium flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm ${
+                    openSlotsCount > 0
+                      ? isDark
+                        ? "bg-gradient-to-r from-sky-500/25 via-sky-400/20 to-indigo-500/25 hover:from-sky-500/35 hover:to-indigo-500/35 border border-sky-400/35 text-sky-200 font-semibold"
+                        : "bg-sky-500 text-white hover:bg-sky-600 border border-sky-600 font-semibold"
+                      : isDark
+                      ? "bg-white/[0.04] text-neutral-500 border border-white/[0.06] cursor-not-allowed"
+                      : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
+                  }`}
+                >
+                  <Zap className="w-3.5 h-3.5 text-sky-400" />
+                  <span>{openSlotsCount > 0 ? `Auto-Dispatch ${openSlotsCount} Priority Slots` : "All Slots Optimized"}</span>
+                </motion.button>
+              </div>
+            )}
+
+            {/* ------------------------------------------------------------- */}
+            {/* TAB 4: CONSULTANTS (Workload Capacity & Category Mix)         */}
+            {/* ------------------------------------------------------------- */}
+            {railTab === "CONSULTANTS" && (
+              <div
+                className={`p-3.5 rounded-2xl border transition-all flex flex-col gap-3 ${
+                  isDark
+                    ? "bg-[#090d16] border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.5)]"
+                    : "bg-white border-slate-200 shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-inherit">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-3.5 h-3.5 text-sky-400" />
+                    <span className={`text-[13px] font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
+                      Consultant Capacity
+                    </span>
+                  </div>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+                    isDark ? "bg-white/5 border-white/10 text-neutral-300" : "bg-slate-100 border-slate-200 text-slate-700"
+                  }`}>
+                    4 Active
+                  </span>
+                </div>
+
+                {/* Staff Capacity Meters */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">
+                    Daily Slot Utilization
+                  </span>
+
+                  {staffWorkload.map(({ staff, count, capacity, pct }) => {
+                    const isSelected = selectedStaffFilter === staff.id;
+                    return (
+                      <div
+                        key={staff.id}
+                        onClick={() => setSelectedStaffFilter((prev) => (prev === staff.id ? "ALL" : staff.id))}
+                        className={`p-2.5 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
+                          isSelected
+                            ? isDark
+                              ? "bg-white/[0.08] border-white/25 shadow-2xs"
+                              : "bg-slate-100 border-slate-300 shadow-2xs"
+                            : isDark
+                            ? "bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.05]"
+                            : "bg-slate-50 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <StaffAvatar staff={staff} size="xs" showStatusDot />
+                            <span className={`text-[11.5px] font-medium ${isDark ? "text-white" : "text-slate-900"}`}>
+                              {staff.name}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-mono text-neutral-400">
+                            {count} / {capacity} slots ({pct}%)
+                          </span>
+                        </div>
+                        {/* Progress Bar */}
+                        <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              pct >= 80 ? "bg-emerald-400" : pct >= 50 ? "bg-sky-400" : "bg-amber-400"
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Category Mix Breakdown */}
+                <div className="pt-2 border-t border-inherit flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">
+                      Category Breakdown
+                    </span>
+                    {selectedCategoryFilter !== "ALL" && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategoryFilter("ALL")}
+                        className="text-[9.5px] text-sky-400 hover:text-white font-mono cursor-pointer"
+                      >
+                        Clear filter ✕
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    {[
+                      { label: "Career Counselling", count: "10", pct: "42%", dot: "bg-[#818cf8]", cat: "Counselling" },
+                      { label: "Admission Discussion", count: "6", pct: "24%", dot: "bg-[#38bdf8]", cat: "Admission" },
+                      { label: "Follow-up Brief", count: "4", pct: "16%", dot: "bg-[#fbbf24]", cat: "Follow-up" },
+                      { label: "Course Enquiry", count: "3", pct: "12%", dot: "bg-[#34d399]", cat: "Course Enquiry" },
+                    ].map((cat) => {
+                      const isActive = selectedCategoryFilter === cat.cat;
+                      return (
+                        <div
+                          key={cat.label}
+                          onClick={() => setSelectedCategoryFilter((prev) => (prev === cat.cat ? "ALL" : cat.cat))}
+                          className={`px-2.5 py-1.5 rounded-xl flex items-center justify-between text-[11px] transition-all cursor-pointer ${
+                            isActive
+                              ? isDark
+                                ? "bg-white/10 text-white font-medium border border-white/15"
+                                : "bg-slate-100 text-slate-900 font-medium border border-slate-300"
+                              : isDark
+                              ? "hover:bg-white/[0.03] text-neutral-300"
+                              : "hover:bg-slate-50 text-slate-700"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${cat.dot} shrink-0`} />
+                            <span>{cat.label}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 font-mono text-[10px] text-neutral-400">
+                            <span>{cat.count}</span>
+                            <span className="opacity-40">•</span>
+                            <span className={isDark ? "text-white/80" : "text-slate-800"}>{cat.pct}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
