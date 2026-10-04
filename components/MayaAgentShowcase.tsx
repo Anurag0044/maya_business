@@ -6,9 +6,7 @@ import {
   Phone,
   Users,
   Calendar,
-  CheckCircle2,
   BarChart2,
-  TrendingUp,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import MayaWorkspaceAnimation from "./MayaWorkspaceAnimation";

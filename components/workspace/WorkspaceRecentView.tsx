@@ -14,6 +14,8 @@ import {
   Search,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { apiClient } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import { LeadItem, ActivityItem, LeadStatus } from "./types";
 
 const RECENT_LEADS: LeadItem[] = [

@@ -22,16 +22,17 @@ interface NavItem {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  badge?: string | number;
 }
 
 const PRIMARY_NAV_ITEMS: NavItem[] = [
-  { id: "home", label: "Home", icon: Home },
-  { id: "conversations", label: "Conversations", icon: MessageSquare },
-  { id: "leads", label: "Leads", icon: Users },
+  { id: "home", label: "Dashboard", icon: Home },
+  { id: "leads", label: "Leads", icon: Users, badge: "12" },
   { id: "appointments", label: "Appointments", icon: Calendar },
+  { id: "conversations", label: "Calls", icon: MessageSquare },
   { id: "follow-ups", label: "Follow-ups", icon: CheckCircle2 },
   { id: "contacts", label: "Contacts", icon: Contact },
-  { id: "knowledge", label: "Knowledge", icon: Box },
+  { id: "knowledge", label: "Knowledge Base", icon: Box },
   { id: "analytics", label: "Analytics", icon: TrendingUp },
   { id: "tools", label: "Tools", icon: Wrench },
 ];
@@ -95,6 +96,21 @@ export default function WorkspaceSidebar({
                   }`}
                 />
                 <span className="truncate">{item.label}</span>
+                {item.badge && (
+                  <span
+                    className={`ml-auto px-1.5 py-0.2 rounded-full text-[10px] font-semibold transition-colors ${
+                      isActive
+                        ? isDark
+                          ? "bg-[#0B0F17] text-white"
+                          : "bg-blue-600 text-white"
+                        : isDark
+                        ? "bg-white/[0.08] text-white/80"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
               </button>
             );
           })}

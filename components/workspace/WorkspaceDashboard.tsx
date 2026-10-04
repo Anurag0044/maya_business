@@ -11,6 +11,8 @@ import WorkspaceMetricCards from "./WorkspaceMetricCards";
 import WorkspaceLeadSourceChart from "./WorkspaceLeadSourceChart";
 import WorkspaceAppointmentTrendChart from "./WorkspaceAppointmentTrendChart";
 import WorkspaceRecentView from "./WorkspaceRecentView";
+import WorkspaceSettingsView from "./WorkspaceSettingsView";
+import WorkspaceLeadsView from "./WorkspaceLeadsView";
 import WorkspaceRightRail from "./WorkspaceRightRail";
 
 export default function WorkspaceDashboard() {
@@ -71,6 +73,13 @@ export default function WorkspaceDashboard() {
                   key="recent-view"
                   onBackToOverview={() => setActiveTab("home")}
                 />
+              ) : activeTab === "settings" ? (
+                <WorkspaceSettingsView
+                  key="settings-view"
+                  onBack={() => setActiveTab("home")}
+                />
+              ) : activeTab === "leads" ? (
+                <WorkspaceLeadsView key="leads-view" />
               ) : (
                 <motion.div
                   key="home-overview"

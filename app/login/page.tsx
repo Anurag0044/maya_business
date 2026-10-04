@@ -16,6 +16,7 @@ import {
   Phone,
 } from "lucide-react";
 import MayaBrand from "@/components/MayaBrand";
+import { createSession } from "@/app/actions/auth";
 
 function GoogleIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -70,13 +71,23 @@ export default function LoginPage() {
   const [keepSignedIn, setKeepSignedIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (authMode === "signin") {
+      if (!email.trim() || !password.trim()) return;
+    } else {
+      if (!name.trim() || !email.trim() || !phone.trim() || !password.trim()) return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    if (password.length < 6) return;
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      router.push("/workspace");
-    }, 250);
+    
+    // In a real app, you would call apiClient.post("/auth/login") here
+    // For this UI template, we set a mock session cookie
+    await createSession("mock_token_for_template");
+    
+    setIsSubmitting(false);
+    router.push("/workspace");
   };
 
   return (
@@ -90,7 +101,6 @@ export default function LoginPage() {
           alt="MAYA Executive High-Rise Penthouse"
           fill
           priority
-          unoptimized
           className="object-cover object-center"
           sizes="100vw"
         />
@@ -252,7 +262,6 @@ export default function LoginPage() {
                     {/* Primary Action Button (Sign in →) matching main UI discipline */}
                     <button
                       type="submit"
-                      onClick={() => handleSubmit()}
                       disabled={isSubmitting}
                       className="group relative w-full h-11 rounded-full mt-1.5 bg-white text-black font-medium text-[13px] tracking-tight flex items-center justify-center gap-2 hover:bg-neutral-100 active:scale-[0.99] transition-all duration-200 shadow-[0_2px_14px_rgba(255,255,255,0.08)] outline-none focus-visible:ring-2 focus-visible:ring-white/80 cursor-pointer disabled:opacity-60 select-none"
                     >
@@ -437,7 +446,6 @@ export default function LoginPage() {
                     {/* Submit Button */}
                     <button
                       type="submit"
-                      onClick={() => handleSubmit()}
                       disabled={isSubmitting}
                       className="group relative w-full h-10 sm:h-11 rounded-full mt-1 bg-white text-black font-medium text-[13px] tracking-tight flex items-center justify-center gap-2 hover:bg-neutral-100 active:scale-[0.99] transition-all duration-200 shadow-[0_2px_14px_rgba(255,255,255,0.08)] outline-none focus-visible:ring-2 focus-visible:ring-white/80 cursor-pointer disabled:opacity-60 select-none"
                     >

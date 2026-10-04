@@ -9,6 +9,8 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { apiClient } from "@/lib/api";
+import { BackendDashboardKPIs } from "./types";
 
 interface MetricCardProps {
   id: string;
@@ -123,6 +125,30 @@ function AnimatedCounter({
 export default function WorkspaceMetricCards() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [kpis, setKpis] = useState<BackendDashboardKPIs | null>(null);
+
+  useEffect(() => {
+    const fetchKPIs = async () => {
+      try {
+        const response = await apiClient.get("/dashboard/overview");
+        setKpis(response.data || response);
+      } catch (error) {
+        console.error("Failed to fetch KPIs", error);
+      }
+    };
+    fetchKPIs();
+  }, []);
+
+  const getCardValue = (id: string, fallback: number) => {
+    if (!kpis) return fallback;
+    switch (id) {
+      case "new-leads": return kpis.leads_total ?? fallback;
+      case "appointments": return kpis.appointments_today ?? fallback;
+      case "calls-handled": return kpis.calls_today ?? fallback;
+      case "follow-ups": return kpis.pending_followups ?? fallback;
+      default: return fallback;
+    }
+  };
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 shrink-0 select-none">
@@ -171,7 +197,7 @@ export default function WorkspaceMetricCards() {
                 className={`text-[28px] sm:text-[32px] font-light tracking-[-0.03em] leading-none tabular-nums shrink-0 ${isDark ? "text-white" : "text-[#0B0F17]"
                   }`}
               >
-                <AnimatedCounter value={card.value} delay={idx * 0.08} />
+                <AnimatedCounter value={getCardValue(card.id, card.value)} delay={idx * 0.08} />
               </span>
 
               {/* Minimalist Whisper-Thin Sparkline */}
