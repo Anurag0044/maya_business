@@ -44,3 +44,6 @@ class AppointmentResponse(BaseModel):
     appointment_type: str
     location: str | None
     meeting_link: str | None
+    calendar_provider: str | None
+    calendar_event_id: str | None
+    calendar_html_link: str | None

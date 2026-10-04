@@ -3,11 +3,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai.agent.session_store import get_or_create_context
-from app.ai.agent.orchestrator import AgentOrchestrator
 from app.api.deps import get_current_user, get_database
+from app.core.exceptions import AppException
 from app.models.user import User
-from app.services.conversations.service import ConversationService
+from app.services.channels.service import ChannelMessageService
+from app.services.channels.types import (
+    ChannelType,
+    NormalizedInboundMessage,
+)
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
@@ -20,73 +23,63 @@ async def chat(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_database),
 ):
+    """
+    Process a customer chat message through the single MAYA channel pipeline.
+
+    ChannelMessageService owns the complete pipeline:
+
+        incoming message
+              ↓
+        conversation
+              ↓
+        MAYA orchestrator
+              ↓
+        transcript
+              ↓
+        memory
+              ↓
+        channel message records
+    """
+
     if business_id != current_user.business_id:
-        from app.core.exceptions import AppException
-        raise AppException("Business access denied", "FORBIDDEN", 403)
-
-    context = get_or_create_context(
-        business_id,
-        session_id,
-    )
-    context.channel = "CHAT"
-
-    conversation_service = ConversationService(db)
-    conversation = await conversation_service.get_or_create(
-        business_id, session_id, lead_id=context.lead_id, channel="CHAT"
-    )
-    await conversation_service.hydrate_context(conversation, context)
-
-    decision = await AgentOrchestrator(db).handle_message(
-        context,
-        message,
-        conversation=conversation,
-    )
-    customer_turn_number = context.turn_count
-    if decision.response:
-        context.add_turn(
-            "ASSISTANT",
-            decision.response,
+        raise AppException(
+            "Business access denied",
+            "FORBIDDEN",
+            403,
         )
 
-    # Persist the complete transcript and bounded working memory. The database
-    # is the durable source of truth; the in-memory session is only a cache.
-    await conversation_service.append_turn(
-        conversation,
-        speaker="CUSTOMER",
+    inbound = NormalizedInboundMessage(
+        business_id=business_id,
+        channel=ChannelType.CHAT,
+        external_user_id=session_id,
+        session_id=session_id,
         message=message,
-        turn_number=customer_turn_number,
     )
-    if decision.response:
-        await conversation_service.append_turn(
-            conversation,
-            speaker="ASSISTANT",
-            message=decision.response,
-            turn_number=context.turn_count,
-        )
-    conversation.lead_id = context.lead_id
-    await conversation_service.sync_memory(
-        conversation,
-        summary=context.conversation_summary,
-        structured_state=context.structured_state,
-        summary_turn_count=context.summary_turn_count,
-        chunks=context.conversation_chunks,
+
+    result = await ChannelMessageService(db).process_ai_message(
+        inbound
     )
-    await conversation_service.sync_lead_intelligence(
-        business_id,
-        context.lead_id,
-        summary=context.conversation_summary,
-        structured_state=context.structured_state,
-    )
-    await db.commit()
+
+    if result["duplicate"]:
+        return {
+            "success": True,
+            "data": result,
+            "message": "Duplicate message ignored",
+        }
 
     return {
         "success": True,
         "data": {
-            "response": decision.response,
-            "intent": context.intent,
-            "decision": decision.decision.value,
-            "confidence": decision.confidence,
-            "reason": decision.reason,
+            "response": result["response"],
+            "intent": result["intent"],
+            "decision": result["decision"],
+            "confidence": result["confidence"],
+            "reason": result["reason"],
+            "conversation_id": result["conversation_id"],
+            "channel_message_id": result["channel_message_id"],
+            "outbound_channel_message_id": result[
+                "outbound_channel_message_id"
+            ],
         },
         "message": "AI response generated",
     }

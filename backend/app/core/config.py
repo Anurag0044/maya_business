@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     embedding_dimensions: int = 1536
     chat_model: str = "gpt-4o-mini"
 
+    google_calendar_client_id: str | None = None
+    google_calendar_client_secret: str | None = None
+    google_calendar_redirect_uri: str = "http://127.0.0.1:8000/api/v1/calendar/callback"
+
     # Internal Voice Intelligence -> Front Desk gateway credential.
     # Keep this secret outside source control; rotate it before production.
     voice_gateway_api_key: str | None = None
