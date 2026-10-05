@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -6,11 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_database
 from app.core.exceptions import AppException
 from app.models.user import User
-from app.services.channels.service import ChannelMessageService
-from app.services.channels.types import (
-    ChannelType,
-    NormalizedInboundMessage,
-)
+from app.services.channels.gateway import ChannelGateway
+from app.services.channels.types import ChannelType, NormalizedInboundMessage
+
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
@@ -20,25 +20,15 @@ async def chat(
     business_id: UUID,
     session_id: str,
     message: str,
+    external_message_id: str | None = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_database),
 ):
-    """
-    Process a customer chat message through the single MAYA channel pipeline.
+    """Compatibility endpoint for website/test chat.
 
-    ChannelMessageService owns the complete pipeline:
-
-        incoming message
-              ↓
-        conversation
-              ↓
-        MAYA orchestrator
-              ↓
-        transcript
-              ↓
-        memory
-              ↓
-        channel message records
+    It now enters the exact same ChannelGateway used by every future
+    customer channel. This keeps /ai/chat useful for development while
+    preventing a second, channel-specific AI pipeline from forming.
     """
 
     if business_id != current_user.business_id:
@@ -53,12 +43,11 @@ async def chat(
         channel=ChannelType.CHAT,
         external_user_id=session_id,
         session_id=session_id,
+        external_message_id=external_message_id,
         message=message,
     )
 
-    result = await ChannelMessageService(db).process_ai_message(
-        inbound
-    )
+    result = await ChannelGateway(db).receive(inbound)
 
     if result["duplicate"]:
         return {
