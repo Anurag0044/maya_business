@@ -3,6 +3,7 @@
 import React from "react";
 import {
   Home,
+  Phone,
   MessageSquare,
   Users,
   Calendar,
@@ -29,7 +30,7 @@ const PRIMARY_NAV_ITEMS: NavItem[] = [
   { id: "home", label: "Dashboard", icon: Home },
   { id: "leads", label: "Leads", icon: Users, badge: "12" },
   { id: "appointments", label: "Appointments", icon: Calendar },
-  { id: "conversations", label: "Calls", icon: MessageSquare },
+  { id: "conversations", label: "Calls", icon: Phone, badge: "18" },
   { id: "follow-ups", label: "Follow-ups", icon: CheckCircle2 },
   { id: "contacts", label: "Contacts", icon: Contact },
   { id: "knowledge", label: "Knowledge Base", icon: Box },

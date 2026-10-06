@@ -14,16 +14,19 @@ class ApiClient {
       headers.set("Content-Type", "application/json");
     }
 
-    let response = await fetch(`${this.baseUrl}${endpoint}`, {
-      ...options,
-      headers,
-      credentials: "include",
-    });
-
-    if (response.status === 401 && typeof window !== "undefined") {
-      // With HttpOnly cookies, the backend handles refresh logic via its own endpoints 
-      // or middleware, returning 401 if fully expired. We just pass the 401 along.
-      console.warn("Unauthorized API call. Session may have expired.");
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...options,
+        headers,
+        credentials: "include",
+      });
+    } catch (networkError) {
+      throw new Error(
+        `API network error on ${endpoint}: ${
+          networkError instanceof Error ? networkError.message : String(networkError)
+        }`
+      );
     }
 
     if (!response.ok) {

@@ -128,15 +128,21 @@ export default function WorkspaceMetricCards() {
   const [kpis, setKpis] = useState<BackendDashboardKPIs | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchKPIs = async () => {
       try {
         const response = await apiClient.get("/dashboard/overview");
-        setKpis(response.data || response);
-      } catch (error) {
-        console.error("Failed to fetch KPIs", error);
+        if (isMounted) {
+          setKpis(response?.data || response);
+        }
+      } catch {
+        // Safe fallback to default KPI data without logging errors
       }
     };
     fetchKPIs();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const getCardValue = (id: string, fallback: number) => {

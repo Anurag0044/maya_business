@@ -14,6 +14,7 @@ import WorkspaceRecentView from "./WorkspaceRecentView";
 import WorkspaceSettingsView from "./WorkspaceSettingsView";
 import WorkspaceLeadsView from "./WorkspaceLeadsView";
 import WorkspaceAppointmentsView from "./WorkspaceAppointmentsView";
+import WorkspaceCallsView from "./WorkspaceCallsView";
 import WorkspaceRightRail from "./WorkspaceRightRail";
 
 export default function WorkspaceDashboard() {
@@ -83,6 +84,8 @@ export default function WorkspaceDashboard() {
                 <WorkspaceLeadsView key="leads-view" />
               ) : activeTab === "appointments" ? (
                 <WorkspaceAppointmentsView key="appointments-view" />
+              ) : activeTab === "conversations" ? (
+                <WorkspaceCallsView key="calls-view" />
               ) : (
                 <motion.div
                   key="home-overview"
