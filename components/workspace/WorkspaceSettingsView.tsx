@@ -125,10 +125,10 @@ export default function WorkspaceSettingsView({ onBack }: WorkspaceSettingsViewP
   const handleGenerateKey = () => {
     if (!keyName.trim()) return;
 
-    // Generate secure randomized key string
-    const randomHex = Array.from({ length: 24 }, () =>
-      Math.floor(Math.random() * 16).toString(16)
-    ).join("");
+    // Generate cryptographically secure key string
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    const randomHex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
     const generated = `maya_live_sk_${randomHex}`;
     const lastFour = generated.slice(-4);
     const masked = `maya_live_••••••••${lastFour}`;

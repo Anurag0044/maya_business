@@ -163,7 +163,6 @@ const INITIAL_CALLS: CallItem[] = [
   {
     id: "call-1",
     callerName: "Rahul Sharma",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     direction: "Incoming",
     phone: "+91 98765 43210",
     timestamp: "Today, 10:32 AM",
@@ -214,7 +213,6 @@ const INITIAL_CALLS: CallItem[] = [
   {
     id: "call-2",
     callerName: "Priya Mehta",
-    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
     direction: "Incoming",
     phone: "+91 98765 12345",
     timestamp: "Today, 11:15 AM",
@@ -269,7 +267,6 @@ const INITIAL_CALLS: CallItem[] = [
   {
     id: "call-4",
     callerName: "Arjun Patel",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
     direction: "Outgoing",
     phone: "+91 99887 66554",
     timestamp: "Today, 01:20 PM",
@@ -300,7 +297,6 @@ const INITIAL_CALLS: CallItem[] = [
   {
     id: "call-5",
     callerName: "Sneha Iyer",
-    avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
     direction: "Incoming",
     phone: "+91 77665 44332",
     timestamp: "Today, 02:11 PM",
@@ -326,7 +322,6 @@ const INITIAL_CALLS: CallItem[] = [
   {
     id: "call-6",
     callerName: "Karan Verma",
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
     direction: "Transferred",
     phone: "+91 88776 55443",
     timestamp: "Today, 03:33 PM",
@@ -352,7 +347,6 @@ const INITIAL_CALLS: CallItem[] = [
   {
     id: "call-7",
     callerName: "Aditya Nair",
-    avatarUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80",
     direction: "Incoming",
     phone: "+91 88774 22110",
     timestamp: "Today, 04:10 PM",
@@ -372,7 +366,6 @@ const INITIAL_CALLS: CallItem[] = [
   {
     id: "call-8",
     callerName: "Meera Joshi",
-    avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
     direction: "Outgoing",
     phone: "+91 99881 22334",
     timestamp: "Today, 05:02 PM",
@@ -411,7 +404,6 @@ const INITIAL_CALLS: CallItem[] = [
   {
     id: "call-10",
     callerName: "Vikram Rao",
-    avatarUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
     direction: "Incoming",
     phone: "+91 77665 99887",
     timestamp: "Today, 06:21 PM",
@@ -445,10 +437,9 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-// Resilient caller avatar supporting image loading with elegant initials fallback and Apple-grade Unknown user icon
+// Default caller avatar component rendering default contact icon
 function CallerAvatar({
   name,
-  avatarUrl,
   size = "md",
   isDark,
 }: {
@@ -457,14 +448,12 @@ function CallerAvatar({
   size?: "sm" | "md" | "lg";
   isDark: boolean;
 }) {
-  const [hasImgError, setHasImgError] = useState(false);
   const isUnknown = !name || name.toLowerCase() === "unknown";
-  const initials = getInitials(name);
 
   const sizeClasses = {
-    sm: "w-7 h-7 text-[10px]",
-    md: "w-8 h-8 text-[11px]",
-    lg: "w-10 h-10 text-[13px]",
+    sm: "w-7 h-7",
+    md: "w-8 h-8",
+    lg: "w-10 h-10",
   }[size];
 
   const iconSizes = {
@@ -473,48 +462,16 @@ function CallerAvatar({
     lg: "w-4.5 h-4.5",
   }[size];
 
-  if (isUnknown) {
-    return (
-      <div
-        className={`${sizeClasses} rounded-full flex items-center justify-center shrink-0 border transition-all duration-200 select-none ${
-          isDark
-            ? "bg-white/[0.04] border-white/10 text-neutral-400"
-            : "bg-slate-100 border-slate-200 text-slate-500 shadow-2xs"
-        }`}
-        title="Unknown Caller"
-      >
-        <User className={`${iconSizes} stroke-[1.8]`} />
-      </div>
-    );
-  }
-
-  if (avatarUrl && !hasImgError) {
-    return (
-      <div
-        className={`${sizeClasses} rounded-full relative shrink-0 overflow-hidden border shadow-2xs ${
-          isDark ? "border-white/10" : "border-slate-200"
-        }`}
-      >
-        <img
-          src={avatarUrl}
-          alt={name}
-          onError={() => setHasImgError(true)}
-          className="w-full h-full object-cover"
-        />
-      </div>
-    );
-  }
-
   return (
     <div
-      className={`${sizeClasses} rounded-full flex items-center justify-center font-medium shrink-0 border transition-all duration-200 select-none ${
+      className={`${sizeClasses} rounded-full flex items-center justify-center shrink-0 border transition-all duration-200 select-none ${
         isDark
-          ? "bg-white/[0.06] text-white border-white/[0.09]"
-          : "bg-slate-100 text-slate-800 border-slate-200 shadow-2xs"
+          ? "bg-white/[0.04] border-white/10 text-neutral-400"
+          : "bg-slate-100 border-slate-200 text-slate-500 shadow-2xs"
       }`}
-      title={name}
+      title={isUnknown ? "Unknown Caller" : name}
     >
-      {initials || "—"}
+      <User className={`${iconSizes} stroke-[1.8]`} />
     </div>
   );
 }

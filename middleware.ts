@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('maya_access_token');
-  
-  // When accessing workspace, ensure session cookie is present so workspace loads seamlessly
+
+  // DEV/TEMPLATE MODE: Auto-provision session cookie so workspace loads without a real backend.
+  // TODO: Remove this block before production — replace with a redirect to /login.
   if (!token && pathname.startsWith('/workspace')) {
-    request.cookies.set('maya_access_token', 'mock_token_for_template');
     const response = NextResponse.next({
       request: {
         headers: request.headers,
       },
     });
-    response.cookies.set('maya_access_token', 'mock_token_for_template', {
+    response.cookies.set('maya_access_token', 'dev_template_session', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -22,11 +22,10 @@ export function proxy(request: NextRequest) {
     });
     return response;
   }
-  
+
   return NextResponse.next();
 }
 
 export const config = {
   matcher: ['/workspace', '/workspace/:path*', '/login'],
 };
-

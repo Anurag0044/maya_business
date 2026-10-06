@@ -166,7 +166,6 @@ const INITIAL_CONTACTS: ContactItem[] = [
     id: "contact-1",
     name: "Rohan Mehta",
     initials: "RM",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80",
     organization: "ABC Institute",
     type: "Student",
     email: "rohan.mehta@gmail.com",
@@ -180,19 +179,16 @@ const INITIAL_CONTACTS: ContactItem[] = [
     assignedStaff: {
       name: "Siddharth",
       initials: "SK",
-      avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
     },
     address: "Jaipur, Rajasthan, India",
     notes: [
       {
         author: "Siddharth",
-        avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
         timeAgo: "2 days ago",
         content: "Interested in Python full stack course. Asked for weekend batch details.",
       },
       {
         author: "Ananya",
-        avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80",
         timeAgo: "1 week ago",
         content: "Follow up next week after demo class.",
       },
@@ -202,7 +198,6 @@ const INITIAL_CONTACTS: ContactItem[] = [
     id: "contact-2",
     name: "Priya Sharma",
     initials: "PS",
-    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&auto=format&fit=crop&q=80",
     organization: "Freelancer",
     type: "Prospect",
     email: "priya.sharma@mail.com",
@@ -230,7 +225,6 @@ const INITIAL_CONTACTS: ContactItem[] = [
     id: "contact-3",
     name: "Aman Verma",
     initials: "AV",
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&auto=format&fit=crop&q=80",
     organization: "XYZ University",
     type: "Student",
     email: "aman.verma@uni.in",
@@ -258,7 +252,6 @@ const INITIAL_CONTACTS: ContactItem[] = [
     id: "contact-4",
     name: "Sneha Kapoor",
     initials: "SK",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80",
     organization: "TechWorks",
     type: "Client",
     email: "sneha@techworks.in",
@@ -286,7 +279,6 @@ const INITIAL_CONTACTS: ContactItem[] = [
     id: "contact-5",
     name: "Karan Patel",
     initials: "KP",
-    avatarUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=160&auto=format&fit=crop&q=80",
     organization: "Self Learner",
     type: "Prospect",
     email: "karan.patel@mail.com",
@@ -314,7 +306,6 @@ const INITIAL_CONTACTS: ContactItem[] = [
     id: "contact-6",
     name: "Isha Gupta",
     initials: "IG",
-    avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=160&auto=format&fit=crop&q=80",
     organization: "Design Studio",
     type: "Client",
     email: "isha.gupta@design.co",
@@ -342,7 +333,6 @@ const INITIAL_CONTACTS: ContactItem[] = [
     id: "contact-7",
     name: "Aditya Singh",
     initials: "AS",
-    avatarUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=160&auto=format&fit=crop&q=80",
     organization: "XYZ College",
     type: "Student",
     email: "aditya.singh@xyz.in",
@@ -370,7 +360,6 @@ const INITIAL_CONTACTS: ContactItem[] = [
     id: "contact-8",
     name: "Neha Jain",
     initials: "NJ",
-    avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=160&auto=format&fit=crop&q=80",
     organization: "Freelancer",
     type: "Prospect",
     email: "neha.jain@mail.com",
@@ -398,7 +387,6 @@ const INITIAL_CONTACTS: ContactItem[] = [
     id: "contact-9",
     name: "Vikram Rao",
     initials: "VR",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80",
     organization: "Rao Solutions",
     type: "Client",
     email: "vikram@raosol.com",
@@ -426,7 +414,6 @@ const INITIAL_CONTACTS: ContactItem[] = [
     id: "contact-10",
     name: "Tanya Desai",
     initials: "TD",
-    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&auto=format&fit=crop&q=80",
     organization: "Creative Labs",
     type: "Student",
     email: "tanya.desai@mail.com",
@@ -453,62 +440,48 @@ const INITIAL_CONTACTS: ContactItem[] = [
 ];
 
 // ============================================================================
-// RESILIENT AVATAR COMPONENT
+// DEFAULT CONTACT AVATAR COMPONENT
 // ============================================================================
 
 function ContactAvatar({
   name,
-  initials,
-  avatarUrl,
   size = "md",
   shape = "circle",
   isDark,
 }: {
   name: string;
-  initials: string;
+  initials?: string;
   avatarUrl?: string;
   size?: "sm" | "md" | "lg" | "xl";
   shape?: "circle" | "squircle";
   isDark: boolean;
 }) {
-  const [imgError, setImgError] = useState(false);
-
   const sizeClasses = {
-    sm: "w-7 h-7 text-[10px]",
-    md: "w-8 h-8 text-[11px]",
-    lg: "w-11 h-11 text-[13px]",
-    xl: "w-14 h-14 text-[16px]",
+    sm: "w-7 h-7",
+    md: "w-8 h-8",
+    lg: "w-11 h-11",
+    xl: "w-14 h-14",
   }[size];
 
-  const roundedClass = shape === "squircle" ? "rounded-2xl" : "rounded-full";
+  const iconSizes = {
+    sm: "w-3.5 h-3.5",
+    md: "w-4 h-4",
+    lg: "w-5 h-5",
+    xl: "w-6 h-6",
+  }[size];
 
-  if (avatarUrl && !imgError) {
-    return (
-      <div
-        className={`${sizeClasses} ${roundedClass} relative shrink-0 overflow-hidden border shadow-2xs ${
-          isDark ? "border-white/10" : "border-slate-200"
-        }`}
-      >
-        <img
-          src={avatarUrl}
-          alt={name}
-          onError={() => setImgError(true)}
-          className="w-full h-full object-cover"
-        />
-      </div>
-    );
-  }
+  const roundedClass = shape === "squircle" ? "rounded-xl" : "rounded-full";
 
   return (
     <div
-      className={`${sizeClasses} ${roundedClass} flex items-center justify-center font-medium shrink-0 border transition-all duration-200 select-none ${
+      className={`${sizeClasses} ${roundedClass} flex items-center justify-center shrink-0 border transition-all duration-200 select-none ${
         isDark
-          ? "bg-white/[0.06] text-white border-white/[0.09]"
-          : "bg-slate-100 text-slate-800 border-slate-200 shadow-2xs"
+          ? "bg-white/[0.06] text-neutral-300 border-white/[0.09]"
+          : "bg-slate-100 text-slate-600 border-slate-200 shadow-2xs"
       }`}
       title={name}
     >
-      {initials || "—"}
+      <User className={`${iconSizes} stroke-[1.8]`} />
     </div>
   );
 }

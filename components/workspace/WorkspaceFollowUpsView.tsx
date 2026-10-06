@@ -187,28 +187,24 @@ const STAFF_MEMBERS: Record<string, StaffMember> = {
     name: "Amit Kumar",
     initials: "AK",
     role: "Senior Admissions Counsellor",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
   },
   Neha: {
     id: "staff-2",
     name: "Neha Sharma",
     initials: "NS",
     role: "Academic Advisor",
-    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80",
   },
   Rohan: {
     id: "staff-3",
     name: "Rohan Varma",
     initials: "RV",
     role: "Program Coordinator",
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
   },
   Ishita: {
     id: "staff-4",
     name: "Ishita Roy",
     initials: "IR",
     role: "Student Relations Lead",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
   },
 };
 
@@ -217,7 +213,6 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
     id: "followup-1",
     leadName: "Rahul Sharma",
     leadInitials: "RS",
-    leadAvatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     course: "Data Science",
     phone: "+91 98765 43210",
     email: "rahul.sharma@example.com",
@@ -242,7 +237,6 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
     id: "followup-2",
     leadName: "Priya Mehta",
     leadInitials: "PM",
-    leadAvatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
     course: "UI/UX Design",
     phone: "+91 98765 12345",
     email: "priya.mehta@example.com",
@@ -266,7 +260,6 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
     id: "followup-3",
     leadName: "Arjun Patel",
     leadInitials: "AP",
-    leadAvatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
     course: "Full Stack Dev",
     phone: "+91 99887 66554",
     email: "arjun.patel@example.com",
@@ -288,7 +281,6 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
     id: "followup-4",
     leadName: "Sneha Iyer",
     leadInitials: "SI",
-    leadAvatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
     course: "Data Analytics",
     phone: "+91 77665 44332",
     email: "sneha.iyer@example.com",
@@ -310,7 +302,6 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
     id: "followup-5",
     leadName: "Karan Verma",
     leadInitials: "KV",
-    leadAvatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
     course: "Cloud Computing",
     phone: "+91 88776 55443",
     email: "karan.verma@example.com",
@@ -332,7 +323,6 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
     id: "followup-6",
     leadName: "Riya Singh",
     leadInitials: "RS",
-    leadAvatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     course: "Digital Marketing",
     phone: "+91 88990 11223",
     email: "riya.singh@example.com",
@@ -354,7 +344,6 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
     id: "followup-7",
     leadName: "Aditya Nair",
     leadInitials: "AN",
-    leadAvatarUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80",
     course: "Python",
     phone: "+91 88774 22110",
     email: "aditya.nair@example.com",
@@ -376,7 +365,6 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
     id: "followup-8",
     leadName: "Meera Joshi",
     leadInitials: "MJ",
-    leadAvatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
     course: "Product Management",
     phone: "+91 99881 22334",
     email: "meera.joshi@example.com",
@@ -398,7 +386,6 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
     id: "followup-9",
     leadName: "Vikram Rao",
     leadInitials: "VR",
-    leadAvatarUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
     course: "Cyber Security",
     phone: "+91 77665 99887",
     email: "vikram.rao@example.com",
@@ -420,7 +407,6 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
     id: "followup-10",
     leadName: "Ananya Gupta",
     leadInitials: "AG",
-    leadAvatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
     course: "AI & ML",
     phone: "+91 91234 88990",
     email: "ananya.gupta@example.com",
@@ -441,57 +427,42 @@ const INITIAL_FOLLOWUPS: FollowUpItem[] = [
 ];
 
 // ============================================================================
-// RESILIENT AVATAR COMPONENTS
+// DEFAULT AVATAR COMPONENTS
 // ============================================================================
 
 function LeadAvatar({
   name,
-  initials,
-  avatarUrl,
   size = "md",
   isDark,
 }: {
   name: string;
-  initials: string;
+  initials?: string;
   avatarUrl?: string;
   size?: "sm" | "md" | "lg";
   isDark: boolean;
 }) {
-  const [imgError, setImgError] = useState(false);
-
   const sizeClasses = {
-    sm: "w-7 h-7 text-[10px]",
-    md: "w-8 h-8 text-[11px]",
-    lg: "w-11 h-11 text-[14px]",
+    sm: "w-7 h-7",
+    md: "w-8 h-8",
+    lg: "w-11 h-11",
   }[size];
 
-  if (avatarUrl && !imgError) {
-    return (
-      <div
-        className={`${sizeClasses} rounded-full relative shrink-0 overflow-hidden border shadow-2xs ${
-          isDark ? "border-white/10" : "border-slate-200"
-        }`}
-      >
-        <img
-          src={avatarUrl}
-          alt={name}
-          onError={() => setImgError(true)}
-          className="w-full h-full object-cover"
-        />
-      </div>
-    );
-  }
+  const iconSizes = {
+    sm: "w-3.5 h-3.5",
+    md: "w-4 h-4",
+    lg: "w-5 h-5",
+  }[size];
 
   return (
     <div
-      className={`${sizeClasses} rounded-full flex items-center justify-center font-medium shrink-0 border transition-all duration-200 select-none ${
+      className={`${sizeClasses} rounded-full flex items-center justify-center shrink-0 border transition-all duration-200 select-none ${
         isDark
-          ? "bg-white/[0.06] text-white border-white/[0.09]"
-          : "bg-slate-100 text-slate-800 border-slate-200 shadow-2xs"
+          ? "bg-white/[0.06] text-neutral-300 border-white/[0.09]"
+          : "bg-slate-100 text-slate-600 border-slate-200 shadow-2xs"
       }`}
       title={name}
     >
-      {initials || "—"}
+      <User className={`${iconSizes} stroke-[1.8]`} />
     </div>
   );
 }
@@ -505,41 +476,28 @@ function StaffAvatar({
   size?: "xs" | "sm" | "md";
   isDark: boolean;
 }) {
-  const [imgError, setImgError] = useState(false);
-
   const sizeClasses = {
-    xs: "w-5 h-5 text-[8.5px]",
-    sm: "w-6 h-6 text-[9.5px]",
-    md: "w-7 h-7 text-[10.5px]",
+    xs: "w-5 h-5",
+    sm: "w-6 h-6",
+    md: "w-7 h-7",
   }[size];
 
-  if (staff.avatarUrl && !imgError) {
-    return (
-      <div
-        className={`${sizeClasses} rounded-full relative shrink-0 overflow-hidden border ${
-          isDark ? "border-white/10" : "border-slate-200"
-        }`}
-      >
-        <img
-          src={staff.avatarUrl}
-          alt={staff.name}
-          onError={() => setImgError(true)}
-          className="w-full h-full object-cover"
-        />
-      </div>
-    );
-  }
+  const iconSizes = {
+    xs: "w-2.5 h-2.5",
+    sm: "w-3 h-3",
+    md: "w-3.5 h-3.5",
+  }[size];
 
   return (
     <div
-      className={`${sizeClasses} rounded-full flex items-center justify-center font-medium shrink-0 border ${
+      className={`${sizeClasses} rounded-full flex items-center justify-center shrink-0 border transition-all duration-200 select-none ${
         isDark
-          ? "bg-white/[0.08] text-white border-white/10"
-          : "bg-slate-200 text-slate-700 border-slate-300"
+          ? "bg-white/[0.08] text-neutral-300 border-white/10"
+          : "bg-slate-100 text-slate-600 border-slate-200 shadow-2xs"
       }`}
       title={staff.name}
     >
-      {staff.initials}
+      <User className={`${iconSizes} stroke-[1.8]`} />
     </div>
   );
 }
