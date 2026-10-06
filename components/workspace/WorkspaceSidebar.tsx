@@ -31,7 +31,7 @@ const PRIMARY_NAV_ITEMS: NavItem[] = [
   { id: "leads", label: "Leads", icon: Users, badge: "12" },
   { id: "appointments", label: "Appointments", icon: Calendar },
   { id: "conversations", label: "Calls", icon: Phone, badge: "18" },
-  { id: "follow-ups", label: "Follow-ups", icon: CheckCircle2 },
+  { id: "follow-ups", label: "Follow-ups", icon: CheckCircle2, badge: "24" },
   { id: "contacts", label: "Contacts", icon: Contact },
   { id: "knowledge", label: "Knowledge Base", icon: Box },
   { id: "analytics", label: "Analytics", icon: TrendingUp },
