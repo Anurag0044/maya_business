@@ -9,6 +9,8 @@ from app.api.deps import get_current_user, get_database, require_roles
 from app.core.exceptions import AppException
 from app.models.user import User
 from app.schemas.channel import ChannelCapabilityResponse, ChannelInboundRequest
+from app.schemas.channel_management import ChannelDefinitionResponse, ChannelManagementResponse
+from app.services.channels.management import ChannelManagementService
 from app.services.channels.gateway import ChannelGateway
 from app.services.channels.registry import ChannelAdapterRegistry
 from app.services.channels.types import ChannelType
@@ -20,9 +22,52 @@ router = APIRouter(prefix="/channels", tags=["Channels"])
 @router.get("/capabilities", response_model=list[ChannelCapabilityResponse])
 async def capabilities(
     current_user: User = Depends(require_roles("OWNER", "ADMIN", "STAFF")),
+    db: AsyncSession = Depends(get_database),
 ):
-    """Return the unified channel contract and currently registered adapters."""
-    return ChannelAdapterRegistry().capabilities()
+    """Return channel adapters registered in the current MAYA runtime."""
+    return ChannelAdapterRegistry(db).capabilities()
+
+
+@router.get(
+    "/status",
+    response_model=ChannelManagementResponse,
+)
+async def channel_status(
+    current_user: User = Depends(
+        require_roles("OWNER", "ADMIN", "STAFF")
+    ),
+    db: AsyncSession = Depends(get_database),
+):
+    """Return the channel catalog and this business's connection state.
+
+    Secrets are never returned. Provider-specific credentials remain in their
+    own connection services/tables.
+    """
+    channels = await ChannelManagementService(db).list_for_business(
+        current_user.business_id
+    )
+    return {
+        "business_id": current_user.business_id,
+        "channels": channels,
+    }
+
+
+@router.get(
+    "/{channel}/status",
+    response_model=ChannelDefinitionResponse,
+)
+async def channel_status_by_type(
+    channel: ChannelType,
+    current_user: User = Depends(
+        require_roles("OWNER", "ADMIN", "STAFF")
+    ),
+    db: AsyncSession = Depends(get_database),
+):
+    """Return one channel's configuration state for the current business."""
+    return await ChannelManagementService(db).get_for_business(
+        current_user.business_id,
+        channel,
+    )
 
 
 @router.post("/{channel}/messages")

@@ -27,6 +27,8 @@ from app.api.v1.handoffs import router as handoffs_router
 from app.api.v1.conversations import router as conversations_router
 from app.api.v1.calender import router as calendar_router
 from app.api.v1.channels import router as channels_router
+from app.api.v1.whatsapp import router as whatsapp_router
+from app.api.v1.whatsapp_webhook import router as whatsapp_webhook_router
 
 async def _retention_worker(stop_event: asyncio.Event) -> None:
     # Retention is intentionally application-driven so it works with the
@@ -85,6 +87,8 @@ app.include_router(conversations_router, prefix="/api/v1")
 app.include_router(data_router, prefix="/api/v1")
 app.include_router(calendar_router, prefix="/api/v1")
 app.include_router(channels_router, prefix="/api/v1")
+app.include_router(whatsapp_router, prefix="/api/v1")
+app.include_router(whatsapp_webhook_router, prefix="/api/v1")
 
 
 app.add_middleware(

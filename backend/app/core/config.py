@@ -47,6 +47,15 @@ class Settings(BaseSettings):
     # Keep this secret outside source control; rotate it before production.
     voice_gateway_api_key: str | None = None
 
+    # --- Meta WhatsApp Cloud API ---
+    whatsapp_graph_api_base: str = "https://graph.facebook.com"
+    # Keep the Graph API version configurable because Meta versions retire.
+    whatsapp_graph_api_version: str = "v25.0"
+    whatsapp_app_secret: str | None = None
+    whatsapp_webhook_verify_token: str | None = None
+    whatsapp_http_timeout_seconds: float = 20.0
+    whatsapp_http_connect_timeout_seconds: float = 10.0
+
     model_config = SettingsConfigDict(
         # Absolute path — works from any CWD (IDE, Docker, test runner, CLI).
         env_file=str(_BACKEND_DIR / ".env"),

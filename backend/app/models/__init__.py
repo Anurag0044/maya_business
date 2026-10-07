@@ -11,6 +11,7 @@ from app.models.notification import Notification, NotificationAttempt
 from app.models.handoff import Handoff
 from app.models.channel_message import ChannelMessage
 from app.models.calendar_connection import CalendarConnection
+from app.models.whatsapp_connection import WhatsAppConnection
 from app.models.conversation import Conversation, ConversationMessage, ConversationChunk
 
 __all__ = [
@@ -19,5 +20,5 @@ __all__ = [
     "Lead", "LeadActivity", "Call", "CallTranscript", "CallEvent",
     "Appointment", "Followup", "FollowupAttempt", "Notification", "NotificationAttempt",
     "Conversation", "ConversationMessage", "ConversationChunk", "Handoff",
-    "ChannelMessage", "CalendarConnection",
+    "ChannelMessage", "CalendarConnection", "WhatsAppConnection",
 ]

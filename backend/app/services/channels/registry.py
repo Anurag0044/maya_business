@@ -1,18 +1,29 @@
 from __future__ import annotations
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.services.channels.adapters.base import ChannelAdapter
-from app.services.channels.adapters.chat import ChatChannelAdapter, WebsiteChannelAdapter
+from app.services.channels.adapters.chat import (
+    ChatChannelAdapter,
+    WebsiteChannelAdapter,
+)
+from app.services.channels.adapters.whatsapp import WhatsAppChannelAdapter
 from app.services.channels.types import ChannelType
 
 
 class ChannelAdapterRegistry:
     """Single registry for all customer-channel adapters."""
 
-    def __init__(self) -> None:
-        self._adapters: dict[ChannelType, ChannelAdapter] = {
+    def __init__(self, db: AsyncSession | None = None) -> None:
+        adapters: dict[ChannelType, ChannelAdapter] = {
             ChannelType.CHAT: ChatChannelAdapter(),
             ChannelType.WEBSITE: WebsiteChannelAdapter(),
         }
+
+        if db is not None:
+            adapters[ChannelType.WHATSAPP] = WhatsAppChannelAdapter(db)
+
+        self._adapters = adapters
 
     def get(self, channel: ChannelType) -> ChannelAdapter:
         try:
