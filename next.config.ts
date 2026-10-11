@@ -1,5 +1,20 @@
 import type { NextConfig } from "next";
 
+const getApiOrigin = () => {
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  if (!url) return "";
+  try {
+    return new URL(url).origin;
+  } catch {
+    return "";
+  }
+};
+
+const apiOrigin = getApiOrigin();
+const connectSrc = ["'self'", "http://localhost:8000", "https:", "wss:", apiOrigin]
+  .filter(Boolean)
+  .join(" ");
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
@@ -22,7 +37,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' http://localhost:8000; media-src 'self'; frame-ancestors 'none';",
+            value: `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src ${connectSrc}; media-src 'self' https: data: blob:; frame-ancestors 'none';`,
           },
           {
             key: "Strict-Transport-Security",
